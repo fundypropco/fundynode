@@ -1,0 +1,5 @@
+const spiderRouter = require('./spider.js')
+
+module.exports = (app) => {
+    app.use('/api', spiderRouter)
+}

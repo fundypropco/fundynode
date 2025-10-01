@@ -1,0 +1,30 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    container_name: fundy-node-prod
+    restart: always
+    ports:
+      - "5001:3000"
+    environment:
+      - APP_PORT=3000
+      - NODE_ENV=production
+      - MONGO_URI=mongodb://mongo:27017/fundynode
+    volumes:
+      - ./logs:/app/logs
+    depends_on:
+      - mongo
+    command: node app.js
+
+  mongo:
+    image: mongo:8
+    container_name: my-mongo
+    restart: always
+    ports:
+      - "27117:27017"
+    volumes:
+      - mongo-data:/data/db
+
+volumes:
+  mongo-data:

@@ -1,0 +1,32 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: fundy-node-dev
+    ports:
+      - "5000:3000" 
+      - "9229:9229"
+    volumes:
+      - .:/app
+      - ./logs:/app/logs
+      - /app/node_modules
+    environment:
+      - APP_PORT=3000
+      - NODE_ENV=development
+      - MONGO_URI=mongodb://mongo:27017/fundynode
+    depends_on:
+      - mongo
+    command: nodemon -L --inspect=0.0.0.0:9229 app.js
+
+  mongo:
+    image: mongo:8
+    container_name: my-mongo
+    restart: always
+    ports:
+      - "27117:27017"
+    volumes:
+      - mongo-data:/data/db
+
+volumes:
+  mongo-data:
