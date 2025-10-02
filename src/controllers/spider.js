@@ -1,6 +1,6 @@
 const asyncHandler = require('../middlewares/asyncHandler')
 const { getMsgHandle } = require('../helpers/helper')
-const handlers = require('../services/handlers')
+const handle504 = require('../services/handlers/handle504')
 
 const getUpdates = asyncHandler(async (req, res) => {
     // ...
@@ -12,10 +12,10 @@ const sendMessage = asyncHandler(async (req, res) => {
 
     switch (handlerNo) {
         case "504":
-            return handlers.handle_504(req, res)
+            return await handle504(req, res)
 
     }
-    
+
 })
 
 

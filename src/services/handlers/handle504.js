@@ -1,9 +1,9 @@
 
 const mongoose = require("mongoose");
-const { Account } = require('../models/Account')
+const { Account } = require('../../models/Account')
 
 
-exports.handle_504 = async (req, res) => {
+module.exports = async (req, res) => {
 
     const msg = req.body.message
     const msg_parts = msg.split(',')
