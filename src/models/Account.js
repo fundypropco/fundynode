@@ -30,7 +30,7 @@ const accountSchema = new mongoose.Schema({
     },
     eqht: {
         // equity_high_time
-        type: String
+        type: Date
     },
     eql: {
         // equity_low
@@ -38,7 +38,7 @@ const accountSchema = new mongoose.Schema({
     },
     eqlt: {
         // equity_low_time
-        type: String
+        type: Date
     },
     bl: {
         // balance
@@ -50,7 +50,7 @@ const accountSchema = new mongoose.Schema({
     },
     blht: {
         // balance_high_time
-        type: String
+        type: Date
     },
     bll: {
         // balance_low
@@ -58,7 +58,7 @@ const accountSchema = new mongoose.Schema({
     },
     bllt: {
         // balance_low_time
-        type: String
+        type: Date
     },
     otc: {
         // open trade count
@@ -71,7 +71,7 @@ const accountSchema = new mongoose.Schema({
     profit: {
         type: Number
     },
-    time: {
+    timestamp: {
         // تایم استمپ بروکر در لحظه کپچر کردن دیتای حساب
         type: String
     },
@@ -86,12 +86,12 @@ const accountSchema = new mongoose.Schema({
         default: false
     },
     created_at: {
-        type: String,
+        type: Date,
         default: Date.now
     },
     updated_at: {
         // تایم استمپ لحظه رسیدن دیتا و بروزرسانی در نود
-        type: String,
+        type: Date,
         default: Date.now
     }
 });

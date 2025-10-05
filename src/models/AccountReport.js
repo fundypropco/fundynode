@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const accountReportSchema = new mongoose.Schema({
     date: {
-        type: String,
+        type: Date,
         required: true
     },
     acc: {
@@ -15,7 +15,7 @@ const accountReportSchema = new mongoose.Schema({
     },
     eqit: {
         // day initial equity time
-        type: String
+        type: Date
     },
     eqh: {
         // equity_high
@@ -23,7 +23,7 @@ const accountReportSchema = new mongoose.Schema({
     },
     eqht: {
         // equity_high_time
-        type: String
+        type: Date
     },
     eql: {
         // equity_low
@@ -31,7 +31,7 @@ const accountReportSchema = new mongoose.Schema({
     },
     eqlt: {
         // equity_low_time
-        type: String
+        type: Date
     },
     bli: {
         // day initial balance
@@ -39,7 +39,7 @@ const accountReportSchema = new mongoose.Schema({
     },
     blit: {
         // day initial balance time
-        type: String
+        type: Date
     },
     blh: {
         // balance_high
@@ -47,7 +47,7 @@ const accountReportSchema = new mongoose.Schema({
     },
     blht: {
         // balance_high_time
-        type: String
+        type: Date
     },
     bll: {
         // balance_low
@@ -55,7 +55,7 @@ const accountReportSchema = new mongoose.Schema({
     },
     bllt: {
         // balance_low_time
-        type: String
+        type: Date
     }
 });
 

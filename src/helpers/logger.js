@@ -12,7 +12,7 @@ function makeSeparatedStream(stream) {
     return {
         write(chunk) {
             stream.write(chunk);
-            stream.write('\n\n'); // خط خالی واقعی
+            stream.write('\n');
         }
     };
 }

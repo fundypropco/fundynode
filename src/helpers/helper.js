@@ -19,10 +19,10 @@ exports.makeID = function () {
     return Date.now() % 1_000_000_000
 }
 
-exports.getMqlError() = function (no) {
+exports.getMqlError = function (no) {
     switch (no) {
         case 0:
-            return 'ERR_NO_ERROR'
+            return 'SUCCESS'
         case 1:
             return 'ERR_NO_RESULT'
         case 2:

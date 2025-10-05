@@ -60,7 +60,7 @@ async function updateAccount(data) {
     account.profit = data.profit
     account.otc = data.otc
     account.htc = data.htc
-    account.time = data.timestamp
+    account.timestamp = data.timestamp
     account.updated_at = Date.now()
 
     if (data.bl > account.blh) {
