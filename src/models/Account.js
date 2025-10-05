@@ -7,58 +7,96 @@ const accountSchema = new mongoose.Schema({
         unique: true
     },
     initial: {
+        // by admin
+        type: Number
+    },
+    tddp: {
+        // total drawdown percent
+        // by admin
+        type: Number
+    },
+    tddv: {
+        // total drawdown value
+        // by admin
         type: Number
     },
     eq: {
+        // equity
         type: Number
     },
     eqh: {
+        // equity_high
         type: Number
     },
     eqht: {
-        type: Number
+        // equity_high_time
+        type: String
     },
     eql: {
+        // equity_low
         type: Number
     },
     eqlt: {
-        type: Number
+        // equity_low_time
+        type: String
     },
     bl: {
+        // balance
         type: Number
     },
     blh: {
+        // balance_high
         type: Number
     },
     blht: {
-        type: Number
+        // balance_high_time
+        type: String
     },
     bll: {
+        // balance_low
         type: Number
     },
     bllt: {
+        // balance_low_time
+        type: String
+    },
+    otc: {
+        // open trade count
         type: Number
     },
-    trade_count: {
+    htc: {
+        // history trade count
         type: Number
     },
-    history_count: {
+    profit: {
         type: Number
     },
     time: {
-        type: Number
+        // تایم استمپ بروکر در لحظه کپچر کردن دیتای حساب
+        type: String
+    },
+    copiers: {
+        Type: [String]
+    },
+    broker: {
+        type: String
+    },
+    copy: {
+        type: Boolean,
+        default: false
     },
     created_at: {
-        type: Number,
+        type: String,
         default: Date.now
     },
     updated_at: {
-        type: Number,
+        // تایم استمپ لحظه رسیدن دیتا و بروزرسانی در نود
+        type: String,
         default: Date.now
     }
 });
 
 
-const Account = mongoose.model('Account', accountSchema);
+const Account = mongoose.model('Account', accountSchema, 'accounts');
 
 exports.Account = Account

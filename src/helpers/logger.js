@@ -8,9 +8,18 @@ if (!fs.existsSync(logDir)) {
 }
 const logFilePath = path.join(logDir, 'app.log');
 
+function makeSeparatedStream(stream) {
+    return {
+        write(chunk) {
+            stream.write(chunk);
+            stream.write('\n\n'); // خط خالی واقعی
+        }
+    };
+}
+
 const streams = [
-    { stream: process.stdout },
-    { stream: fs.createWriteStream(logFilePath, { flags: 'a' }) }
+    { stream: makeSeparatedStream(process.stdout) },
+    { stream: makeSeparatedStream(fs.createWriteStream(logFilePath, { flags: 'a' })) }
 ];
 logger = pino({
     level: 'warn',

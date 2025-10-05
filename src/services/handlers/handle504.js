@@ -1,67 +1,133 @@
 
 const mongoose = require("mongoose");
+const { formatDateYMD } = require('../../helpers/helper')
 const { Account } = require('../../models/Account')
+const { AccountReport } = require('../../models/AccountReport')
 
 
 module.exports = async (req, res) => {
 
-    const msg = req.body.message
-    const msg_parts = msg.split(',')
-    const acc = msg_parts[0]
-    const timestamp = msg_parts[3]
-    const info = msg_parts[2]
-    const info_parts = info.split('&')
-    const bl = parseFloat(info_parts[1])
-    const eq = parseFloat(info_parts[2])
-    const profit = parseFloat(info_parts[3])
-    const trade_count = info_parts[4]
-    const history_count = info_parts[5]
+    const data = processMessage(req.body.message)
 
-    let account = await Account.findOne({ acc });
+    await updateAccount(data)
+    await updateAccountReport(data)
+
+    res.send({
+        status: 'success',
+    })
+}
+
+function processMessage(msg) {
+    const data = {};
+
+    // msg parts
+    const msg_parts = msg.split(',')
+    data.acc = msg_parts[0]
+    data.timestamp = msg_parts[3] * 1000
+    data.date = formatDateYMD(data.timestamp)
+    const info = msg_parts[2]
+
+    // msg info
+    const info_parts = info.split('&')
+    data.bl = parseFloat(info_parts[1])
+    data.eq = parseFloat(info_parts[2])
+    data.profit = parseFloat(info_parts[3])
+    data.otc = info_parts[4]
+    data.htc = info_parts[5]
+
+    return data
+}
+
+async function updateAccount(data) {
+    let account = await Account.findOne({ acc: data.acc });
 
     if (!account) {
         account = new Account({
-            acc,
-            eqh: eq,
-            eqht: Date.now(),
-            eql: eq,
-            eqlt: Date.now(),
-            blh: bl,
-            blht: Date.now(),
-            bll: bl,
-            bllt: Date.now(),
+            acc: data.acc,
+            eqh: data.eq,
+            eqht: data.timestamp,
+            eql: data.eq,
+            eqlt: data.timestamp,
+            blh: data.bl,
+            blht: data.timestamp,
+            bll: data.bl,
+            bllt: data.timestamp,
         })
     }
 
-    account.bl = bl
-    account.eq = eq
-    account.profit = profit
-    account.trade_count = trade_count
-    account.history_count = history_count
-    account.time = timestamp * 1000
+    account.bl = data.bl
+    account.eq = data.eq
+    account.profit = data.profit
+    account.otc = data.otc
+    account.htc = data.htc
+    account.time = data.timestamp
     account.updated_at = Date.now()
 
-    if (bl > account.blh) {
-        account.blh = bl
-        account.blht = Date.now()
+    if (data.bl > account.blh) {
+        account.blh = data.bl
+        account.blht = data.timestamp
     }
 
-    if (bl < account.bll) {
-        account.bll = bl
-        account.bllt = Date.now()
+    if (data.bl < account.bll) {
+        account.bll = data.bl
+        account.bllt = data.timestamp
     }
 
-    if (eq > account.eqh) {
-        account.eqh = eq
-        account.eqht = Date.now()
+    if (data.eq > account.eqh) {
+        account.eqh = data.eq
+        account.eqht = data.timestamp
     }
 
-    if (eq < account.eql) {
-        account.eql = eq
-        account.eqlt = Date.now()
+    if (data.eq < account.eql) {
+        account.eql = data.eq
+        account.eqlt = data.timestamp
     }
 
     await account.save()
+}
 
-    res.send(req.body)
+async function updateAccountReport(data) {
+    let accountReport = await AccountReport.findOne({ acc: data.acc, date: data.date });
+
+    if (!accountReport) {
+        accountReport = new AccountReport({
+            acc: data.acc,
+            date: data.date,
+            eqi: data.eq,
+            eqit: data.timestamp,
+            eqh: data.eq,
+            eqht: data.timestamp,
+            eql: data.eq,
+            eqlt: data.timestamp,
+            bli: data.bl,
+            blit: data.timestamp,
+            blh: data.bl,
+            blht: data.timestamp,
+            bll: data.bl,
+            bllt: data.timestamp,
+        })
+    }
+
+
+    if (data.bl > accountReport.blh) {
+        accountReport.blh = data.bl
+        accountReport.blht = data.timestamp
+    }
+
+    if (data.bl < accountReport.bll) {
+        accountReport.bll = data.bl
+        accountReport.bllt = data.timestamp
+    }
+
+    if (data.eq > accountReport.eqh) {
+        accountReport.eqh = data.eq
+        accountReport.eqht = data.timestamp
+    }
+
+    if (data.eq < accountReport.eql) {
+        accountReport.eql = data.eq
+        accountReport.eqlt = data.timestamp
+    }
+
+    await accountReport.save()
 }
