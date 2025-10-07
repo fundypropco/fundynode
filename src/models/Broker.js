@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose"
 
 const accountSchema = new mongoose.Schema({
     title: {
@@ -14,9 +14,9 @@ const accountSchema = new mongoose.Schema({
 
 const Broker = mongoose.model('Broker', accountSchema, 'brokers')
 
-exports.Broker = Broker
+export default Broker
 
-exports.syncBrokerIndexes = async function () {
+export async function syncBrokerIndexes() {
     try {
         await Broker.syncIndexes();
     } catch (err) {

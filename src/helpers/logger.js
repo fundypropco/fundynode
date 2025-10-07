@@ -1,6 +1,10 @@
-const pino = require("pino")
-const fs = require('fs');
-const path = require('path');
+import pino from 'pino';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const logDir = path.join(__dirname, '..', '..', 'logs');
 if (!fs.existsSync(logDir)) {
@@ -21,7 +25,7 @@ const streams = [
     { stream: makeSeparatedStream(process.stdout) },
     { stream: makeSeparatedStream(fs.createWriteStream(logFilePath, { flags: 'a' })) }
 ];
-logger = pino({
+const logger = pino({
     level: 'warn',
     base: null,
     formatters: {
@@ -33,4 +37,4 @@ logger = pino({
     }
 }, pino.multistream(streams));
 
-module.exports = logger;
+export default logger;

@@ -1,5 +1,5 @@
-const spiderRouter = require('./spider.js')
+import spiderRouter from './spider.js'
 
-module.exports = (app) => {
+export default (app) => {
     app.use('/api/spider', spiderRouter)
 }

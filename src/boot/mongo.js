@@ -1,8 +1,7 @@
-const mongoose = require('mongoose')
-const logger = require('../helpers/logger')
+import mongoose from 'mongoose'
+import logger from '../helpers/logger.js';
 
 const MONGO_URI = process.env.MONGO_URI
-
 
 const startMongoDB = () => {
     mongoose.connect(`${MONGO_URI}`)
@@ -10,4 +9,4 @@ const startMongoDB = () => {
         .catch(err => logger.error('Could Not Connect To MongoDB ...', err));
 }
 
-module.exports = startMongoDB
+export default startMongoDB

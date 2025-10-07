@@ -1,10 +1,10 @@
-const { Account } = require('../../models/Account')
-const { RequestLog } = require("../../models/RequestLog")
-const GetUpdateService = require("../../services/GetUpdateService")
-const { formatDateYMD, getCopyTradeParams, makeMsgForHandler, isOrderPossible } = require('../../helpers/helper')
-const { ACTION_HANDLER } = require('../../helpers/constant')
+import Account from '../../models/Account.js'
+import RequestLog from "../../models/RequestLog.js"
+import GetUpdateService from "../../services/GetUpdateService.js"
+import { formatDateYMD, getCopyTradeParams, makeMsgForHandler, isOrderPossible } from '../../helpers/helper.js'
+import { ACTION_HANDLER } from '../../helpers/constant.js'
 
-module.exports = async (req, res) => {
+export default async (req, res) => {
 
     const data = processMessage(req.body.message)
 

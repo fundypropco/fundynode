@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose"
 
 const requestLogSchema = new mongoose.Schema({
     type: {
@@ -15,9 +15,9 @@ const requestLogSchema = new mongoose.Schema({
 
 const RequestLog = mongoose.model('RequestLog', requestLogSchema, 'request_logs')
 
-exports.RequestLog = RequestLog
+export default RequestLog
 
-exports.syncRequestLogIndexes = async function () {
+export async function syncRequestLogIndexes() {
     try {
         await RequestLog.syncIndexes();
     } catch (err) {

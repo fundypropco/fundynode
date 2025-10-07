@@ -1,3 +1,3 @@
-const startMongoDB = require('./mongo')
+import startMongoDB from './mongo.js'
 
 startMongoDB()

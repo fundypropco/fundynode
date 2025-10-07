@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose"
 
 const copierSchema = new mongoose.Schema({
     acc: String,
@@ -110,9 +110,9 @@ const accountSchema = new mongoose.Schema({
 
 const Account = mongoose.model('Account', accountSchema, 'accounts');
 
-exports.Account = Account
+export default Account
 
-exports.syncAccountIndexes = async function () {
+export async function syncAccountIndexes() {
     try {
         await Account.syncIndexes();
     } catch (err) {

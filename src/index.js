@@ -1,17 +1,22 @@
-const express = require('express')
+import express from 'express'
+import './boot/index.js'
+import routes from './routes/index.js'
+import middlewares from './middlewares/index.js';
+import exception from './middlewares/exception.js';
+import notfound from './middlewares/404.js'
+
 const app = express()
 
-require('./boot')
-require('./middlewares')(app)
-require('./routes')(app)
-require('./middlewares/exception')(app)
-require('./middlewares/404')(app)
+middlewares(app)
+routes(app)
+exception(app)
+notfound(app)
 
-const { syncAccountIndexes } = require("./models/Account")
-const { syncAccountReportIndexes } = require("./models/AccountReport")
-const { syncBrokerIndexes } = require("./models/Broker")
-const { syncGetUpdateIndexes } = require("./models/GetUpdate")
-const { syncSymbolIndexes } = require("./models/Symbol")
+import { syncAccountIndexes } from "./models/Account.js"
+import { syncAccountReportIndexes } from "./models/AccountReport.js"
+import { syncBrokerIndexes } from "./models/Broker.js"
+import { syncGetUpdateIndexes } from "./models/GetUpdate.js"
+import { syncSymbolIndexes } from "./models/Symbol.js"
 
 
 // const schedule = require('./schedules/test')
@@ -29,4 +34,4 @@ const runApp = async (port) => {
     await syncSymbolIndexes()
 }
 
-module.exports = runApp
+export default runApp

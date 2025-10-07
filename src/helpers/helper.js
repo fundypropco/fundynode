@@ -1,7 +1,7 @@
-const { Broker } = require("../models/Broker")
-const { Symbol } = require("../models/Symbol")
+import Broker from "../models/Broker.js"
+import Symbol from "../models/Symbol.js"
 
-exports.getHandlerOfMsg = function (msg) {
+export function getHandlerOfMsg(msg) {
     if (!msg || typeof msg !== 'string') {
         throw new Error('Wrong Message Format !!!')
     }
@@ -9,7 +9,7 @@ exports.getHandlerOfMsg = function (msg) {
     return parts[1];
 }
 
-exports.makeMsgForHandler = function (handler, data) {
+export function makeMsgForHandler(handler, data) {
     let message = `${data.acc},${handler}`;
 
     // set rule
@@ -29,7 +29,7 @@ exports.makeMsgForHandler = function (handler, data) {
     return message
 }
 
-exports.formatDateYMD = function (timestamp) {
+export function formatDateYMD(timestamp) {
     const d = new Date(timestamp);
     const y = d.getFullYear();
     const m = d.getMonth() + 1;
@@ -37,11 +37,11 @@ exports.formatDateYMD = function (timestamp) {
     return `${y}-${m < 10 ? '0' + m : m}-${day < 10 ? '0' + day : day}`;
 }
 
-exports.makeID = function makeID() {
+export function makeID() {
     return Date.now() % 1_000_000_000
 }
 
-exports.getMqlError = function (no) {
+export function getMqlError(no) {
     switch (no) {
         case 0:
             return 'SUCCESS'
@@ -112,7 +112,7 @@ exports.getMqlError = function (no) {
     }
 }
 
-exports.getCopyTradeParams = async function (account, order, copier) {
+export async function getCopyTradeParams(account, order, copier) {
     const data = order;
 
     const broker_a = await Broker.findOne({ server: account.server });
@@ -140,7 +140,7 @@ exports.getCopyTradeParams = async function (account, order, copier) {
     data.sl = order.sl //todo: محاسبه شود بر اساس اختلاف اسپرد
     data.tp = order.tp //todo: محاسبه شود بر اساس اختلاف اسپرد
     data.slippage = 5 //todo: پرسیده شود اگر نیاز است محاسبه شود
-    data.keyid = exports.makeID()
+    data.keyid = makeID()
 
     data.brokerObj = broker_b
     data.symbolObj = symbol_b
@@ -148,6 +148,6 @@ exports.getCopyTradeParams = async function (account, order, copier) {
     return data
 }
 
-exports.isOrderPossible = function (orderData) {
+export function isOrderPossible(orderData) {
     return true //todo: بررسی مارجین و تایم و سایر محدودیت ها برای انجام سفارش
 }

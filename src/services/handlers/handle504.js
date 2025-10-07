@@ -1,9 +1,9 @@
 
-const { formatDateYMD } = require('../../helpers/helper')
-const { Account } = require('../../models/Account')
-const { AccountReport } = require('../../models/AccountReport')
+import { formatDateYMD } from '../../helpers/helper.js'
+import Account from '../../models/Account.js'
+import AccountReport from '../../models/AccountReport.js'
 
-module.exports = async (req, res) => {
+export default async (req, res) => {
 
     const data = processMessage(req.body.message)
 

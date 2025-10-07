@@ -1,8 +1,9 @@
-const express = require('express')
+import express from 'express'
+import spiderController from '../controllers/spider.js'
+
 const router = express.Router()
-const spiderController = require('../controllers/spider')
 
 router.get('/GetUpdates', spiderController.getUpdates)
 router.post('/SendMessage', spiderController.sendMessage)
 
-module.exports = router
+export default router

@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose"
 
 const accountSchema = new mongoose.Schema({
     acc: {
@@ -39,9 +39,9 @@ const accountSchema = new mongoose.Schema({
 
 const GetUpdate = mongoose.model('GetUpdate', accountSchema, 'get_updates')
 
-exports.GetUpdate = GetUpdate
+export default GetUpdate
 
-exports.syncGetUpdateIndexes = async function () {
+export async function syncGetUpdateIndexes() {
     try {
         await GetUpdate.syncIndexes();
     } catch (err) {

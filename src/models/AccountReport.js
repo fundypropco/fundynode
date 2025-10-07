@@ -1,4 +1,4 @@
-const mongoose = require("mongoose")
+import mongoose from "mongoose"
 
 const accountReportSchema = new mongoose.Schema({
     date: {
@@ -63,9 +63,9 @@ accountReportSchema.index({ acc: 1, date: 1 })
 
 const AccountReport = mongoose.model('AccountReport', accountReportSchema, 'account_reports')
 
-exports.AccountReport = AccountReport
+export default AccountReport
 
-exports.syncAccountReportIndexes = async function () {
+export async function syncAccountReportIndexes() {
     try {
         await AccountReport.syncIndexes();
     } catch (err) {

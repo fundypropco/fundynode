@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose"
 
 const symbolAliasSchema = new mongoose.Schema({
     title: {
@@ -13,9 +13,9 @@ const symbolAliasSchema = new mongoose.Schema({
 
 const SymbolAlias = mongoose.model('SymbolAlias', symbolAliasSchema, 'symbol_alias');
 
-exports.SymbolAlias = SymbolAlias
+export default SymbolAlias
 
-exports.syncSymbolAliasIndexes = async function () {
+export async function syncSymbolAliasIndexes() {
     try {
         await SymbolAlias.syncIndexes();
     } catch (err) {

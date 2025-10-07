@@ -33,4 +33,4 @@ async function startLoop(intervalMs = 10000) {
     }
 }
 
-module.exports = startLoop
+export default startLoop

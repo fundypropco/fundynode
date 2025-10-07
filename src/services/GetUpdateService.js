@@ -1,6 +1,6 @@
-const { GetUpdate } = require("../models/GetUpdate")
+import GetUpdate from "../models/GetUpdate.js"
 
-exports.create = async function (data) {
+const create = async (data) => {
     const getUpdate = new GetUpdate({
         acc: data.acc,
         handler: data.handler,
@@ -15,7 +15,7 @@ exports.create = async function (data) {
     return await getUpdate.save()
 }
 
-exports.getUnprocessed = async function () {
+const getUnprocessed = async () => {
     let results = await GetUpdate.find({
         $or: [
             { status: 'pending' },
@@ -32,4 +32,9 @@ exports.getUnprocessed = async function () {
         ok: true,
         result: finalResults
     }
+}
+
+export default {
+    create,
+    getUnprocessed
 }

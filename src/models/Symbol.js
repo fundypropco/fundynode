@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose"
 
 const symbolSchema = new mongoose.Schema({
     server: {
@@ -28,9 +28,9 @@ symbolSchema.index({ server: 1, symbol: 1 })
 
 const Symbol = mongoose.model('Symbol', symbolSchema, 'symbols')
 
-exports.Symbol = Symbol
+export default Symbol
 
-exports.syncSymbolIndexes = async function () {
+export async function syncSymbolIndexes() {
     try {
         await Symbol.syncIndexes();
     } catch (err) {

@@ -1,14 +1,14 @@
-const asyncHandler = require('../middlewares/asyncHandler')
-const { getHandlerOfMsg } = require('../helpers/helper')
-const GetUpdateService = require('../services/GetUpdateService')
-const handle504 = require('../services/handlers/handle504')
-const handle500 = require('../services/handlers/handle500')
+import asyncHandler from '../middlewares/asyncHandler.js'
+import { getHandlerOfMsg } from '../helpers/helper.js'
+import GetUpdateService from '../services/GetUpdateService.js'
+import handle504 from '../services/handlers/handle504.js'
+import handle500 from '../services/handlers/handle500.js'
 
-exports.getUpdates = asyncHandler(async (req, res) => {
+const getUpdates = asyncHandler(async (req, res) => {
     res.send(await GetUpdateService.getUnprocessed())
 })
 
-exports.sendMessage = asyncHandler(async (req, res) => {
+const sendMessage = asyncHandler(async (req, res) => {
 
     const handlerNo = getHandlerOfMsg(req.body.message)
 
@@ -21,3 +21,8 @@ exports.sendMessage = asyncHandler(async (req, res) => {
     }
 
 })
+
+export default {
+    getUpdates,
+    sendMessage
+}
