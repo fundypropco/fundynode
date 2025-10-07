@@ -1,5 +1,15 @@
 const mongoose = require("mongoose");
 
+const copierSchema = new mongoose.Schema({
+    acc: String,
+    server: String,
+    initial: Number,
+    vol: {
+        type: String,
+        enum: ['calc', 'exact']
+    }
+}, { _id: false })
+
 const accountSchema = new mongoose.Schema({
     acc: {
         type: String,
@@ -76,10 +86,12 @@ const accountSchema = new mongoose.Schema({
         type: String
     },
     copiers: {
-        Type: [String]
+        type: [copierSchema],
+        default: []
     },
-    broker: {
-        type: String
+    server: {
+        type: String,
+        default: ""
     },
     copy: {
         type: Boolean,
@@ -96,7 +108,14 @@ const accountSchema = new mongoose.Schema({
     }
 });
 
-
 const Account = mongoose.model('Account', accountSchema, 'accounts');
 
 exports.Account = Account
+
+exports.syncAccountIndexes = async function () {
+    try {
+        await Account.syncIndexes();
+    } catch (err) {
+        console.error("❌ Error syncing Symbol indexes:", err);
+    }
+}

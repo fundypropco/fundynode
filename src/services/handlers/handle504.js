@@ -1,9 +1,7 @@
 
-const mongoose = require("mongoose");
 const { formatDateYMD } = require('../../helpers/helper')
 const { Account } = require('../../models/Account')
 const { AccountReport } = require('../../models/AccountReport')
-
 
 module.exports = async (req, res) => {
 
@@ -39,6 +37,7 @@ function processMessage(msg) {
 }
 
 async function updateAccount(data) {
+    //todo:  بررسی اینکه اکانت کال شده است یا خیر و ارسال دستور بستن همه معاملات و غیرفعال کردن کپی روی آن حساب
     let account = await Account.findOne({ acc: data.acc });
 
     if (!account) {

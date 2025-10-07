@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require("mongoose")
 
 const accountReportSchema = new mongoose.Schema({
     date: {
@@ -57,10 +57,18 @@ const accountReportSchema = new mongoose.Schema({
         // balance_low_time
         type: Date
     }
-});
+})
 
-accountReportSchema.index({ acc: 1, date: 1 });
+accountReportSchema.index({ acc: 1, date: 1 })
 
-const AccountReport = mongoose.model('AccountReport', accountReportSchema, 'account_reports');
+const AccountReport = mongoose.model('AccountReport', accountReportSchema, 'account_reports')
 
 exports.AccountReport = AccountReport
+
+exports.syncAccountReportIndexes = async function () {
+    try {
+        await AccountReport.syncIndexes();
+    } catch (err) {
+        console.error("❌ Error syncing Symbol indexes:", err);
+    }
+}

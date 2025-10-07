@@ -1,10 +1,32 @@
+const { Broker } = require("../models/Broker")
+const { Symbol } = require("../models/Symbol")
 
-exports.getMsgHandle = function (msg) {
+exports.getHandlerOfMsg = function (msg) {
     if (!msg || typeof msg !== 'string') {
         throw new Error('Wrong Message Format !!!')
     }
     const parts = msg.split(',');
     return parts[1];
+}
+
+exports.makeMsgForHandler = function (handler, data) {
+    let message = `${data.acc},${handler}`;
+
+    // set rule
+    switch (handler) {
+        case 1:
+        case 2:
+            message += `,${data.symbol}&${data.vol}&${data.slippage}&${data.sl}&${data.tp}&${data.comment}&${data.magic}`
+            break;
+
+        case 3:
+            message += ''
+            break;
+    }
+
+    message += `,${Date.now()},${data.keyid}`
+
+    return message
 }
 
 exports.formatDateYMD = function (timestamp) {
@@ -15,7 +37,7 @@ exports.formatDateYMD = function (timestamp) {
     return `${y}-${m < 10 ? '0' + m : m}-${day < 10 ? '0' + day : day}`;
 }
 
-exports.makeID = function () {
+exports.makeID = function makeID() {
     return Date.now() % 1_000_000_000
 }
 
@@ -88,4 +110,44 @@ exports.getMqlError = function (no) {
         default:
             return 'ERR'
     }
+}
+
+exports.getCopyTradeParams = async function (account, order, copier) {
+    const data = order;
+
+    const broker_a = await Broker.findOne({ server: account.server });
+    const broker_b = await Broker.findOne({ server: copier.server });
+    const symbol_a = await Symbol.findOne({ server: broker_a.server, symbol: order.symbol });
+    const symbol_b = await Symbol.findOne({ server: broker_b.server, title: symbol_a.title });
+
+    data.acc = copier.acc
+    data.symbol = symbol_b.symbol
+    data.vol = (() => {
+        let vol = order.vol
+        if (copier.vol == 'exact') {
+            //todo: براساس اختلاف ارزش پیپ محاسبه شود
+        } else if (copier.vol == 'calc') {
+            let ratio = copier.initial / account.initial
+            vol = Math.floor(ratio * order.vol * 100) / 100
+        }
+
+        if (vol < 0.01) {
+            vol = 0.01 //todo: قرار دادن کمترین میزان مجاز برای این نماد در این بروکر یا 0 برای انصراف از کپی کردن ترید
+        }
+
+        return vol;
+    })(); //todo: محاسبه شود بر اساس اختلاف کانترکت و مدل کپی کردن اکانت
+    data.sl = order.sl //todo: محاسبه شود بر اساس اختلاف اسپرد
+    data.tp = order.tp //todo: محاسبه شود بر اساس اختلاف اسپرد
+    data.slippage = 5 //todo: پرسیده شود اگر نیاز است محاسبه شود
+    data.keyid = exports.makeID()
+
+    data.brokerObj = broker_b
+    data.symbolObj = symbol_b
+
+    return data
+}
+
+exports.isOrderPossible = function (orderData) {
+    return true //todo: بررسی مارجین و تایم و سایر محدودیت ها برای انجام سفارش
 }

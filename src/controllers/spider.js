@@ -1,24 +1,23 @@
 const asyncHandler = require('../middlewares/asyncHandler')
-const { getMsgHandle } = require('../helpers/helper')
+const { getHandlerOfMsg } = require('../helpers/helper')
+const GetUpdateService = require('../services/GetUpdateService')
 const handle504 = require('../services/handlers/handle504')
+const handle500 = require('../services/handlers/handle500')
 
-const getUpdates = asyncHandler(async (req, res) => {
-    // ...
+exports.getUpdates = asyncHandler(async (req, res) => {
+    res.send(await GetUpdateService.getUnprocessed())
 })
 
-const sendMessage = asyncHandler(async (req, res) => {
+exports.sendMessage = asyncHandler(async (req, res) => {
 
-    const handlerNo = getMsgHandle(req.body.message)
+    const handlerNo = getHandlerOfMsg(req.body.message)
 
     switch (handlerNo) {
         case "504":
             return await handle504(req, res)
+        case "500":
+            return await handle500(req, res)
 
     }
 
 })
-
-
-
-exports.getUpdates = getUpdates
-exports.sendMessage = sendMessage
