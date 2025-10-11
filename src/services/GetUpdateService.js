@@ -1,4 +1,5 @@
 import GetUpdate from "../models/GetUpdate.js"
+import { getMqlError } from "../helpers/helper.js"
 
 const create = async (data) => {
     const getUpdate = new GetUpdate({
@@ -9,10 +10,39 @@ const create = async (data) => {
         keyid: data.keyid,
         try_count: 0,
         status: data.status,
-        description: data.description
+        description: data.description,
+        origin: data.origin
     })
 
     return await getUpdate.save()
+}
+
+const updateStatus = async (data) => {
+    const update = {
+        $set: {
+            status: data.status,
+            updated_at: Date.now()
+        },
+        $inc: { try_count: 1 }
+    };
+
+    if (data.status != 'success') {
+        update.$push = { description: `${data.result_text} / ${getMqlError(data.result_code)}` };
+    }
+
+    const result = await GetUpdate.findOneAndUpdate({
+        acc: data.acc,
+        handler: data.handler,
+        keyid: data.keyid,
+        status: { $ne: 'success' }
+    },
+        update,
+        {
+            new: true,
+            upsert: false
+        }
+    )
+    return result
 }
 
 const getUnprocessed = async () => {
@@ -36,5 +66,6 @@ const getUnprocessed = async () => {
 
 export default {
     create,
+    updateStatus,
     getUnprocessed
 }

@@ -1,0 +1,66 @@
+import Account from '../../models/Account.js'
+import RequestLog from "../../models/RequestLog.js"
+import { formatDateYMD, getCopyTradeParams, makeMsgForHandler, isOrderPossible } from '../../helpers/helper.js'
+import GetUpdate from '../../models/GetUpdate.js'
+import GetUpdateService from '../GetUpdateService.js'
+import TradeTicket from '../../models/TradeTicket.js'
+
+export default async (req, res) => {
+
+    // 1. 
+    // پردازش دیتای ورودی
+    const data = processMessage(req.body.message)
+
+    // 2.
+    // بروزرسانی وضعیت دستور در صف دستورات
+    const getUpdateDoc = await GetUpdateService.updateStatus(data)
+
+    // 3.
+    // مپ کردن اکانت و تیکت های مرجع و کپی کننده 
+    const [originOrderAcc, OriginOrderTicket] = getUpdateDoc.origin.split(':')
+    const tradeTicket = new TradeTicket({
+        acc_src: originOrderAcc,
+        ticket_src: OriginOrderTicket,
+        acc_dist: data.acc,
+        ticket_dist: data.ticket
+    })
+    await tradeTicket.save()
+
+    // 4.
+    // لاگ گرفتن از رکوئست دریافتی
+    const requestLog = new RequestLog({
+        type: 'SendMessage',
+        message: req.body.message,
+        datetime: Date.now()
+    })
+    await requestLog.save()
+
+    // 5. 
+    // ارسال پاسخ عملیات موفقیت آمیز
+    res.send({
+        status: 'success',
+    })
+}
+
+function processMessage(msg) {
+    // E.g. 1006135456,999,OK OPEN BUY&324252360&0,1758983673,6
+    const data = {};
+
+    // msg parts
+    const msg_parts = msg.split(',')
+    data.acc = msg_parts[0]
+    data.handler = 1000 - parseInt(msg_parts[1])
+    data.timestamp = msg_parts[3] * 1000
+    data.date = formatDateYMD(data.timestamp)
+    data.keyid = msg_parts[4]
+    const info = msg_parts[2]
+
+    // msg info
+    const info_parts = info.split('&')
+    data.result_text = info_parts[0]
+    data.ticket = info_parts[1]
+    data.result_code = info_parts[2]
+    data.status = data.result_code == 0 ? 'success' : 'error'
+
+    return data
+}

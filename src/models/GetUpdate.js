@@ -1,6 +1,6 @@
 import mongoose from "mongoose"
 
-const accountSchema = new mongoose.Schema({
+const getUpdateSchema = new mongoose.Schema({
     acc: {
         type: String
     },
@@ -32,12 +32,22 @@ const accountSchema = new mongoose.Schema({
     description: {
         type: [String],
         default: []
+    },
+    origin: {
+        type: String
+    },
+    updated_at: {
+        type: Date,
+        default: Date.now
     }
 });
 
+
+getUpdateSchema.index({ acc: 1, handler: 1, keyid: 1 })
+
 // مواردی که در وضعیت خطا قرار دارند و هیچ تلاشی روی آنها صورت نگرفته به معنی خطا در سمت اپلیکیشن هستند
 
-const GetUpdate = mongoose.model('GetUpdate', accountSchema, 'get_updates')
+const GetUpdate = mongoose.model('GetUpdate', getUpdateSchema, 'get_updates')
 
 export default GetUpdate
 

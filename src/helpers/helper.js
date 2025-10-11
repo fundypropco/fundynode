@@ -14,12 +14,16 @@ export function makeMsgForHandler(handler, data) {
 
     // set rule
     switch (handler) {
-        case 1:
-        case 2:
+        case 1: // BUY
+        case 2: // SELL
+        case 5: // BUYLIMIT
+        case 6: // BUYSTOP
+        case 7: // SELLLIMIT
+        case 8: // SELLSTOP
             message += `,${data.symbol}&${data.vol}&${data.slippage}&${data.sl}&${data.tp}&${data.comment}&${data.magic}`
             break;
 
-        case 3:
+        case 3: //MODIFY
             message += ''
             break;
     }

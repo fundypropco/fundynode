@@ -1,8 +1,9 @@
 import asyncHandler from '../middlewares/asyncHandler.js'
 import { getHandlerOfMsg } from '../helpers/helper.js'
 import GetUpdateService from '../services/GetUpdateService.js'
-import handle504 from '../services/handlers/handle504.js'
-import handle500 from '../services/handlers/handle500.js'
+import handleNewData from '../services/handlers/HandleNewData.js'
+import handleNewOrder from '../services/handlers/HandleNewOrder.js'
+import handleResNewOrder from '../services/handlers/HandleResNewOrder.js'
 
 const getUpdates = asyncHandler(async (req, res) => {
     res.send(await GetUpdateService.getUnprocessed())
@@ -14,9 +15,16 @@ const sendMessage = asyncHandler(async (req, res) => {
 
     switch (handlerNo) {
         case "504":
-            return await handle504(req, res)
+            return await handleNewData(req, res)
         case "500":
-            return await handle500(req, res)
+            return await handleNewOrder(req, res)
+        case "999":
+        case "998":
+        case "995":
+        case "994":
+        case "993":
+        case "992":
+            return await handleResNewOrder(req, res)
 
     }
 

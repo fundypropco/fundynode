@@ -1,6 +1,6 @@
 import Account from '../../models/Account.js'
 import RequestLog from "../../models/RequestLog.js"
-import GetUpdateService from "../../services/GetUpdateService.js"
+import GetUpdateService from "../GetUpdateService.js"
 import { formatDateYMD, getCopyTradeParams, makeMsgForHandler, isOrderPossible } from '../../helpers/helper.js'
 import { ACTION_HANDLER } from '../../helpers/constant.js'
 
@@ -8,20 +8,26 @@ export default async (req, res) => {
 
     const data = processMessage(req.body.message)
 
+    // 1.
     // پیدا کردن اکانت مربوط به عملیات دریافتی
     const account = await Account.findOne({ acc: data.acc });
 
+    // 2.
     // بررسی اینکه آیا کپی ترید برای این اکانت فعال هست یا نه
     if (account.copy) {
+        // 3.
         // بدست آوردن اکانتهای کپی کننده
         for (const copier of account.copiers) {
+            // 4.
             // بدست آوردن پارامتر های سفارش کپی
             let copyTradeData = await getCopyTradeParams(account, data, copier)
 
+            // 5.
             // بررسی امکان اجرای سفارش کپی
             //todo: await کردن این بخش بعد از تکمیل
             copyTradeData.is_possible = isOrderPossible(copyTradeData)
 
+            // 6.
             // مقداردهی سایر پارامترها برای ثبت دستور اجرا سفارش
             copyTradeData.handler = ACTION_HANDLER[copyTradeData.type]
             copyTradeData.status = copyTradeData.is_possible && copyTradeData.vol ? 'pending' : 'error'
@@ -30,11 +36,15 @@ export default async (req, res) => {
                 !copyTradeData.is_possible ? "ORDER IS NOT POSSIBLE" : null,
                 !copyTradeData.vol ? "ORDER VOL IS NOT VALID" : null
             ].filter(Boolean)
+            copyTradeData.origin = `${account.acc}:${data.ticket}`
+
+            // 7.
             // ثبت دستور اجرای سفارش
             await GetUpdateService.create(copyTradeData)
         }
     }
 
+    // 8.
     // لاگ گرفتن از رکوئست دریافتی
     const requestLog = new RequestLog({
         type: 'SendMessage',
