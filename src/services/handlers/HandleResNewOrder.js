@@ -1,5 +1,5 @@
 import RequestLog from "../../models/RequestLog.js"
-import { formatDateYMD, getCopyTradeParams, makeMsgForHandler, isOrderPossible } from '../../helpers/helper.js'
+import { formatDateYMD } from '../../helpers/helper.js'
 import GetUpdateService from '../GetUpdateService.js'
 import TradeTicket from '../../models/TradeTicket.js'
 
@@ -13,20 +13,20 @@ export default async (req, res) => {
     // بروزرسانی وضعیت دستور در صف دستورات
     const getUpdateDoc = await GetUpdateService.updateStatus(data)
 
-    // 3.
-    // مپ کردن اکانت و تیکت های مرجع و کپی کننده 
-    const [originOrderAcc, originOrderTicket] = getUpdateDoc.origin.split(':')
-    const tradeTicket = new TradeTicket({
-        acc_src: originOrderAcc,
-        ticket_src: originOrderTicket,
-        acc_dist: data.acc,
-        ticket_dist: data.ticket
-    })
-    await tradeTicket.save()
-
-    // 4.
-    // ارسال دستورات در وضعیت انتظار و وابسته به این دیتا
     if (getUpdateDoc.status == 'success') {
+        // 3.
+        // مپ کردن اکانت و تیکت های مرجع و کپی کننده 
+        const [originOrderAcc, originOrderTicket] = getUpdateDoc.origin.split(':')
+        const tradeTicket = new TradeTicket({
+            acc_src: originOrderAcc,
+            ticket_src: originOrderTicket,
+            acc_dist: data.acc,
+            ticket_dist: data.ticket
+        })
+        await tradeTicket.save()
+
+        // 4.
+        // ارسال دستورات در وضعیت انتظار و وابسته به این دیتا
         await GetUpdateService.updateWaitings(getUpdateDoc.origin, data.ticket)
     }
 
