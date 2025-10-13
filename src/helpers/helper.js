@@ -1,5 +1,7 @@
 import Broker from "../models/Broker.js"
 import Symbol from "../models/Symbol.js"
+import redis from "../boot/redis.js"
+import { ACTION_HANDLER } from './constant.js'
 
 export function getHandlerOfMsg(msg) {
     if (!msg || typeof msg !== 'string') {
@@ -9,8 +11,36 @@ export function getHandlerOfMsg(msg) {
     return parts[1];
 }
 
+async function getMqlClusterNo(handler, acc, max = 3) {
+
+    handler = Number(handler)
+
+    const clustringHandlers = [
+        ACTION_HANDLER.BUY,
+        ACTION_HANDLER.SELL,
+        ACTION_HANDLER.BUYLIMIT,
+        ACTION_HANDLER.BUYSTOP,
+        ACTION_HANDLER.SELLLIMIT,
+        ACTION_HANDLER.SELLSTOP,
+        ACTION_HANDLER.CLOSE,
+        ACTION_HANDLER.MODIFY,
+    ]
+
+    if (clustringHandlers.includes(handler)) {
+        let c = await redis.incr("spider_" + acc);
+        if (c > max) {
+            await redis.set("spider_" + acc, 1);
+            c = 1;
+        }
+        return c;
+    } else {
+        return 1
+    }
+}
+
 export function makeMsgForHandler(handler, data) {
-    let message = `${data.acc},${handler}`;
+    let mql_cluster_no = getMqlClusterNo(handler, data.acc)
+    let message = `${data.acc}_${mql_cluster_no},${handler}`;
 
     // set rule
     switch (handler) {
@@ -24,11 +54,11 @@ export function makeMsgForHandler(handler, data) {
             break;
 
         case 3: //MODIFY
-            message += ''
+            message += `,${data.ticket}&${data.entry}&${data.sl}&${data.tp}`
             break;
     }
 
-    message += `,${Date.now()},${data.keyid}`
+    message += `,${Math.floor(Date.now() / 1000)},${data.keyid}`
 
     return message
 }
@@ -144,7 +174,6 @@ export async function getCopyTradeParams(account, order, copier) {
     data.sl = order.sl //todo: محاسبه شود بر اساس اختلاف اسپرد
     data.tp = order.tp //todo: محاسبه شود بر اساس اختلاف اسپرد
     data.slippage = 5 //todo: پرسیده شود اگر نیاز است محاسبه شود
-    data.keyid = makeID()
 
     data.brokerObj = broker_b
     data.symbolObj = symbol_b

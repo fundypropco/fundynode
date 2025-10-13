@@ -1,7 +1,5 @@
-import Account from '../../models/Account.js'
 import RequestLog from "../../models/RequestLog.js"
 import { formatDateYMD, getCopyTradeParams, makeMsgForHandler, isOrderPossible } from '../../helpers/helper.js'
-import GetUpdate from '../../models/GetUpdate.js'
 import GetUpdateService from '../GetUpdateService.js'
 import TradeTicket from '../../models/TradeTicket.js'
 
@@ -17,25 +15,31 @@ export default async (req, res) => {
 
     // 3.
     // مپ کردن اکانت و تیکت های مرجع و کپی کننده 
-    const [originOrderAcc, OriginOrderTicket] = getUpdateDoc.origin.split(':')
+    const [originOrderAcc, originOrderTicket] = getUpdateDoc.origin.split(':')
     const tradeTicket = new TradeTicket({
         acc_src: originOrderAcc,
-        ticket_src: OriginOrderTicket,
+        ticket_src: originOrderTicket,
         acc_dist: data.acc,
         ticket_dist: data.ticket
     })
     await tradeTicket.save()
 
     // 4.
+    // ارسال دستورات در وضعیت انتظار و وابسته به این دیتا
+    if (getUpdateDoc.status == 'success') {
+        await GetUpdateService.updateWaitings(getUpdateDoc.origin, data.ticket)
+    }
+
+    // 5.
     // لاگ گرفتن از رکوئست دریافتی
     const requestLog = new RequestLog({
-        type: 'SendMessage',
+        type: 'GetUpdateResponse',
         message: req.body.message,
         datetime: Date.now()
     })
     await requestLog.save()
 
-    // 5. 
+    // 6. 
     // ارسال پاسخ عملیات موفقیت آمیز
     res.send({
         status: 'success',
@@ -43,7 +47,9 @@ export default async (req, res) => {
 }
 
 function processMessage(msg) {
-    // E.g. 1006135456,999,OK OPEN BUY&324252360&0,1758983673,6
+    // E.g. 
+    // 1006135456,999,OK OPEN BUY&324252360&0,1758983673,6
+    // acc,999,OK OPEN BUY&ticket&result_code,timestamp,keyid
     const data = {};
 
     // msg parts

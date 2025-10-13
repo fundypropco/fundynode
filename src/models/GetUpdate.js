@@ -12,11 +12,11 @@ const getUpdateSchema = new mongoose.Schema({
     },
     datetime: {
         type: Date,
+        default: Date.now,
         index: true
     },
     keyid: {
         type: Number,
-        index: true
     },
     try_count: {
         type: Number,
@@ -25,7 +25,7 @@ const getUpdateSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['pending', 'success', 'error'],
+        enum: ['pending', 'success', 'error', 'internal_error', 'waiting'],
         index: true,
         default: 'pending'
     },
@@ -34,7 +34,8 @@ const getUpdateSchema = new mongoose.Schema({
         default: []
     },
     origin: {
-        type: String
+        type: String,
+        index: true
     },
     updated_at: {
         type: Date,
@@ -44,8 +45,6 @@ const getUpdateSchema = new mongoose.Schema({
 
 
 getUpdateSchema.index({ acc: 1, handler: 1, keyid: 1 })
-
-// مواردی که در وضعیت خطا قرار دارند و هیچ تلاشی روی آنها صورت نگرفته به معنی خطا در سمت اپلیکیشن هستند
 
 const GetUpdate = mongoose.model('GetUpdate', getUpdateSchema, 'get_updates')
 

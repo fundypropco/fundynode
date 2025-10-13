@@ -35,14 +35,24 @@ const updateStatus = async (data) => {
         handler: data.handler,
         keyid: data.keyid,
         status: { $ne: 'success' }
-    },
-        update,
-        {
-            new: true,
-            upsert: false
-        }
+    }, update, {
+        new: true,
+        upsert: false
+    }
     )
+
     return result
+}
+
+const updateWaitings = async (origin, ticket) => {
+    // همه داکیومنتهای مربوط به آپدیتهای متاتریدر را که در وضعیت انتظار قرار دارند و منشا مشترکی با این سفارش دارند را پیدا میکنیم
+    // وضعیت آنها را به وضعیت اجرا تغییر داده و همچنین تیکت آنها را تکمیل میکنیم
+    const waitingDocs = await GetUpdate.find({ status: 'waiting', origin: origin })
+    for (const waitingDoc of waitingDocs) {
+        waitingDoc.status = 'pending'
+        waitingDoc.message = waitingDoc.message.replace('?ticket?', ticket)
+        await waitingDoc.save()
+    }
 }
 
 const getUnprocessed = async () => {
@@ -67,5 +77,6 @@ const getUnprocessed = async () => {
 export default {
     create,
     updateStatus,
+    updateWaitings,
     getUnprocessed
 }

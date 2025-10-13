@@ -16,6 +16,8 @@ const sendMessage = asyncHandler(async (req, res) => {
     switch (handlerNo) {
         case "504":
             return await handleNewData(req, res)
+        case "503":
+            return await handleChangeEnterPrice(req, res)
         case "500":
             return await handleNewOrder(req, res)
         case "999":

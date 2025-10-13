@@ -11,10 +11,13 @@ services:
       - APP_PORT=3000
       - NODE_ENV=production
       - MONGO_URI=mongodb://mongo:27017/fundynode
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
     volumes:
       - ./logs:/app/logs
     depends_on:
       - mongo
+      - redis
     command: node app.js
 
   mongo:
@@ -22,9 +25,16 @@ services:
     container_name: my-mongo
     restart: always
     ports:
-      - "27117:27017"
+      - "27017:27017"
     volumes:
       - mongo-data:/data/db
+
+  redis:
+    image: redis:8
+    container_name: my-redis
+    ports:
+      - "6379:6379"
+    restart: always
 
 volumes:
   mongo-data:
