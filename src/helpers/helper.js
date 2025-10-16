@@ -24,6 +24,8 @@ async function getMqlClusterNo(handler, acc, max = 3) {
         ACTION_HANDLER.SELLSTOP,
         ACTION_HANDLER.CLOSE,
         ACTION_HANDLER.MODIFY,
+        ACTION_HANDLER.PARTIAL_CLOSE,
+        ACTION_HANDLER.BULK_CLOSE,
     ]
 
     if (clustringHandlers.includes(handler)) {
@@ -38,8 +40,8 @@ async function getMqlClusterNo(handler, acc, max = 3) {
     }
 }
 
-export function makeMsgForHandler(handler, data) {
-    let mql_cluster_no = getMqlClusterNo(handler, data.acc)
+export async function makeMsgForHandler(handler, data) {
+    let mql_cluster_no = await getMqlClusterNo(handler, data.acc)
     let message = `${data.acc}_${mql_cluster_no},${handler}`;
 
     // set rule
@@ -59,6 +61,10 @@ export function makeMsgForHandler(handler, data) {
 
         case 4: // CLOSE
             message += `,${data.ticket}&${data.vol}&${data.close_price}&${data.slippage}`
+            break;
+
+        case 13: // CLOSE
+            message += `,0`
             break;
     }
 
@@ -198,4 +204,17 @@ export function getOrderVol(accountObj, copierObj, originSymbol, originVol) {
 
 export function isOrderPossible(orderData) {
     return true //todo: بررسی مارجین و تایم و سایر محدودیت ها برای انجام سفارش
+}
+
+export function normalizeSymbol(symbol) {
+
+    symbol = symbol.trim();
+
+    // __EURUSD.i--" → "EURUSD.i"
+    symbol = symbol.replace(/^[^A-Za-z0-9]+|[^A-Za-z0-9]+$/g, '');
+
+    // EURUSD.i → EURUSD
+    // EURUSD_o → EURUSD
+    // EURUSD.pe → EURUSD
+    return symbol.replace(/[^A-Za-z0-9]+.*/i, '');
 }

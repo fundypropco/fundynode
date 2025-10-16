@@ -7,7 +7,8 @@ const symbolAliasSchema = new mongoose.Schema({
         unique: true
     },
     alias: {
-        type: [String]
+        type: [String],
+        default: []
     }
 });
 

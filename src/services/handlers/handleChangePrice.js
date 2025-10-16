@@ -44,12 +44,12 @@ export default async (req, res) => {
 
                 if (copierOrder) {
                     copyTradeData.ticket = copierOrder.ticket_dist
-                    copyTradeData.message = makeMsgForHandler(copyTradeData.handler, copyTradeData)
+                    copyTradeData.message = await makeMsgForHandler(copyTradeData.handler, copyTradeData)
                     copyTradeData.status = 'pending'
                     await GetUpdateService.create(copyTradeData)
                 } else {
                     copyTradeData.ticket = '?ticket?'
-                    copyTradeData.message = makeMsgForHandler(copyTradeData.handler, copyTradeData)
+                    copyTradeData.message = await makeMsgForHandler(copyTradeData.handler, copyTradeData)
                     copyTradeData.status = 'waiting'
                     await GetUpdateService.create(copyTradeData)
                 }

@@ -59,7 +59,7 @@ export default async (req, res) => {
             // مقداردهی سایر پارامترها برای ثبت دستور اجرا سفارش
             copyTradeData.handler = ACTION_HANDLER[copyTradeData.type]
             copyTradeData.status = copyTradeData.is_possible && copyTradeData.vol ? 'pending' : 'internal_error'
-            copyTradeData.message = makeMsgForHandler(copyTradeData.handler, copyTradeData)
+            copyTradeData.message = await makeMsgForHandler(copyTradeData.handler, copyTradeData)
             copyTradeData.description = [
                 !copyTradeData.is_possible ? "ORDER IS NOT POSSIBLE" : null,
                 !copyTradeData.vol ? "ORDER VOL IS NOT VALID" : null

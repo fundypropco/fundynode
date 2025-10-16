@@ -31,7 +31,7 @@ export default async (req, res) => {
             const copierOrder = tickets.find(t => t.acc_dist == copier.acc)
 
             copyTradeData.acc = copier.acc
-            copyTradeData.handler = ACTION_HANDLER.PARTIALCLOSE
+            copyTradeData.handler = ACTION_HANDLER.PARTIAL_CLOSE
             copyTradeData.keyid = makeID()
             copyTradeData.origin_acc = account.acc
             copyTradeData.origin_ticket = data.close_ticket
@@ -41,12 +41,12 @@ export default async (req, res) => {
 
             if (copierOrder) {
                 copyTradeData.ticket = copierOrder.ticket_dist
-                copyTradeData.message = makeMsgForHandler(copyTradeData.handler, copyTradeData)
+                copyTradeData.message = await makeMsgForHandler(copyTradeData.handler, copyTradeData)
                 copyTradeData.status = 'pending'
                 await GetUpdateService.create(copyTradeData)
             } else {
                 copyTradeData.ticket = '?ticket?'
-                copyTradeData.message = makeMsgForHandler(copyTradeData.handler, copyTradeData)
+                copyTradeData.message = await makeMsgForHandler(copyTradeData.handler, copyTradeData)
                 copyTradeData.status = 'waiting'
                 await GetUpdateService.create(copyTradeData)
             }

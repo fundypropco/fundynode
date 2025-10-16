@@ -7,8 +7,9 @@ const ACTION_HANDLER = {
     BUYSTOP: 6,
     SELLLIMIT: 7,
     SELLSTOP: 8,
-    BULKCLOSE: 21,
-    PARTIALCLOSE: 22,
+    BULK_CLOSE: 21,
+    PARTIAL_CLOSE: 22,
+    BROKER_SYMBOLS: 13,
 }
 
 export {

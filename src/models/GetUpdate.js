@@ -8,6 +8,10 @@ const getUpdateSchema = new mongoose.Schema({
         type: String,
         default: ''
     },
+    server: {
+        type: String,
+        default: '',
+    },
     handler: {
         type: Number
     },
