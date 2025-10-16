@@ -53,8 +53,12 @@ export function makeMsgForHandler(handler, data) {
             message += `,${data.symbol}&${data.vol}&${data.slippage}&${data.sl}&${data.tp}&${data.comment}&${data.magic}`
             break;
 
-        case 3: //MODIFY
+        case 3: // MODIFY
             message += `,${data.ticket}&${data.entry}&${data.sl}&${data.tp}`
+            break;
+
+        case 4: // CLOSE
+            message += `,${data.ticket}&${data.vol}&${data.close_price}&${data.slippage}`
             break;
     }
 
@@ -179,6 +183,17 @@ export async function getCopyTradeParams(account, order, copier) {
     data.symbolObj = symbol_b
 
     return data
+}
+
+export function getOrderVol(accountObj, copierObj, originSymbol, originVol) {
+    let finalVol = originVol
+    if (copier.vol == 'exact') {
+        //todo: براساس اختلاف ارزش پیپ محاسبه شود
+    } else if (copier.vol == 'calc') {
+        let ratio = copier.initial / account.initial
+        finalVol = Math.floor(ratio * originVol * 100) / 100
+    }
+    return finalVol
 }
 
 export function isOrderPossible(orderData) {

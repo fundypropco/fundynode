@@ -64,7 +64,10 @@ export default async (req, res) => {
                 !copyTradeData.is_possible ? "ORDER IS NOT POSSIBLE" : null,
                 !copyTradeData.vol ? "ORDER VOL IS NOT VALID" : null
             ].filter(Boolean)
-            copyTradeData.origin = `${account.acc}:${data.ticket}`
+            copyTradeData.origin_acc = account.acc
+            copyTradeData.origin_ticket = data.ticket
+            copyTradeData.ticket = ''
+            copyTradeData.origin_new_ticket = ''
             copyTradeData.keyid = keyid++
 
             // 9.
@@ -90,7 +93,7 @@ export default async (req, res) => {
 function processMessage(msg) {
     //E.g. 
     // 1006135456,500,NEW ORDER&324253368&BTCUSD&BUY&0.01&109245.51000&2025.09.27 18:05:14&0.00000&0.00000&-1.31000&0&,1758998114,-1
-    // acc,500,NEW ORDER&ticket&symbol&type&vol&openprice&opentime&sl&tp&commission&magic&comment,timestamp,-1
+    // acc , 500 , NEW ORDER & ticket & symbol & type & vol & open_price & open_time & sl & tp & commission & magic & comment , timestamp , -1
     const data = {};
 
     // msg parts

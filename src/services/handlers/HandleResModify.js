@@ -31,7 +31,7 @@ export default async (req, res) => {
 function processMessage(msg) {
     // E.g. 
     // 1006135456,997,OK MODIFY&324252647&0,1758987838,7
-    // acc,997,OK MODIFY&ticket&result_code,timestamp,keyid
+    // acc , 997 , OK MODIFY & ticket & result_code , timestamp , keyid
     const data = {};
 
     // msg parts

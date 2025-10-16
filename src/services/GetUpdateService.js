@@ -4,6 +4,7 @@ import { getMqlError } from "../helpers/helper.js"
 const create = async (data) => {
     const getUpdate = new GetUpdate({
         acc: data.acc,
+        ticket: data.ticket,
         handler: data.handler,
         message: data.message,
         datetime: Date.now(),
@@ -11,7 +12,9 @@ const create = async (data) => {
         try_count: 0,
         status: data.status,
         description: data.description,
-        origin: data.origin
+        origin_acc: data.origin_acc,
+        origin_ticket: data.origin_ticket,
+        origin_new_ticket: data.origin_new_ticket
     })
 
     return await getUpdate.save()
@@ -38,16 +41,15 @@ const updateStatus = async (data) => {
     }, update, {
         new: true,
         upsert: false
-    }
-    )
+    })
 
     return result
 }
 
-const updateWaitings = async (origin, ticket) => {
+const updateWaitings = async (origin_acc, origin_ticket, ticket) => {
     // همه داکیومنتهای مربوط به آپدیتهای متاتریدر را که در وضعیت انتظار قرار دارند و منشا مشترکی با این سفارش دارند را پیدا میکنیم
     // وضعیت آنها را به وضعیت اجرا تغییر داده و همچنین تیکت آنها را تکمیل میکنیم
-    const waitingDocs = await GetUpdate.find({ status: 'waiting', origin: origin })
+    const waitingDocs = await GetUpdate.find({ status: 'waiting', origin_acc: origin_acc, origin_ticket: origin_ticket })
     for (const waitingDoc of waitingDocs) {
         waitingDoc.status = 'pending'
         waitingDoc.message = waitingDoc.message.replace('?ticket?', ticket)
@@ -65,7 +67,8 @@ const getUnprocessed = async () => {
 
     const finalResults = results.map(doc => ({
         update_id: doc.keyid,
-        message: `${doc.acc},${doc.handler},${doc.message},${Math.floor(doc.datetime.getTime() / 1000)},${doc.keyid}`
+        message: doc.message
+        //message: `${doc.acc},${doc.handler},${doc.message},${Math.floor(doc.datetime.getTime() / 1000)},${doc.keyid}`
     }))
 
     return {

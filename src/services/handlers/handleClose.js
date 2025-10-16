@@ -33,10 +33,14 @@ export default async (req, res) => {
                 const copierOrder = tickets.find(t => t.acc_dist == copier.acc)
 
                 copyTradeData.acc = copier.acc
-                copyTradeData.handler = ACTION_HANDLER.MODIFY
+                copyTradeData.handler = ACTION_HANDLER.CLOSE
                 copyTradeData.keyid = keyid++
-                copyTradeData.origin = `${account.acc}:${order.ticket}`
+                copyTradeData.origin_acc = account.acc
+                copyTradeData.origin_ticket = order.ticket
                 copyTradeData.description = []
+                copyTradeData.close_price = order.close_price
+                copyTradeData.slippage = 5 // todo: مشورت در مورد این پارامتر که بعدا دردسر نشه
+                copyTradeData.vol = order.vol // todo: حذف این پارامتر چون فرمالیته هست در هندل 4
 
                 if (copierOrder) {
                     copyTradeData.ticket = copierOrder.ticket_dist
@@ -52,7 +56,6 @@ export default async (req, res) => {
             }
         }
     }
-
 
     // 6.
     // لاگ گرفتن از رکوئست دریافتی
@@ -70,8 +73,8 @@ export default async (req, res) => {
 
 function processMessage(msg) {
     // E.g. 
-    // 1006135456,503,CHANGE ENTER PRICE&324253422&127584.33@324253422&127584.33,1758999138,-1
-    // acc,503,CHANGE ENTER PRICE&ticket&entry&sl&tp@ticket&entry&sl&tp,timestamp,-1
+    // 1006135456,501,NEW CLOSE&324253369&115608&2025-10-14 15:23:40&1@324253369&115608&2025-10-14 15:23:40&1,1758998127,-1
+    // acc , 501 , NEW CLOSE & ticket & close-price & close-time & vol @ ticket & close-price & close-time & vol , timestamp, -1
     const data = {};
 
     // msg parts
@@ -86,7 +89,7 @@ function processMessage(msg) {
     info = info.replace(/^[^&]*&/, "")
     data.items = info.split("@")
         .map(part => part.split("&"))
-        .map(([ticket, entry, sl, tp]) => ({ ticket, entry, sl, tp }))
+        .map(([ticket, close_price, close_time, vol]) => ({ ticket, close_price, close_time, vol }))
 
     return data
 }

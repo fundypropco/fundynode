@@ -16,7 +16,8 @@ export default async (req, res) => {
     if (getUpdateDoc.status == 'success') {
         // 3.
         // مپ کردن اکانت و تیکت های مرجع و کپی کننده 
-        const [originOrderAcc, originOrderTicket] = getUpdateDoc.origin.split(':')
+        const originOrderAcc = getUpdateDoc.origin_acc
+        const originOrderTicket = getUpdateDoc.origin_ticket
         const tradeTicket = new TradeTicket({
             acc_src: originOrderAcc,
             ticket_src: originOrderTicket,
@@ -27,7 +28,7 @@ export default async (req, res) => {
 
         // 4.
         // ارسال دستورات در وضعیت انتظار و وابسته به این دیتا
-        await GetUpdateService.updateWaitings(getUpdateDoc.origin, data.ticket)
+        await GetUpdateService.updateWaitings(originOrderAcc, originOrderTicket, data.ticket)
     }
 
     // 5.
@@ -49,7 +50,7 @@ export default async (req, res) => {
 function processMessage(msg) {
     // E.g. 
     // 1006135456,999,OK OPEN BUY&324252360&0,1758983673,6
-    // acc,999,OK OPEN BUY&ticket&result_code,timestamp,keyid
+    // acc , 999 , OK OPEN BUY & ticket & result_code , timestamp , keyid
     const data = {};
 
     // msg parts
