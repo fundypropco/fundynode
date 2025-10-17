@@ -3,10 +3,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.prod
-    container_name: fundy-node-prod
+    container_name: fundynode
     restart: always
     ports:
-      - "5001:3000"
+      - "3000:3000"
     environment:
       - APP_PORT=3000
       - NODE_ENV=production
@@ -18,7 +18,20 @@ services:
     depends_on:
       - mongo
       - redis
-    command: node app.js
+    command: pm2-runtime ecosystem.config.js
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
 
   mongo:
     image: mongo:8
