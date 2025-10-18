@@ -1,5 +1,51 @@
+logs/*
+
+# ----------------------------
+# Node.js general ignores
+# ----------------------------
 node_modules
-npm-debug.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 .DS_Store
-.vscode
+
+
+# ----------------------------
+# Environment and secrets
+# ----------------------------
+.env
+.env.local
+.env.*.local
+
+# ----------------------------
+# Git and editor stuff
+# ----------------------------
 .git
+.gitignore
+.idea
+.vscode
+*.swp
+
+# ----------------------------
+# Build outputs
+# ----------------------------
+dist
+build
+coverage
+
+# ----------------------------
+# Runtime / app data
+# ----------------------------
+logs
+mongo-data
+redis-data
+uploads
+tmp
+.cache
+
+# ----------------------------
+# Docker internal
+# ----------------------------
+Dockerfile*
+docker-compose*
