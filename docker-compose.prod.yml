@@ -18,7 +18,7 @@ services:
     depends_on:
       - mongo
       - redis
-    command: pm2-runtime ecosystem.config.js
+    command: pm2-runtime ecosystem.config.cjs
 
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
