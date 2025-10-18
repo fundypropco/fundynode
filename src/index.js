@@ -13,11 +13,7 @@ routes(app)
 exception(app)
 notfound(app)
 
-import { syncAccountIndexes } from "./models/Account.js"
-import { syncAccountReportIndexes } from "./models/AccountReport.js"
-import { syncBrokerIndexes } from "./models/Broker.js"
-import { syncGetUpdateIndexes } from "./models/GetUpdate.js"
-import { syncSymbolIndexes } from "./models/Symbol.js"
+
 
 // const schedule = require('./schedules/test')
 // require('./schedules/cron')
@@ -27,11 +23,7 @@ const runApp = async (port) => {
         console.log(`app is running on port: ${port}`)
     })
 
-    await syncAccountIndexes()
-    await syncAccountReportIndexes()
-    await syncBrokerIndexes()
-    await syncGetUpdateIndexes()
-    await syncSymbolIndexes()
+
 }
 
 export default runApp

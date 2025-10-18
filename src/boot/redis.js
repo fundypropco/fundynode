@@ -2,7 +2,7 @@ import Redis from "ioredis";
 
 let redis = null;
 
-export default function startRedis() {
+export default async function startRedis() {
     if (redis) return redis;
 
     redis = new Redis({
@@ -14,6 +14,11 @@ export default function startRedis() {
     redis.on("ready", () => console.log("✅ Redis ready to use"));
     redis.on("error", (err) => console.error("❌ Redis error:", err));
     redis.on("end", () => console.log("🔴 Redis connection closed"));
+
+    await new Promise((resolve, reject) => {
+        redis.once("ready", resolve);
+        redis.once("error", reject);
+    });
 
     return redis;
 }
