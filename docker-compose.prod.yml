@@ -10,14 +10,16 @@ services:
     environment:
       - APP_PORT=3000
       - NODE_ENV=production
-      - MONGO_URI=mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongo:27017/${MONGO_INITDB_DATABASE}?authSource=admin
+      - MONGO_URI=mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@my-mongo:27017/${MONGO_INITDB_DATABASE}?authSource=admin
       - REDIS_HOST=redis
       - REDIS_PORT=6379
     volumes:
       - ./logs:/app/logs
     depends_on:
-      - mongo
-      - redis
+      my-mongo:
+        condition: service_healthy
+      my-redis:
+        condition: service_healthy
     command: pm2-runtime ecosystem.config.cjs
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/healthcheck"]
@@ -41,6 +43,7 @@ services:
       - MONGO_INITDB_DATABASE=${MONGO_INITDB_DATABASE}
     volumes:
       - ./mongo-data:/data/db
+      - ./mongo-bkp:/backup
     healthcheck:
       test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
       interval: 30s

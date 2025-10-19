@@ -40,6 +40,7 @@ coverage
 logs
 mongo-data
 redis-data
+mongo-bkp
 uploads
 tmp
 .cache
