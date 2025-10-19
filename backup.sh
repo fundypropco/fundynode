@@ -3,7 +3,7 @@
 # -----------------------------
 # تنظیمات
 # -----------------------------
-CONTAINER_NAME="my_mongo"      # نام کانتینر MongoDB
+CONTAINER_NAME="my-mongo"      # نام کانتینر MongoDB
 BACKUP_DIR="/home/mongo_backups"  # مسیر ذخیره بک‌آپ روی سرور
 DATE=$(date +%F)                         # تاریخ امروز
 BACKUP_PATH="$BACKUP_DIR/$DATE"
