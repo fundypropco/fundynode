@@ -5,7 +5,7 @@
 # -----------------------------
 CONTAINER_NAME="my-mongo"     
 BACKUP_DIR="/home/mongo_backups"  
-DATE=$(date +%F)       
+DATE=$(date +'%F %T')      
 BACKUP_PATH="$BACKUP_DIR/$DATE"
 
 
