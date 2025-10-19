@@ -13,7 +13,7 @@ import handleResPartialClose from '../services/handlers/handleResPartialClose.js
 import HandleResBrokerSymbols from '../services/handlers/HandleResBrokerSymbols.js'
 
 const getUpdates = asyncHandler(async (req, res) => {
-    res.send(await GetUpdateService.getUnprocessed())
+    res.json(await GetUpdateService.getUnprocessed())
 })
 
 const sendMessage = asyncHandler(async (req, res) => {
