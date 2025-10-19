@@ -5,7 +5,8 @@
 # -----------------------------
 CONTAINER_NAME="my-mongo"     
 BACKUP_DIR="/home/mongo_backups"  
-DATE=$(date +'%F %T')      
+DATE=$(date +'%F')      
+DATETIME=$(date +'%F %T') 
 BACKUP_PATH="$BACKUP_DIR/$DATE"
 
 
@@ -32,19 +33,19 @@ docker exec "$CONTAINER_NAME" mongodump \
     --password "$MONGO_INITDB_ROOT_PASSWORD" \
     --authenticationDatabase admin \
     --gzip \
-    --archive="/backup/mongo_$DATE.gz"
+    --archive="/backup/mongo_$DATETIME.gz"
 
 # -----------------------------
 # کپی بک‌آپ از کانتینر به سرور
 # -----------------------------
-docker cp "$CONTAINER_NAME:/backup/mongo_$DATE.gz" "$BACKUP_PATH/mongo_$DATE.gz"
+docker cp "$CONTAINER_NAME:/backup/mongo_$DATETIME.gz" "$BACKUP_PATH/mongo_$DATETIME.gz"
 
 # -----------------------------
 # پاک کردن فایل موقت داخل کانتینر
 # -----------------------------
-docker exec "$CONTAINER_NAME" rm "/backup/mongo_$DATE.gz"
+docker exec "$CONTAINER_NAME" rm "/backup/mongo_$DATETIME.gz"
 
 # -----------------------------
 # اطلاع از پایان بک‌آپ
 # -----------------------------
-echo "MongoDB backup for $DATE completed: $BACKUP_PATH/mongo_$DATE.gz"
+echo "MongoDB backup for $DATETIME completed: $BACKUP_PATH/mongo_$DATETIME.gz"
