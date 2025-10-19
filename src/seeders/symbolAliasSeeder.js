@@ -47,8 +47,12 @@ const symbolAliasSeeder = async () => {
         { title: 'XPDUSD', alias: [] },
     ]
 
+    const cryptos = [
+        { title: 'BTCUSD', alias: [] }
+    ]
+
     await SymbolAlias.bulkWrite(
-        [...pairs, ...metals].map(s => ({
+        [...pairs, ...metals, ...cryptos].map(s => ({
             updateOne: {
                 filter: { title: s.title },
                 update: { $set: s },
