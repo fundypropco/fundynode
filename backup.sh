@@ -3,24 +3,33 @@
 # -----------------------------
 # تنظیمات
 # -----------------------------
-CONTAINER_NAME="my-mongo"      # نام کانتینر MongoDB
-BACKUP_DIR="/home/mongo_backups"  # مسیر ذخیره بک‌آپ روی سرور
-DATE=$(date +%F)                         # تاریخ امروز
+CONTAINER_NAME="my-mongo"     
+BACKUP_DIR="/home/mongo_backups"  
+DATE=$(date +%F)       
 BACKUP_PATH="$BACKUP_DIR/$DATE"
-MONGO_USER="MONGO_USER"               # اگر نیاز به یوزر و پسورد دارید
-MONGO_PASS="MONGO_PASS"
+
 
 # -----------------------------
 # ساخت پوشه بک‌آپ
 # -----------------------------
 mkdir -p "$BACKUP_PATH"
 
+
+# -----------------------------
+# env
+# -----------------------------
+if [ -f "$(dirname "$0")/.env" ]; then
+  set -o allexport
+  source "$(dirname "$0")/.env"
+  set +o allexport
+fi
+
 # -----------------------------
 # اجرای mongodump داخل کانتینر و فشرده‌سازی
 # -----------------------------
 docker exec "$CONTAINER_NAME" mongodump \
-    --username "$MONGO_USER" \
-    --password "$MONGO_PASS" \
+    --username "$MONGO_INITDB_ROOT_USERNAME" \
+    --password "$MONGO_INITDB_ROOT_PASSWORD" \
     --authenticationDatabase admin \
     --gzip \
     --archive="/backup/mongo_$DATE.gz"
