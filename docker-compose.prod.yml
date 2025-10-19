@@ -16,9 +16,9 @@ services:
     volumes:
       - ./logs:/app/logs
     depends_on:
-      my-mongo:
+      mongo:
         condition: service_healthy
-      my-redis:
+      redis:
         condition: service_healthy
     command: pm2-runtime ecosystem.config.cjs
     healthcheck:
