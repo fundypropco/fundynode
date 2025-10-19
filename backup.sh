@@ -32,6 +32,7 @@ docker exec "$CONTAINER_NAME" mongodump \
     --username "$MONGO_INITDB_ROOT_USERNAME" \
     --password "$MONGO_INITDB_ROOT_PASSWORD" \
     --authenticationDatabase admin \
+    --db "$MONGO_INITDB_DATABASE" \
     --gzip \
     --archive="/backup/mongo_$DATETIME.gz"
 
