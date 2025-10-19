@@ -10,7 +10,7 @@ services:
     environment:
       - APP_PORT=3000
       - NODE_ENV=production
-      - MONGO_URI=mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}/${MONGO_INITDB_DATABASE}?authSource=admin
+      - MONGO_URI=mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongo:27017/${MONGO_INITDB_DATABASE}?authSource=admin
       - REDIS_HOST=redis
       - REDIS_PORT=6379
     volumes:
