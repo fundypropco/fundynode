@@ -41,8 +41,8 @@ async function getMqlClusterNo(handler, acc, max = 3) {
 }
 
 export async function makeMsgForHandler(handler, data) {
-    let mql_cluster_no = await getMqlClusterNo(handler, data.acc)
-    let message = `${data.acc}_${mql_cluster_no},${handler}`;
+    // let mql_cluster_no = await getMqlClusterNo(handler, data.acc)
+    let message = `${data.acc},${handler}`;//_${mql_cluster_no}
 
     // set rule
     switch (handler) {
