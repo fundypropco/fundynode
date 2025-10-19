@@ -10,7 +10,7 @@ services:
     environment:
       - APP_PORT=3000
       - NODE_ENV=production
-      - MONGO_URI=mongodb://mongo:27017/fundynode
+      - MONGO_URI=mongodb:/${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}/${MONGO_INITDB_DATABASE}?authSource=admin
       - REDIS_HOST=redis
       - REDIS_PORT=6379
     volumes:
@@ -19,14 +19,12 @@ services:
       - mongo
       - redis
     command: pm2-runtime ecosystem.config.cjs
-
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/healthcheck"]
       interval: 30s
       timeout: 5s
       retries: 3
       start_period: 10s
-
     logging:
       driver: "json-file"
       options:
@@ -37,17 +35,40 @@ services:
     image: mongo:8
     container_name: my-mongo
     restart: always
-    ports:
-      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
+      - MONGO_INITDB_DATABASE=${MONGO_INITDB_DATABASE}
     volumes:
       - ./mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
 
   redis:
     image: redis:8
     container_name: my-redis
-    ports:
-      - "6379:6379"
     restart: always
+    volumes:
+      - ./redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
 
-#volumes:
-  #mongo-data:
+networks:
+  default:
+    driver: bridge

@@ -65,9 +65,9 @@ const AccountReport = mongoose.model('AccountReport', accountReportSchema, 'acco
 
 export default AccountReport
 
-export async function syncAccountReportIndexes() {
+export async function createAccountReportIndexes() {
     try {
-        await AccountReport.syncIndexes();
+        await AccountReport.createIndexes();
     } catch (err) {
         console.error("❌ Error syncing Symbol indexes:", err);
     }

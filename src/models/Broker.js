@@ -16,9 +16,9 @@ const Broker = mongoose.model('Broker', accountSchema, 'brokers')
 
 export default Broker
 
-export async function syncBrokerIndexes() {
+export async function createBrokerIndexes() {
     try {
-        await Broker.syncIndexes();
+        await Broker.createIndexes();
     } catch (err) {
         console.error("❌ Error syncing Symbol indexes:", err);
     }

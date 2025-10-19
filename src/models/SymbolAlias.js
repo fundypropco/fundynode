@@ -16,9 +16,9 @@ const SymbolAlias = mongoose.model('SymbolAlias', symbolAliasSchema, 'symbol_ali
 
 export default SymbolAlias
 
-export async function syncSymbolAliasIndexes() {
+export async function createSymbolAliasIndexes() {
     try {
-        await SymbolAlias.syncIndexes();
+        await SymbolAlias.createIndexes();
     } catch (err) {
         console.error("❌ Error syncing Symbol indexes:", err);
     }

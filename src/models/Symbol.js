@@ -30,9 +30,9 @@ const Symbol = mongoose.model('Symbol', symbolSchema, 'symbols')
 
 export default Symbol
 
-export async function syncSymbolIndexes() {
+export async function createSymbolIndexes() {
     try {
-        await Symbol.syncIndexes();
+        await Symbol.createIndexes();
     } catch (err) {
         console.error("❌ Error syncing Symbol indexes:", err);
     }

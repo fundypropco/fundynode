@@ -69,9 +69,9 @@ const GetUpdate = mongoose.model('GetUpdate', getUpdateSchema, 'get_updates')
 
 export default GetUpdate
 
-export async function syncGetUpdateIndexes() {
+export async function createGetUpdateIndexes() {
     try {
-        await GetUpdate.syncIndexes();
+        await GetUpdate.createIndexes();
     } catch (err) {
         console.error("❌ Error syncing Symbol indexes:", err);
     }

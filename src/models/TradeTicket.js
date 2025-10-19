@@ -21,9 +21,9 @@ const TradeTicket = mongoose.model('TradeTicket', tradeTicketSchema, 'trade_tick
 
 export default TradeTicket
 
-export async function syncTradeTicketIndexes() {
+export async function createTradeTicketIndexes() {
     try {
-        await TradeTicket.syncIndexes();
+        await TradeTicket.createIndexes();
     } catch (err) {
         console.error("❌ Error syncing Symbol indexes:", err);
     }

@@ -112,9 +112,9 @@ const Account = mongoose.model('Account', accountSchema, 'accounts');
 
 export default Account
 
-export async function syncAccountIndexes() {
+export async function createAccountIndexes() {
     try {
-        await Account.syncIndexes();
+        await Account.createIndexes();
     } catch (err) {
         console.error("❌ Error syncing Symbol indexes:", err);
     }

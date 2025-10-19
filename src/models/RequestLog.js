@@ -17,9 +17,9 @@ const RequestLog = mongoose.model('RequestLog', requestLogSchema, 'request_logs'
 
 export default RequestLog
 
-export async function syncRequestLogIndexes() {
+export async function createRequestLogIndexes() {
     try {
-        await RequestLog.syncIndexes();
+        await RequestLog.createIndexes();
     } catch (err) {
         console.error("❌ Error syncing Symbol indexes:", err);
     }
