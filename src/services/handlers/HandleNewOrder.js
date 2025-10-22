@@ -59,7 +59,6 @@ export default async (req, res) => {
             // مقداردهی سایر پارامترها برای ثبت دستور اجرا سفارش
             copyTradeData.handler = ACTION_HANDLER[copyTradeData.type]
             copyTradeData.status = copyTradeData.is_possible && copyTradeData.vol ? 'pending' : 'internal_error'
-            copyTradeData.message = await makeMsgForHandler(copyTradeData.handler, copyTradeData)
             copyTradeData.description = [
                 !copyTradeData.is_possible ? "ORDER IS NOT POSSIBLE" : null,
                 !copyTradeData.vol ? "ORDER VOL IS NOT VALID" : null
@@ -69,6 +68,7 @@ export default async (req, res) => {
             copyTradeData.ticket = ''
             copyTradeData.origin_new_ticket = ''
             copyTradeData.keyid = keyid++
+            copyTradeData.message = await makeMsgForHandler(copyTradeData.handler, copyTradeData)
 
             // 9.
             // ثبت دستور اجرای سفارش

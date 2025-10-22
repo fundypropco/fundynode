@@ -157,7 +157,7 @@ export function getMqlError(no) {
 }
 
 export async function getCopyTradeParams(account, order, copier) {
-    const data = order;
+    let data = order;
 
     const broker_a = await Broker.findOne({ server: account.server });
     const broker_b = await Broker.findOne({ server: copier.server });
@@ -184,7 +184,7 @@ export async function getCopyTradeParams(account, order, copier) {
     data.sl = order.sl //todo: محاسبه شود بر اساس اختلاف اسپرد
     data.tp = order.tp //todo: محاسبه شود بر اساس اختلاف اسپرد
     data.slippage = 5 //todo: پرسیده شود اگر نیاز است محاسبه شود
-
+    data.server = broker_b.server
     data.brokerObj = broker_b
     data.symbolObj = symbol_b
 
