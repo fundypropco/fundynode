@@ -41,7 +41,7 @@ export default async (req, res) => {
     // بررسی اینکه آیا کپی ترید برای این اکانت فعال هست یا نه
     if (account.copy) {
 
-        const keyid = makeID()
+        let keyid = makeID()
 
         // 5.
         // بدست آوردن اکانتهای کپی کننده

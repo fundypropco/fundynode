@@ -19,7 +19,7 @@ export default async (req, res) => {
     // بررسی اینکه آیا قابلیت برای این اکانت فعال هست یا نه
     if (account.copy) {
 
-        const keyid = makeID()
+        let keyid = makeID()
 
         for (const order of data.items) {
             // 4.
