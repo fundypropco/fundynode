@@ -82,7 +82,7 @@ export function formatDateYMD(timestamp) {
 }
 
 export function makeID() {
-    return Date.now() % 1_000_000_000
+    return parseInt(Date.now() % 1_000_000_000)
 }
 
 export function getMqlError(no) {
