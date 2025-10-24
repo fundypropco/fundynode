@@ -12,6 +12,7 @@ import handlePartialClose from '../services/handlers/handlePartialClose.js'
 import handleResPartialClose from '../services/handlers/handleResPartialClose.js'
 import HandleResBrokerSymbols from '../services/handlers/HandleResBrokerSymbols.js'
 import handleChangePrice from '../services/handlers/handleChangePrice.js'
+import HandleResCloseDelete from '../services/handlers/HandleResCloseDelete.js'
 
 const getUpdates = asyncHandler(async (req, res) => {
     res.json(await GetUpdateService.getUnprocessed())
@@ -46,7 +47,8 @@ const sendMessage = asyncHandler(async (req, res) => {
         case "997":
             return await handleResModify(req, res)
         case "996":
-            return await handleResCloseDelete(req, res)
+        case "991":
+            return await HandleResCloseDelete(req, res)
         case "978":
             return await handleResPartialClose(req, res)
         case "987":

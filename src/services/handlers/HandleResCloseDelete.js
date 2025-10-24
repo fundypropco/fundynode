@@ -32,6 +32,7 @@ function processMessage(msg) {
     // E.g. 
     // 1006135456,996,OK CLOSE&324252647&0,1758987838,7
     // acc , 996 , OK/FAIL CLOSE & ticket & result_code , timestamp , keyid
+    // acc , 991 , OK/FAIL DELETE & ticket & result_code , timestamp , keyid
     const data = {};
 
     // msg parts
