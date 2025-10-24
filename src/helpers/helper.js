@@ -23,7 +23,6 @@ async function getMqlClusterNo(handler, acc, max = 3) {
         ACTION_HANDLER.SELLLIMIT,
         ACTION_HANDLER.SELLSTOP,
         ACTION_HANDLER.CLOSE,
-        ACTION_HANDLER.DELETE,
         ACTION_HANDLER.MODIFY,
         ACTION_HANDLER.PARTIAL_CLOSE,
         ACTION_HANDLER.BULK_CLOSE,

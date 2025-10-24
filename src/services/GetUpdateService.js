@@ -1,17 +1,27 @@
 import GetUpdate from "../models/GetUpdate.js"
 import { getMqlError } from "../helpers/helper.js"
+import { ACTION_HANDLER } from "../helpers/constant.js"
 
 const create = async (data) => {
-    const results = await GetUpdate.find({ acc: data.acc, ticket: data.ticket, handler: data.handler, status: 'pending' })
+    const noDuplicatingHandlers = [
+        ACTION_HANDLER.CLOSE,
+        ACTION_HANDLER.MODIFY,
+        ACTION_HANDLER.PARTIAL_CLOSE,
+        ACTION_HANDLER.BULK_CLOSE,
+    ]
     let found = false
-    let main_msg = data.message.split(',')[2]
     let found_result = null
-    for (const result of results) {
-        const result_main_msg = result.message.split(',')[2]
-        if (result_main_msg == main_msg) {
-            found = true
-            found_result = result
-            break
+
+    if (noDuplicatingHandlers.includes(data.handler)) {
+        const results = await GetUpdate.find({ acc: data.acc, ticket: data.ticket, handler: data.handler, status: 'pending' })
+        let main_msg = data.message.split(',')[2]
+        for (const result of results) {
+            const result_main_msg = result.message.split(',')[2]
+            if (result_main_msg == main_msg) {
+                found = true
+                found_result = result
+                break
+            }
         }
     }
 

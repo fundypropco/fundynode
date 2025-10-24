@@ -109,8 +109,7 @@ const accountSchema = new mongoose.Schema({
     }
 });
 
-accountSchema.index({ server: 1 });
-accountSchema.index({ "copiers.server": 1 });
+accountSchema.index({ "copiers.server": 1 })
 
 const Account = mongoose.model('Account', accountSchema, 'accounts');
 
