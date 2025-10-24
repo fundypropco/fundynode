@@ -11,6 +11,7 @@ import handleDelete from '../services/handlers/handleDelete.js'
 import handlePartialClose from '../services/handlers/handlePartialClose.js'
 import handleResPartialClose from '../services/handlers/handleResPartialClose.js'
 import HandleResBrokerSymbols from '../services/handlers/HandleResBrokerSymbols.js'
+import handleChangePrice from '../services/handlers/handleChangePrice.js'
 
 const getUpdates = asyncHandler(async (req, res) => {
     res.json(await GetUpdateService.getUnprocessed())

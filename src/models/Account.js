@@ -91,7 +91,8 @@ const accountSchema = new mongoose.Schema({
     },
     server: {
         type: String,
-        default: ""
+        default: "",
+        index: true
     },
     copy: {
         type: Boolean,
@@ -107,6 +108,9 @@ const accountSchema = new mongoose.Schema({
         default: Date.now
     }
 });
+
+accountSchema.index({ server: 1 });
+accountSchema.index({ "copiers.server": 1 });
 
 const Account = mongoose.model('Account', accountSchema, 'accounts');
 

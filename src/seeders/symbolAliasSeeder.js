@@ -48,7 +48,8 @@ const symbolAliasSeeder = async () => {
     ]
 
     const cryptos = [
-        { title: 'BTCUSD', alias: [] }
+        { title: 'BTCUSD', alias: [] },
+        { title: 'ETHUSD', alias: [] },
     ]
 
     await SymbolAlias.bulkWrite(

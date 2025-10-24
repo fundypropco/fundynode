@@ -38,9 +38,6 @@ export default async (req, res) => {
                 copyTradeData.origin_acc = account.acc
                 copyTradeData.origin_ticket = order.ticket
                 copyTradeData.description = []
-                copyTradeData.close_price = order.close_price
-                copyTradeData.slippage = 5 // todo: مشورت در مورد این پارامتر که بعدا دردسر نشه
-                copyTradeData.vol = order.vol // todo: حذف این پارامتر چون فرمالیته هست در هندل 4
 
                 if (copierOrder) {
                     copyTradeData.ticket = copierOrder.ticket_dist

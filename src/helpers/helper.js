@@ -23,6 +23,7 @@ async function getMqlClusterNo(handler, acc, max = 3) {
         ACTION_HANDLER.SELLLIMIT,
         ACTION_HANDLER.SELLSTOP,
         ACTION_HANDLER.CLOSE,
+        ACTION_HANDLER.DELETE,
         ACTION_HANDLER.MODIFY,
         ACTION_HANDLER.PARTIAL_CLOSE,
         ACTION_HANDLER.BULK_CLOSE,
@@ -60,7 +61,8 @@ export async function makeMsgForHandler(handler, data) {
             break;
 
         case 4: // CLOSE
-            message += `,${data.ticket}&${data.vol}&${data.close_price}&${data.slippage}`
+        case 9: // DELETE
+            message += `,${data.ticket}`
             break;
 
         case 13: // CLOSE

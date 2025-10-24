@@ -25,6 +25,7 @@ const getUpdateSchema = new mongoose.Schema({
     },
     keyid: {
         type: Number,
+        index: true
     },
     try_count: {
         type: Number,
@@ -62,7 +63,8 @@ const getUpdateSchema = new mongoose.Schema({
 });
 
 
-getUpdateSchema.index({ acc: 1, handler: 1, keyid: 1 })
+getUpdateSchema.index({ acc: 1, handler: 1 })
+getUpdateSchema.index({ server: 1, handler: 1 })
 getUpdateSchema.index({ origin_acc: 1, origin_ticket: 1 })
 
 const GetUpdate = mongoose.model('GetUpdate', getUpdateSchema, 'get_updates')

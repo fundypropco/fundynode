@@ -33,14 +33,11 @@ export default async (req, res) => {
                 const copierOrder = tickets.find(t => t.acc_dist == copier.acc)
 
                 copyTradeData.acc = copier.acc
-                copyTradeData.handler = ACTION_HANDLER.CLOSE
+                copyTradeData.handler = ACTION_HANDLER.DELETE
                 copyTradeData.keyid = keyid++
                 copyTradeData.origin_acc = account.acc
                 copyTradeData.origin_ticket = order.ticket
                 copyTradeData.description = []
-                copyTradeData.close_price = order.open_price // todo: درخواست برای حذف این پارامتر در هندل 4
-                copyTradeData.slippage = 5 // todo: مشورت در مورد این پارامتر که بعدا دردسر نشه
-                copyTradeData.vol = order.vol // todo: حذف این پارامتر چون فرمالیته هست در هندل 4
 
                 if (copierOrder) {
                     copyTradeData.ticket = copierOrder.ticket_dist

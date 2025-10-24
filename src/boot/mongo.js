@@ -1,11 +1,11 @@
 import mongoose from "mongoose";
 import logger from "../helpers/logger.js";
 
-//import { createAccountIndexes } from "../models/Account.js";
-//import { createAccountReportIndexes } from "../models/AccountReport.js";
-//import { createBrokerIndexes } from "../models/Broker.js";
-//import { createGetUpdateIndexes } from "../models/GetUpdate.js";
-//import { createSymbolIndexes } from "../models/Symbol.js";
+import { createAccountIndexes } from "../models/Account.js";
+import { createAccountReportIndexes } from "../models/AccountReport.js";
+import { createBrokerIndexes } from "../models/Broker.js";
+import { createGetUpdateIndexes } from "../models/GetUpdate.js";
+import { createSymbolIndexes } from "../models/Symbol.js";
 
 const MONGO_URI = process.env.MONGO_URI;
 
@@ -14,25 +14,23 @@ export default async function startMongoDB(retries = 10, delay = 5000) {
         try {
             // ⏳ اتصال به MongoDB
             await mongoose.connect(MONGO_URI, {
-                serverSelectionTimeoutMS: delay, // هر تلاش ۵ ثانیه
+                serverSelectionTimeoutMS: delay,
             });
 
             console.log("✅ Connected To MongoDB ...");
 
-            // ⏱ صبر کن تا اتصال کاملاً برقرار بشه (ایمن‌تر برای Docker)
-            //await new Promise((resolve) => setTimeout(resolve, 1000));
+            await new Promise((resolve) => setTimeout(resolve, 1000));
 
-            // 🔄 Sync همه ایندکس‌ها
-            // await Promise.all([
-            //     createAccountIndexes(),
-            //     createAccountReportIndexes(),
-            //     createBrokerIndexes(),
-            //     createGetUpdateIndexes(),
-            //     createSymbolIndexes(),
-            // ]);
+            await Promise.all([
+                createAccountIndexes(),
+                createAccountReportIndexes(),
+                createBrokerIndexes(),
+                createGetUpdateIndexes(),
+                createSymbolIndexes(),
+            ]);
 
-            //console.log("✅ MongoDB indexes synced successfully");
-            return; // ✅ موفقیت‌آمیز، خارج شو
+            console.log("✅ MongoDB indexes synced successfully");
+            return;
 
         } catch (err) {
             retries--;
@@ -44,7 +42,6 @@ export default async function startMongoDB(retries = 10, delay = 5000) {
                 process.exit(1); // برنامه متوقف می‌شه چون بدون DB نمی‌تونه ادامه بده
             }
 
-            // 🔁 چند ثانیه صبر کن و دوباره تلاش کن
             await new Promise((resolve) => setTimeout(resolve, delay));
         }
     }
