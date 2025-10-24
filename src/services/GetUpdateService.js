@@ -2,22 +2,39 @@ import GetUpdate from "../models/GetUpdate.js"
 import { getMqlError } from "../helpers/helper.js"
 
 const create = async (data) => {
-    const getUpdate = new GetUpdate({
-        acc: data.acc,
-        ticket: data.ticket,
-        handler: data.handler,
-        message: data.message,
-        datetime: Date.now(),
-        keyid: data.keyid,
-        try_count: 0,
-        status: data.status,
-        description: data.description,
-        origin_acc: data.origin_acc,
-        origin_ticket: data.origin_ticket,
-        origin_new_ticket: data.origin_new_ticket
-    })
+    const results = await GetUpdate.find({ acc: data.acc, ticket: data.ticket, handler: data.handler, status: 'pending' })
+    let found = false
+    let main_msg = data.message.split(',')[2]
+    let found_result = null
+    for (const result of results) {
+        const result_main_msg = result.message.split(',')[2]
+        if (result_main_msg == main_msg) {
+            found = true
+            found_result = result
+            break
+        }
+    }
 
-    return await getUpdate.save()
+    if (!found) {
+        const getUpdate = new GetUpdate({
+            acc: data.acc,
+            ticket: data.ticket,
+            handler: data.handler,
+            message: data.message,
+            datetime: Date.now(),
+            keyid: data.keyid,
+            try_count: 0,
+            status: data.status,
+            description: data.description,
+            origin_acc: data.origin_acc,
+            origin_ticket: data.origin_ticket,
+            origin_new_ticket: data.origin_new_ticket
+        })
+
+        return await getUpdate.save()
+    } else {
+        return found_result
+    }
 }
 
 const updateStatus = async (data) => {
@@ -58,17 +75,18 @@ const updateWaitings = async (origin_acc, origin_ticket, ticket) => {
 }
 
 const getUnprocessed = async () => {
-    let results = await GetUpdate.find({
-        $or: [
-            { status: 'pending' },
-            { status: 'error', try_count: { $lt: 3 } }
-        ]
-    }).sort('datetime')
+    // let results = await GetUpdate.find({
+    //     $or: [
+    //         { status: 'pending' },
+    //         { status: 'error', try_count: { $lt: 3 } }
+    //     ]
+    // }).sort('datetime')
+
+    let results = await GetUpdate.find({ status: 'pending' }).sort('datetime')
 
     const finalResults = results.map(doc => ({
         update_id: doc.keyid,
         message: doc.message
-        //message: `${doc.acc},${doc.handler},${doc.message},${Math.floor(doc.datetime.getTime() / 1000)},${doc.keyid}`
     }))
 
     return {

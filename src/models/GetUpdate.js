@@ -3,17 +3,21 @@ import mongoose from "mongoose"
 const getUpdateSchema = new mongoose.Schema({
     acc: {
         type: String,
+        index: true,
     },
     ticket: {
         type: String,
+        index: true,
         default: ''
     },
     server: {
         type: String,
         default: '',
+        index: true,
     },
     handler: {
-        type: Number
+        type: Number,
+        index: true,
     },
     message: {
         type: String
