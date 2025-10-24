@@ -70,8 +70,8 @@ export default async (req, res) => {
 
 function processMessage(msg) {
     // E.g. 
-    // 1006135456,506,PARTIAL&324253391&103420.04&1&2025-10-14 22:08:23@324253391&103420.04&1&2025-10-14 22:08:23,1750019908,-1
-    // acc , 506 , PARTIAL & open-ticket & open-price & open-vol & open-time @ close-ticket & close-price & close-vol & close-time , timestamp, -1
+    // 1006135456,506,328350198@1.00@2025-10-18 00:03:19&328350202@1.00@2025-10-18 00:03:05;328272032@0.05@2025-10-17 17:28:00&328272081@0.05@2025-10-17 17:27:41,1750019908,-1
+    // acc , 506 , CLOSED_TICKET @ CLOSED_VOL @ CLOSED_TIME @ OPEN_TICKET @ OPEN_VOL @ OPEN_TIME ; CLOSED_TICKET @ CLOSED_VOL @ CLOSED_TIME @ OPEN_TICKET @ OPEN_VOL @ OPEN_TIME , timestamp, -1
     const data = {};
 
     // msg parts
@@ -82,16 +82,9 @@ function processMessage(msg) {
     let info = msg_parts[2]
 
     // msg info
-    // حذف بخش اول عبارت به همراه اولین کاراکتر امپرساین
-    info = info.replace(/^[^&]*&/, "")
-    const info_parts = info.split("@")
-    const open_order = info_parts[0]
-    const close_order = info_parts[1]
-    const open_order_parts = open_order.split('&')
-    data.open_ticket = open_order_parts[0]
-    const close_order_parts = close_order.split('&')
-    data.close_ticket = close_order_parts[0]
-    data.close_vol = close_order_parts[2]
+    data.items = info.split(";")
+        .map(side => side.split("@"))
+        .map(([closed_ticket, closed_vol, closed_time, open_ticket, open_vol, open_time]) => ({ closed_ticket, closed_vol, closed_time, open_ticket, open_vol, open_time }))
 
     return data
 }

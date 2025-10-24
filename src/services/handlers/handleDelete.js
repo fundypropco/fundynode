@@ -33,7 +33,7 @@ export default async (req, res) => {
                 const copierOrder = tickets.find(t => t.acc_dist == copier.acc)
 
                 copyTradeData.acc = copier.acc
-                copyTradeData.handler = ACTION_HANDLER.DELETE
+                copyTradeData.handler = ACTION_HANDLER.CLOSE
                 copyTradeData.keyid = keyid++
                 copyTradeData.origin_acc = account.acc
                 copyTradeData.origin_ticket = order.ticket
