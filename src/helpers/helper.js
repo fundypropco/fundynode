@@ -49,11 +49,14 @@ export async function makeMsgForHandler(handler, data) {
     switch (handler) {
         case 1: // BUY
         case 2: // SELL
+            message += `,${data.symbol}&${data.vol}&${data.slippage}&${data.sl}&${data.tp}&${data.comment}&${data.magic}`
+            break;
+
         case 5: // BUYLIMIT
         case 6: // BUYSTOP
         case 7: // SELLLIMIT
         case 8: // SELLSTOP
-            message += `,${data.symbol}&${data.vol}&${data.slippage}&${data.sl}&${data.tp}&${data.comment}&${data.magic}`
+            message += `,${data.symbol}&${data.open_price}&${data.vol}&${data.slippage}&${data.sl}&${data.tp}&${data.comment}&${data.magic}`
             break;
 
         case 3: // MODIFY

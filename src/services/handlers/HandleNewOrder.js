@@ -68,6 +68,7 @@ export default async (req, res) => {
             copyTradeData.ticket = ''
             copyTradeData.origin_new_ticket = ''
             copyTradeData.keyid = keyid++
+            copyTradeData.open_price = data.open_price
             copyTradeData.message = await makeMsgForHandler(copyTradeData.handler, copyTradeData)
 
             // 9.
