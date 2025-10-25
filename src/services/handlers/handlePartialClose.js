@@ -19,6 +19,7 @@ export default async (req, res) => {
     // بررسی اینکه آیا قابلیت برای این اکانت فعال هست یا نه
     if (account.copy) {
 
+        let keyid = makeID()
 
         // 4.
         // بدست آوردن تیکتهای متناظر با این سفارش روی اکانتهای دیگر
@@ -32,7 +33,7 @@ export default async (req, res) => {
 
             copyTradeData.acc = copier.acc
             copyTradeData.handler = ACTION_HANDLER.PARTIAL_CLOSE
-            copyTradeData.keyid = makeID()
+            copyTradeData.keyid = keyid++
             copyTradeData.origin_acc = account.acc
             copyTradeData.origin_ticket = data.closed_ticket
             copyTradeData.origin_new_ticket = data.open_ticket
@@ -52,7 +53,6 @@ export default async (req, res) => {
             }
         }
     }
-
 
     // 6.
     // لاگ گرفتن از رکوئست دریافتی
