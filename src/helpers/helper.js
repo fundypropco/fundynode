@@ -197,10 +197,10 @@ export async function getCopyTradeParams(account, order, copier) {
 
 export function getOrderVol(accountObj, copierObj, originSymbol, originVol) {
     let finalVol = originVol
-    if (copier.vol == 'exact') {
+    if (copierObj.vol == 'exact') {
         //todo: براساس اختلاف ارزش پیپ محاسبه شود
-    } else if (copier.vol == 'calc') {
-        let ratio = copier.initial / account.initial
+    } else if (copierObj.vol == 'calc') {
+        let ratio = copierObj.initial / account.initial
         finalVol = Math.floor(ratio * originVol * 100) / 100
     }
     return finalVol
