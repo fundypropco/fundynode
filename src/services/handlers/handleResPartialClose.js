@@ -15,7 +15,7 @@ export default async (req, res) => {
     // بروزرسانی وضعیت دستور در صف دستورات
     const getUpdateDoc = await GetUpdateService.updateStatus(data)
 
-    if (getUpdateDoc.status == 'success') {
+    if (getUpdateDoc && getUpdateDoc.status == 'success') {
         // #.
         // مپ کردن اکانت و تیکت های مرجع و کپی کننده باقیمانده 
         const originOrderAcc = getUpdateDoc.origin_acc
@@ -56,9 +56,11 @@ function processMessage(msg) {
     // msg parts
     const msg_parts = msg.split(',')
     data.acc = msg_parts[0]
+    data.handler = 1000 - parseInt(msg_parts[1])
     data.timestamp = msg_parts[3] * 1000
     data.date = formatDateYMD(data.timestamp)
     let info = msg_parts[2]
+    data.keyid = msg_parts[4]
 
     // msg info
     const info_parts = info.split('&')
