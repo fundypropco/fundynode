@@ -55,7 +55,7 @@ async function processNewOrder(data) {
             //# بررسی بروکر و نماد اکانت ترید و کپی
             //# بررسی امکان اجرای سفارش کپی
 
-            data = isValidSymbols(account, copier, data)
+            data = await isValidSymbols(account, copier, data)
 
             if (data.is_valid_symbols) {
                 // اگر نمادهای معاملاتی معتبر باشند
