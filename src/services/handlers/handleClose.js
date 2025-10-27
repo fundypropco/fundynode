@@ -145,12 +145,8 @@ function processMessage(msg) {
             .map(side => side.split("@"))
             .map(([closed_ticket, closed_vol, closed_time, open_ticket, open_vol, open_time]) => ({ closed_ticket, closed_vol, closed_time, open_ticket, open_vol, open_time }))
 
-        for (const order of data.partial_items) {
-            if (data.ticket == order.closed_ticket || data.ticket == order.open_ticket) {
-                data.is_partial = true
-                break;
-            }
-        }
+
+        data.is_partial = data.partial_items.some(pi => pi.closed_ticket == data.ticket)
     }
 
     return data
