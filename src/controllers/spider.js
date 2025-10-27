@@ -8,10 +8,8 @@ import handleResModify from '../services/handlers/HandleResModify.js'
 import handleModify from '../services/handlers/handleModify.js'
 import handleClose from '../services/handlers/handleClose.js'
 import handleDelete from '../services/handlers/handleDelete.js'
-import handlePartialClose from '../services/handlers/handlePartialClose.js'
 import handleResPartialClose from '../services/handlers/handleResPartialClose.js'
 import HandleResBrokerSymbols from '../services/handlers/HandleResBrokerSymbols.js'
-import handleChangePrice from '../services/handlers/handleChangePrice.js'
 import HandleResCloseDelete from '../services/handlers/HandleResCloseDelete.js'
 
 const getUpdates = asyncHandler(async (req, res) => {
