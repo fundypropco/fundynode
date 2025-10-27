@@ -42,6 +42,7 @@ const sendMessage = asyncHandler(async (req, res) => {
             return await handleResModify(req, res)
         case "996":
         case "991":
+        case "977":
             return await HandleResCloseDelete(req, res)
         case "978":
             return await handleResPartialClose(req, res)
