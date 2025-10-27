@@ -48,7 +48,7 @@ export default async (req, res) => {
                     copyTradeData.message = await makeMsgForHandler(copyTradeData.handler, copyTradeData)
                     await GetUpdateService.create(copyTradeData)
                 } else {
-                    copyTradeData.ticket = '?ticket?'
+                    copyTradeData.ticket = '-1'
                     copyTradeData.status = 'waiting'
                     copyTradeData.message = await makeMsgForHandler(copyTradeData.handler, copyTradeData)
                     await GetUpdateService.create(copyTradeData)

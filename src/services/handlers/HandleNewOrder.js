@@ -129,7 +129,7 @@ async function processPartial(data) {
                     copyTradeData.message = await makeMsgForHandler(copyTradeData.handler, copyTradeData)
                     await GetUpdateService.create(copyTradeData)
                 } else {
-                    copyTradeData.ticket = '?ticket?'
+                    copyTradeData.ticket = '-1'
                     copyTradeData.status = 'waiting'
                     copyTradeData.message = await makeMsgForHandler(copyTradeData.handler, copyTradeData)
                     await GetUpdateService.create(copyTradeData)

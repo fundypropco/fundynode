@@ -66,7 +66,7 @@ async function processClose(data) {
                     copyTradeData.status = 'pending'
                     await GetUpdateService.create(copyTradeData)
                 } else {
-                    copyTradeData.ticket = '?ticket?'
+                    copyTradeData.ticket = '-1'
                     copyTradeData.message = await makeMsgForHandler(copyTradeData.handler, copyTradeData)
                     copyTradeData.status = 'waiting'
                     await GetUpdateService.create(copyTradeData)
@@ -110,7 +110,7 @@ async function processPartial(data) {
                     copyTradeData.message = await makeMsgForHandler(copyTradeData.handler, copyTradeData)
                     await GetUpdateService.create(copyTradeData)
                 } else {
-                    copyTradeData.ticket = '?ticket?'
+                    copyTradeData.ticket = '-1'
                     copyTradeData.status = 'waiting'
                     copyTradeData.message = await makeMsgForHandler(copyTradeData.handler, copyTradeData)
                     await GetUpdateService.create(copyTradeData)

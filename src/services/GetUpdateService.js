@@ -80,7 +80,7 @@ const updateWaitings = async (origin_acc, origin_ticket, ticket) => {
     const waitingDocs = await GetUpdate.find({ status: 'waiting', origin_acc: origin_acc, origin_ticket: origin_ticket })
     for (const waitingDoc of waitingDocs) {
         waitingDoc.status = 'pending'
-        waitingDoc.message = waitingDoc.message.replace('?ticket?', ticket)
+        waitingDoc.message = waitingDoc.message.replace('-1', ticket)
         await waitingDoc.save()
     }
 }
