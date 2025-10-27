@@ -83,11 +83,11 @@ async function processNewOrder(data) {
                 data.handler = ACTION_HANDLER.CLOSE_ORIGIN
                 data.status = 'pending'
                 data.acc = data.origin_acc = account.acc
-                data.ticket = data.origin_ticket = data.ticket
+                data.origin_ticket = data.ticket
                 data.origin_new_ticket = ''
-                data.message = await makeMsgForHandler(data.handler, data)
                 data.description = []
                 data.keyid = keyid++
+                data.message = await makeMsgForHandler(data.handler, data)
                 await GetUpdateService.create(data)
 
             }
