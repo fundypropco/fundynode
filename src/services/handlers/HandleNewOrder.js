@@ -32,6 +32,7 @@ export default async (req, res) => {
 }
 
 async function processNewOrder(data) {
+
     //# بررسی اینکه آیا این سفارش تکراری است یا خیر
     const is_duplicated = await isDuplicatedOrder(data)
     if (is_duplicated) {
@@ -95,8 +96,6 @@ async function processNewOrder(data) {
 }
 
 async function processPartial(data) {
-    //# پردازش پیام ورودی
-    const data = processMessage(req.body.message)
 
     //# پیدا کردن اکانت مربوط به عملیات دریافتی
     const account = await Account.findOne({ acc: data.acc });

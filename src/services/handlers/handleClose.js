@@ -33,6 +33,7 @@ export default async (req, res) => {
 }
 
 async function processClose(data) {
+
     //# پیدا کردن اکانت مربوط به عملیات دریافتی
     const account = await Account.findOne({ acc: data.acc });
 
@@ -76,8 +77,6 @@ async function processClose(data) {
 }
 
 async function processPartial(data) {
-    //# پردازش پیام ورودی
-    const data = processMessage(req.body.message)
 
     //# پیدا کردن اکانت مربوط به عملیات دریافتی
     const account = await Account.findOne({ acc: data.acc });
