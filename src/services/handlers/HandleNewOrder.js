@@ -4,6 +4,7 @@ import GetUpdateService from "../GetUpdateService.js"
 import { formatDateYMD, getCopyTradeParams, makeMsgForHandler, isValidSymbols, makeID, getOrderVol } from '../../helpers/helper.js'
 import { ACTION_HANDLER } from '../../helpers/constant.js'
 import GetUpdate from '../../models/GetUpdate.js'
+import TradeTicket from '../../models/TradeTicket.js'
 
 export default async (req, res) => {
 
