@@ -63,11 +63,11 @@ export async function makeMsgForHandler(handler, data) {
             break;
 
         case 4: // CLOSE
-        case 9: // DELETE
+        case 23: // CLOSE
             message += `,${data.ticket}`
             break;
 
-        case 13: // CLOSE
+        case 13: // BROKER SYMBOLS
             message += `,0`
             break;
     }
@@ -160,16 +160,10 @@ export function getMqlError(no) {
     }
 }
 
-export async function getCopyTradeParams(account, order, copier) {
-    let data = order;
-
-    const broker_a = await Broker.findOne({ server: account.server });
-    const broker_b = await Broker.findOne({ server: copier.server });
-    const symbol_a = await Symbol.findOne({ server: broker_a.server, symbol: order.symbol });
-    const symbol_b = await Symbol.findOne({ server: broker_b.server, title: symbol_a.title });
-
+export async function getCopyTradeParams(account, copier, order) {
+    const data = order
     data.acc = copier.acc
-    data.symbol = symbol_b.symbol
+    data.symbol = order.symbol_b.symbol
     data.vol = (() => {
         let vol = order.vol
         if (copier.vol == 'exact') {
@@ -188,9 +182,7 @@ export async function getCopyTradeParams(account, order, copier) {
     data.sl = order.sl //todo: محاسبه شود بر اساس اختلاف اسپرد
     data.tp = order.tp //todo: محاسبه شود بر اساس اختلاف اسپرد
     data.slippage = 5 //todo: پرسیده شود اگر نیاز است محاسبه شود
-    data.server = broker_b.server
-    data.brokerObj = broker_b
-    data.symbolObj = symbol_b
+    data.server = copier.server
 
     return data
 }
@@ -206,8 +198,19 @@ export function getOrderVol(accountObj, copierObj, originSymbol, originVol) {
     return finalVol
 }
 
-export function isOrderPossible(orderData) {
-    return true //todo: بررسی مارجین و تایم و سایر محدودیت ها برای انجام سفارش
+export async function isValidSymbols(accountObj, copierObj, data) {
+    data.description = [];
+    data.is_valid_symbols = false
+    data.symbol_a = await Symbol.findOne({ server: accountObj.server, symbol: data.symbol })
+    if (!data.symbol_a) {
+        data.description.push(`symbol ${data.symbol} not found for broker ${accountObj.server}`)
+    }
+    data.symbol_b = await Symbol.findOne({ server: copierObj.server, title: symbol_a.title })
+    if (!data.symbol_b) {
+        data.description.push(`symbol ${data.symbol} not found for broker ${copierObj.server}`)
+    }
+    data.is_valid_symbols = true
+    return data
 }
 
 export function normalizeSymbol(symbol) {

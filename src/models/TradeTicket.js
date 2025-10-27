@@ -2,16 +2,16 @@ import mongoose from "mongoose"
 
 const tradeTicketSchema = new mongoose.Schema({
     acc_src: {
-        type: String,
+        type: Number,
     },
     ticket_src: {
-        type: String
+        type: Number
     },
     acc_dist: {
-        type: String
+        type: Number
     },
     ticket_dist: {
-        type: String
+        type: Number
     }
 });
 

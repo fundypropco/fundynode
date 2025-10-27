@@ -1,7 +1,7 @@
 import mongoose from "mongoose"
 
 const copierSchema = new mongoose.Schema({
-    acc: String,
+    acc: Number,
     server: String,
     initial: Number,
     vol: {
@@ -12,7 +12,7 @@ const copierSchema = new mongoose.Schema({
 
 const accountSchema = new mongoose.Schema({
     acc: {
-        type: String,
+        type: Number,
         required: true,
         unique: true
     },

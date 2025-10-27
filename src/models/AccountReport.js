@@ -6,7 +6,7 @@ const accountReportSchema = new mongoose.Schema({
         required: true
     },
     acc: {
-        type: String,
+        type: Number,
         required: true,
     },
     eqi: {

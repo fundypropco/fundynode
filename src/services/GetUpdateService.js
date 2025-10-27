@@ -8,12 +8,13 @@ const create = async (data) => {
         ACTION_HANDLER.MODIFY,
         ACTION_HANDLER.PARTIAL_CLOSE,
         ACTION_HANDLER.BULK_CLOSE,
+        ACTION_HANDLER.CLOSE_ORIGIN,
     ]
     let found = false
     let found_result = null
 
     if (noDuplicatingHandlers.includes(data.handler)) {
-        const results = await GetUpdate.find({ acc: data.acc, ticket: data.ticket, handler: data.handler, status: 'pending' })
+        const results = await GetUpdate.find({ acc: data.acc, ticket: data.ticket, handler: data.handler, status: { $in: ['success', 'pending'] } })
         let main_msg = data.message.split(',')[2]
         for (const result of results) {
             const result_main_msg = result.message.split(',')[2]

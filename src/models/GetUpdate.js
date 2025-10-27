@@ -2,13 +2,13 @@ import mongoose from "mongoose"
 
 const getUpdateSchema = new mongoose.Schema({
     acc: {
-        type: String,
+        type: Number,
         index: true,
     },
     ticket: {
-        type: String,
+        type: Number,
         index: true,
-        default: ''
+        default: 0
     },
     server: {
         type: String,
@@ -47,17 +47,17 @@ const getUpdateSchema = new mongoose.Schema({
         default: []
     },
     origin_acc: {
-        type: String,
+        type: Number,
         index: true,
-        default: ''
+        default: 0
     },
     origin_ticket: {
-        type: String,
+        type: Number,
         index: true,
-        default: ''
+        default: 0
     },
     origin_new_ticket: {
-        type: String,
+        type: Number,
         default: ''
     },
     updated_at: {
