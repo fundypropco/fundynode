@@ -174,29 +174,35 @@ function processMessage(msg) {
     data.date = formatDateYMD(data.timestamp)
     const info = msg_parts[2]
     const partial_info = msg_parts[4]
-    data.is_partial = partial_info == -1 ? false : true
+    data.is_partial = false
 
-    if (!data.is_partial) {
-        // msg info
-        const info_parts = info.split('&')
-        data.ticket = info_parts[1]
-        data.symbol = info_parts[2]
-        data.type = info_parts[3]
-        data.vol = info_parts[4]
-        data.open_price = info_parts[5]
-        data.open_time = info_parts[6] //todo: بررسی این فیلد برای سفارشات پندینگ و همچنین درخواست از سعید برای تغییر فرمت آن
-        data.sl = info_parts[7]
-        data.tp = info_parts[8]
-        data.commission = info_parts[9]
-        data.magic = info_parts[10]
-        data.comment = info_parts[11]
-    } else {
+    // msg info
+    const info_parts = info.split('&')
+    data.ticket = info_parts[1]
+    data.symbol = info_parts[2]
+    data.type = info_parts[3]
+    data.vol = info_parts[4]
+    data.open_price = info_parts[5]
+    data.open_time = info_parts[6] //todo: بررسی این فیلد برای سفارشات پندینگ و همچنین درخواست از سعید برای تغییر فرمت آن
+    data.sl = info_parts[7]
+    data.tp = info_parts[8]
+    data.commission = info_parts[9]
+    data.magic = info_parts[10]
+    data.comment = info_parts[11]
+
+    if (partial_info != -1) {
         // partial
         data.partial_items = partial_info.split(";")
             .map(side => side.split("@"))
             .map(([closed_ticket, closed_vol, closed_time, open_ticket, open_vol, open_time]) => ({ closed_ticket, closed_vol, closed_time, open_ticket, open_vol, open_time }))
-    }
 
+        for (const order of data.partial_items) {
+            if (data.ticket == order.closed_ticket || data.ticket == order.open_ticket) {
+                data.is_partial = true
+                break;
+            }
+        }
+    }
 
     return data
 }

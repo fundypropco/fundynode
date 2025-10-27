@@ -42,35 +42,31 @@ async function processClose(data) {
 
         let keyid = makeID()
 
-        for (const order of data.close_items) {
-            // 4.
-            // بدست آوردن تیکتهای متناظر با این سفارش روی اکانتهای دیگر
-            const tickets = await TradeTicket.find({ acc_src: account.acc, ticket_src: order.ticket })
+        //# بدست آوردن تیکتهای متناظر با این سفارش روی اکانتهای دیگر
+        const tickets = await TradeTicket.find({ acc_src: account.acc, ticket_src: data.ticket })
 
-            // 5.
-            // بدست آوردن اکانتهای کپی کننده
-            for (const copier of account.copiers) {
-                const copyTradeData = {}
-                const copierOrder = tickets.find(t => t.acc_dist == copier.acc)
+        //# بدست آوردن اکانتهای کپی کننده
+        for (const copier of account.copiers) {
+            const copyTradeData = {}
+            const copierOrder = tickets.find(t => t.acc_dist == copier.acc)
 
-                copyTradeData.acc = copier.acc
-                copyTradeData.handler = ACTION_HANDLER.CLOSE
-                copyTradeData.keyid = keyid++
-                copyTradeData.origin_acc = account.acc
-                copyTradeData.origin_ticket = order.ticket
-                copyTradeData.description = []
+            copyTradeData.acc = copier.acc
+            copyTradeData.handler = ACTION_HANDLER.CLOSE
+            copyTradeData.keyid = keyid++
+            copyTradeData.origin_acc = account.acc
+            copyTradeData.origin_ticket = data.ticket
+            copyTradeData.description = []
 
-                if (copierOrder) {
-                    copyTradeData.ticket = copierOrder.ticket_dist
-                    copyTradeData.message = await makeMsgForHandler(copyTradeData.handler, copyTradeData)
-                    copyTradeData.status = 'pending'
-                    await GetUpdateService.create(copyTradeData)
-                } else {
-                    copyTradeData.ticket = '-1'
-                    copyTradeData.message = await makeMsgForHandler(copyTradeData.handler, copyTradeData)
-                    copyTradeData.status = 'waiting'
-                    await GetUpdateService.create(copyTradeData)
-                }
+            if (copierOrder) {
+                copyTradeData.ticket = copierOrder.ticket_dist
+                copyTradeData.message = await makeMsgForHandler(copyTradeData.handler, copyTradeData)
+                copyTradeData.status = 'pending'
+                await GetUpdateService.create(copyTradeData)
+            } else {
+                copyTradeData.ticket = '-1'
+                copyTradeData.message = await makeMsgForHandler(copyTradeData.handler, copyTradeData)
+                copyTradeData.status = 'waiting'
+                await GetUpdateService.create(copyTradeData)
             }
         }
     }
@@ -123,7 +119,7 @@ async function processPartial(data) {
 function processMessage(msg) {
     // E.g. 
     // 1006135456,501,NEW CLOSE&324253369&115608&2025-10-14 15:23:40&1@324253369&115608&2025-10-14 15:23:40&1,1758998127,-1
-    // acc , 501 , NEW CLOSE & ticket & close-price & close-time & vol @ ticket & close-price & close-time & vol , timestamp, -1
+    // acc , 501 , NEW CLOSE & ticket & close-price & close-time & vol @ ticket & close-price & close-time & vol @ close-price & close-time & vol @ ticket & close-price & close-time & vol , timestamp, -1
     // partial → acc , 501 , NEW CLOSE_or_DELETE & ticket & close-price & close-time & vol @ ticket & close-price & close-time & vol , timestamp, CLOSED_TICKET @ CLOSED_VOL @ CLOSED_TIME @ OPEN_TICKET @ OPEN_VOL @ OPEN_TIME ; CLOSED_TICKET @ CLOSED_VOL @ CLOSED_TIME @ OPEN_TICKET @ OPEN_VOL @ OPEN_TIME
     const data = {};
 
@@ -134,22 +130,28 @@ function processMessage(msg) {
     data.date = formatDateYMD(data.timestamp)
     let info = msg_parts[2]
     const partial_info = msg_parts[4]
-    data.is_partial = partial_info == -1 ? false : true
+    data.is_partial = false
 
-    if (!data.is_partial) {
-        // msg info
-        // حذف بخش اول عبارت به همراه اولین کاراکتر امپرساین
-        info = info.replace(/^[^&]*&/, "")
-        data.close_items = info.split("@")
-            .map(part => part.split("&"))
-            .map(([ticket, close_price, close_time, vol]) => ({ ticket, close_price, close_time, vol }))
-    } else {
+    // msg info
+    const info_parts = info.split('&')
+    data.ticket = info_parts[1]
+    data.closed_price = info_parts[2]
+    data.closed_time = info_parts[3]
+    data.vol = info_parts[4]
+
+    if (partial_info != -1) {
         // partial
         data.partial_items = partial_info.split(";")
             .map(side => side.split("@"))
             .map(([closed_ticket, closed_vol, closed_time, open_ticket, open_vol, open_time]) => ({ closed_ticket, closed_vol, closed_time, open_ticket, open_vol, open_time }))
-    }
 
+        for (const order of data.partial_items) {
+            if (data.ticket == order.closed_ticket || data.ticket == order.open_ticket) {
+                data.is_partial = true
+                break;
+            }
+        }
+    }
 
     return data
 }
