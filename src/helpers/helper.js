@@ -67,6 +67,10 @@ export async function makeMsgForHandler(handler, data) {
             message += `,${data.ticket}`
             break;
 
+        case 22: // PARTIAL
+            message += `,${data.ticket},${data.vol}`
+            break;
+
         case 13: // BROKER SYMBOLS
             message += `,0`
             break;
