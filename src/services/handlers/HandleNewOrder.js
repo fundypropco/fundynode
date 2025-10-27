@@ -87,7 +87,7 @@ async function processNewOrder(data) {
                 data.origin_new_ticket = ''
                 data.message = await makeMsgForHandler(data.handler, data)
                 data.description = []
-                copyTradeData.keyid = keyid++
+                data.keyid = keyid++
                 await GetUpdateService.create(data)
 
             }
