@@ -203,20 +203,21 @@ export function getOrderVol(accountObj, copierObj, originSymbol, originVol) {
 }
 
 export async function isValidSymbols(accountObj, copierObj, data) {
-    data.description = [];
-    data.is_valid_symbols = false
-    data.symbol_a = await Symbol.findOne({ server: accountObj.server, symbol: data.symbol })
-    if (!data.symbol_a) {
-        data.description.push(`symbol ${data.symbol} not found for broker ${accountObj.server}`)
-        return data
+    const result = {}
+    result.description = [];
+    result.is_valid_symbols = false
+    result.symbol_a = await Symbol.findOne({ server: accountObj.server, symbol: data.symbol })
+    if (!result.symbol_a) {
+        result.description.push(`symbol ${data.symbol} not found for broker ${accountObj.server}`)
+        return result
     }
-    data.symbol_b = await Symbol.findOne({ server: copierObj.server, title: data.symbol_a.title })
-    if (!data.symbol_b) {
-        data.description.push(`symbol ${data.symbol} not found for broker ${copierObj.server}`)
-        return data
+    result.symbol_b = await Symbol.findOne({ server: copierObj.server, title: data.symbol_a.title })
+    if (!result.symbol_b) {
+        result.description.push(`symbol ${data.symbol} not found for broker ${copierObj.server}`)
+        return result
     }
-    data.is_valid_symbols = true
-    return data
+    result.is_valid_symbols = true
+    return result
 }
 
 export function normalizeSymbol(symbol) {

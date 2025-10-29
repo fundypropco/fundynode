@@ -2,6 +2,7 @@ import RequestLog from "../../models/RequestLog.js"
 import { formatDateYMD } from '../../helpers/helper.js'
 import GetUpdateService from '../GetUpdateService.js'
 import TradeTicket from '../../models/TradeTicket.js'
+import GetUpdate from "../../models/GetUpdate.js"
 
 export default async (req, res) => {
 
@@ -11,8 +12,13 @@ export default async (req, res) => {
 
     // 2.
     // بروزرسانی وضعیت دستور در صف دستورات
-    const getUpdateDoc = await GetUpdateService.updateStatus(data)
+    await GetUpdateService.updateStatus(data)
 
+    const getUpdateDoc = await GetUpdate.findOne({
+        acc: data.acc,
+        handler: data.handler,
+        keyid: data.keyid,
+    })
     if (getUpdateDoc.status == 'success') {
         // 3.
         // مپ کردن اکانت و تیکت های مرجع و کپی کننده 

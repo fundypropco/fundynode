@@ -56,10 +56,13 @@ async function processNewOrder(data) {
             //# بررسی بروکر و نماد اکانت ترید و کپی
             //# بررسی امکان اجرای سفارش کپی
 
-            data = await isValidSymbols(account, copier, data)
+            const validatedSymbolData = await isValidSymbols(account, copier, data)
 
-            if (data.is_valid_symbols) {
+            if (validatedSymbolData.is_valid_symbols) {
                 // اگر نمادهای معاملاتی معتبر باشند
+
+                data.symbol_a = validatedSymbolData.symbol_a
+                data.symbol_b = validatedSymbolData.symbol_b
 
                 //# بدست آوردن پارامتر های سفارش کپی
                 const copyTradeData = await getCopyTradeParams(account, copier, data)
@@ -72,6 +75,7 @@ async function processNewOrder(data) {
                 copyTradeData.ticket = copyTradeData.origin_new_ticket = ''
                 copyTradeData.keyid = keyid++
                 copyTradeData.open_price = data.open_price
+                copyTradeData.description = validatedSymbolData.description
                 copyTradeData.message = await makeMsgForHandler(copyTradeData.handler, copyTradeData)
 
                 //# ثبت دستور اجرای سفارش
@@ -86,7 +90,7 @@ async function processNewOrder(data) {
                 data.acc = data.origin_acc = account.acc
                 data.origin_ticket = data.ticket
                 data.origin_new_ticket = ''
-                data.description = []
+                data.description = validatedSymbolData.description
                 data.keyid = keyid++
                 data.message = await makeMsgForHandler(data.handler, data)
                 await GetUpdateService.create(data)
