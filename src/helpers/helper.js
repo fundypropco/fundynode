@@ -211,7 +211,7 @@ export async function isValidSymbols(accountObj, copierObj, data) {
         result.description.push(`symbol ${data.symbol} not found for broker ${accountObj.server}`)
         return result
     }
-    result.symbol_b = await Symbol.findOne({ server: copierObj.server, title: data.symbol_a.title })
+    result.symbol_b = await Symbol.findOne({ server: copierObj.server, title: result.symbol_a.title })
     if (!result.symbol_b) {
         result.description.push(`symbol ${data.symbol} not found for broker ${copierObj.server}`)
         return result
