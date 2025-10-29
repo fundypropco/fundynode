@@ -37,10 +37,7 @@ async function processNewOrder(data) {
     //# بررسی اینکه آیا این سفارش تکراری است یا خیر
     const is_duplicated = await isDuplicatedOrder(data)
     if (is_duplicated) {
-        res.send({
-            status: 'success',
-            message: 'This order has already been received.',
-        })
+        return
     }
 
     //# پیدا کردن اکانت مربوط به عملیات دریافتی
@@ -53,28 +50,29 @@ async function processNewOrder(data) {
 
         //# بدست آوردن اکانتهای کپی کننده
         for (const copier of account.copiers) {
+            const localData = JSON.parse(JSON.stringify(data))
             //# بررسی بروکر و نماد اکانت ترید و کپی
             //# بررسی امکان اجرای سفارش کپی
 
-            const validatedSymbolData = await isValidSymbols(account, copier, data)
+            const validatedSymbolData = await isValidSymbols(account, copier, localData)
 
             if (validatedSymbolData.is_valid_symbols) {
                 // اگر نمادهای معاملاتی معتبر باشند
 
-                data.symbol_a = validatedSymbolData.symbol_a
-                data.symbol_b = validatedSymbolData.symbol_b
+                localData.symbol_a = validatedSymbolData.symbol_a
+                localData.symbol_b = validatedSymbolData.symbol_b
 
                 //# بدست آوردن پارامتر های سفارش کپی
-                const copyTradeData = await getCopyTradeParams(account, copier, data)
+                const copyTradeData = await getCopyTradeParams(account, copier, localData)
 
                 //# مقداردهی سایر پارامترها برای ثبت دستور اجرا سفارش
                 copyTradeData.handler = ACTION_HANDLER[copyTradeData.type]
                 copyTradeData.status = 'pending'
                 copyTradeData.origin_acc = account.acc
-                copyTradeData.origin_ticket = data.ticket
+                copyTradeData.origin_ticket = localData.ticket
                 copyTradeData.ticket = copyTradeData.origin_new_ticket = ''
                 copyTradeData.keyid = keyid++
-                copyTradeData.open_price = data.open_price
+                copyTradeData.open_price = localData.open_price
                 copyTradeData.description = validatedSymbolData.description
                 copyTradeData.message = await makeMsgForHandler(copyTradeData.handler, copyTradeData)
 
@@ -85,15 +83,16 @@ async function processNewOrder(data) {
                 // اگر نمادهای معاملاتی نامعتبر باشند
 
                 //# بستن معامله در اکانت ترید
-                data.handler = ACTION_HANDLER.CLOSE_ORIGIN
-                data.status = 'pending'
-                data.acc = data.origin_acc = account.acc
-                data.origin_ticket = data.ticket
-                data.origin_new_ticket = ''
-                data.description = validatedSymbolData.description
-                data.keyid = keyid++
-                data.message = await makeMsgForHandler(data.handler, data)
-                await GetUpdateService.create(data)
+                const order = {}
+                order.handler = ACTION_HANDLER.CLOSE_ORIGIN
+                order.status = 'pending'
+                order.acc = order.origin_acc = account.acc
+                order.ticket = order.origin_ticket = data.ticket
+                order.origin_new_ticket = ''
+                order.description = validatedSymbolData.description
+                order.keyid = keyid++
+                order.message = await makeMsgForHandler(order.handler, order)
+                await GetUpdateService.create(order)
 
             }
         }//for
@@ -200,7 +199,7 @@ function processMessage(msg) {
             .map(side => side.split("@"))
             .map(([closed_ticket, closed_vol, closed_time, open_ticket, open_vol, open_time]) => ({ closed_ticket, closed_vol, closed_time, open_ticket, open_vol, open_time }))
 
-        data.is_partial = data.partial_items.some(pi => pi.closed_ticket == data.ticket || pi.open_ticket == data.ticket)
+        data.is_partial = data.partial_items.some(pi => pi.open_ticket == data.ticket)
     }
 
     return data
