@@ -3,22 +3,25 @@ import { normalizeSymbol } from '../../helpers/helper.js'
 import GetUpdateService from '../GetUpdateService.js'
 import SymbolAlias from "../../models/SymbolAlias.js"
 import Symbol from "../../models/Symbol.js"
+import GetUpdate from "../../models/GetUpdate.js"
 
 export default async (req, res) => {
 
-    // 1. 
-    // پردازش دیتای ورودی
+    //# پردازش دیتای ورودی
     const data = processMessage(req.body.message)
 
-    // 2.
-    // بروزرسانی وضعیت دستور در صف دستورات
-    const getUpdateDoc = await GetUpdateService.updateStatus(data)
+    //# بروزرسانی وضعیت دستور در صف دستورات
+    await GetUpdateService.updateStatus(data)
 
-    // #.
-    // بدست آوردن نام سرور
-    let serverName = getUpdateDoc ? getUpdateDoc.server : 'Test-Server'
+    //# بدست آوردن نام سرور
+    const getUpdateDoc = await GetUpdate.findOne({
+        acc: data.acc,
+        handler: data.handler,
+        keyid: data.keyid,
+    })
+    const serverName = getUpdateDoc ? getUpdateDoc.server : 'Test-Server'
 
-    // 3.
+    //#
     // استفاده از جدول راهنمای نمادهای معاملاتی برای تشخیص نمادهای قابل معامله در این بروکر
     // 'GOLD' → 'XAUUSD'
     // 'XAUUSD_o' → 'XAUUSD'
@@ -52,8 +55,7 @@ export default async (req, res) => {
         }).filter(Boolean)
     )
 
-    // 4.
-    // لاگ گرفتن از رکوئست دریافتی
+    //# لاگ گرفتن از رکوئست دریافتی
     const requestLog = new RequestLog({
         type: 'GetUpdateResponse',
         message: req.body.message,
@@ -61,8 +63,7 @@ export default async (req, res) => {
     })
     await requestLog.save()
 
-    // 5. 
-    // ارسال پاسخ عملیات موفقیت آمیز
+    //# ارسال پاسخ عملیات موفقیت آمیز
     res.send({
         status: 'success',
     })
