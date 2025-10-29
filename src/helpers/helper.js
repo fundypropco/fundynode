@@ -1,6 +1,5 @@
-import Broker from "../models/Broker.js"
 import Symbol from "../models/Symbol.js"
-import redis from "../boot/redis.js"
+import startRedis from '../boot/redis.js'
 import { ACTION_HANDLER } from './constant.js'
 
 export function getHandlerOfMsg(msg) {
@@ -12,6 +11,7 @@ export function getHandlerOfMsg(msg) {
 }
 
 async function getMqlClusterNo(handler, acc, max = 3) {
+    const redis = await startRedis()
 
     handler = Number(handler)
 
