@@ -80,7 +80,7 @@ function processMessage(msg) {
 
     // msg parts
     const msg_parts = msg.split(',')
-    data.acc = msg_parts[0]
+    data.acc = msg_parts[0].replace(/_.*/, '')
     data.timestamp = msg_parts[3] * 1000
     data.date = formatDateYMD(data.timestamp)
     let info = msg_parts[2]

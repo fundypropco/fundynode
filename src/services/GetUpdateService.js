@@ -15,9 +15,10 @@ const create = async (data) => {
 
     if (noDuplicatingHandlers.includes(data.handler)) {
         const results = await GetUpdate.find({ acc: data.acc, ticket: data.ticket, handler: data.handler, status: { $in: ['success', 'pending'] } })
-        let main_msg = data.message.split(',')[2]
+        // پیدا کردن بخش پیام و حذف شماره اکانت از اول آن چرا که ممکن است کلاستر حساب در سمت ام کیو ال باعث اشتباه محاسباتی شود
+        let main_msg = data.message.split(',')[2].replace(/^[^,]*,/, "")
         for (const result of results) {
-            const result_main_msg = result.message.split(',')[2]
+            const result_main_msg = result.message.split(',')[2].replace(/^[^,]*,/, "")
             if (result_main_msg == main_msg) {
                 found = true
                 found_result = result

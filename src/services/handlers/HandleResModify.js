@@ -36,7 +36,7 @@ function processMessage(msg) {
 
     // msg parts
     const msg_parts = msg.split(',')
-    data.acc = msg_parts[0]
+    data.acc = msg_parts[0].replace(/_.*/, '')
     data.handler = 1000 - parseInt(msg_parts[1])
     data.timestamp = msg_parts[3] * 1000
     data.date = formatDateYMD(data.timestamp)
