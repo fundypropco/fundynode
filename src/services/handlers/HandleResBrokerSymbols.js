@@ -44,7 +44,7 @@ export default async (req, res) => {
             if (title) {
                 return {
                     updateOne: {
-                        filter: { title },
+                        filter: { title: title, server: serverName },
                         update: { $set: { symbol: rawSymbol, server: serverName } },
                         upsert: true
                     }
