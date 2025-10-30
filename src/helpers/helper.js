@@ -185,7 +185,7 @@ export async function getCopyTradeParams(account, copier, order) {
     })(); //todo: محاسبه شود بر اساس اختلاف کانترکت و مدل کپی کردن اکانت
     data.sl = order.sl //todo: محاسبه شود بر اساس اختلاف اسپرد
     data.tp = order.tp //todo: محاسبه شود بر اساس اختلاف اسپرد
-    data.slippage = 5 //todo: پرسیده شود اگر نیاز است محاسبه شود
+    data.slippage = 500 //todo: پرسیده شود اگر نیاز است محاسبه شود
     data.server = copier.server
 
     return data
