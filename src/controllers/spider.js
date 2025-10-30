@@ -13,7 +13,7 @@ import HandleResBrokerSymbols from '../services/handlers/HandleResBrokerSymbols.
 import HandleResCloseDelete from '../services/handlers/HandleResCloseDelete.js'
 
 const getUpdates = asyncHandler(async (req, res) => {
-    res.json(await GetUpdateService.getUnprocessed())
+    res.json(await GetUpdateService.getUnprocessed(req.params.acc))
 })
 
 const sendMessage = asyncHandler(async (req, res) => {

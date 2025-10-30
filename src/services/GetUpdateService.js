@@ -86,7 +86,7 @@ const updateWaitings = async (origin_acc, origin_ticket, ticket) => {
     }
 }
 
-const getUnprocessed = async () => {
+const getUnprocessed = async (acc) => {
     // let results = await GetUpdate.find({
     //     $or: [
     //         { status: 'pending' },
@@ -94,7 +94,7 @@ const getUnprocessed = async () => {
     //     ]
     // }).sort('datetime')
 
-    let results = await GetUpdate.find({ status: 'pending' }).sort('datetime')
+    let results = await GetUpdate.find({ acc, status: 'pending' }).sort('-datetime')
 
     const finalResults = results.map(doc => ({
         update_id: doc.keyid,
