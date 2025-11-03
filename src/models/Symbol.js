@@ -15,12 +15,12 @@ const symbolSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-    point: Number,
-    tick_value: Number,
     tick_size: Number,
+    contract_size: Number,
+    tick_value: Number,
+    vol_step: Number,
     vol_min: Number,
-    vol_max: Number,
-    vol_limit: Number,
+    vol_max: Number
 })
 
 symbolSchema.index({ server: 1, title: 1 })

@@ -1,9 +1,10 @@
 import RequestLog from "../../models/RequestLog.js"
-import { normalizeSymbol } from '../../helpers/helper.js'
+import { makeMsgForHandler, normalizeSymbol } from '../../helpers/helper.js'
 import GetUpdateService from '../GetUpdateService.js'
 import SymbolAlias from "../../models/SymbolAlias.js"
 import Symbol from "../../models/Symbol.js"
 import GetUpdate from "../../models/GetUpdate.js"
+import { ACTION_HANDLER } from "../../helpers/constant.js"
 
 export default async (req, res) => {
 
@@ -23,7 +24,7 @@ export default async (req, res) => {
 
     //#
     // استفاده از جدول راهنمای نمادهای معاملاتی برای تشخیص نمادهای قابل معامله در این بروکر
-    // 'GOLD' → 'XAUUSD'
+    // 'XAUUSD' → 'XAUUSD'
     // 'XAUUSD_o' → 'XAUUSD'
     const symbolAliases = await SymbolAlias.find().lean();
     const aliasMap = new Map();
@@ -34,8 +35,18 @@ export default async (req, res) => {
         }
     }
 
+    //# 
+    // بدست آوردن نمادهای قابل معامله 
+    const tradableSymbols = data.symbols.filter(rawSymbol => {
+        const normalized = normalizeSymbol(rawSymbol)
+        const title = aliasMap.get(normalized) || aliasMap.get(rawSymbol)
+        return Boolean(title)
+    })
+
+    //# 
+    // آپدیت کردن اطلاعات دیتابیس
     await Symbol.bulkWrite(
-        data.symbols.map(rawSymbol => {
+        tradableSymbols.map(rawSymbol => {
             const normalized = normalizeSymbol(rawSymbol)
 
             // بررسی وجود نام نماد در جدول راهنمای بالا
@@ -54,6 +65,26 @@ export default async (req, res) => {
             }
         }).filter(Boolean)
     )
+
+    //# 
+    // درخواست برای ارسال اطلاعات نماد
+    let keyid = makeID()
+    const promises = [];
+    for (const symbol of tradableSymbols) {
+        const promise = (async () => {
+            const getUpdateData = {
+                server: serverName,
+                acc: data.acc,
+                handler: ACTION_HANDLER.BROKER_SYMBOL_DATA,
+                symbol: symbol,
+                keyid: keyid++,
+            }
+            getUpdateData.message = await makeMsgForHandler(getUpdateData.handler, getUpdateData);
+            return GetUpdateService.create(getUpdateData);
+        })()
+        promises.push(promise);
+    }
+    await Promise.all(promises);
 
     //# لاگ گرفتن از رکوئست دریافتی
     const requestLog = new RequestLog({
@@ -76,6 +107,7 @@ function processMessage(msg) {
     const data = {};
 
     // msg parts
+    msg = msg.toUpperCase()
     const msg_parts = msg.split(',')
     data.acc = msg_parts[0].replace(/_.*/, '')
     data.handler = 1000 - parseInt(msg_parts[1])

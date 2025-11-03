@@ -62,13 +62,17 @@ export async function makeMsgForHandler(handler, data) {
             message += `,${data.ticket}&${data.entry}&${data.sl}&${data.tp}`
             break;
 
-        case 4: // CLOSE
-        case 23: // CLOSE
+        case 4: // CLOSE COPIER
+        case 23: // CLOSE TRADER
             message += `,${data.ticket}`
             break;
 
         case 22: // PARTIAL
             message += `,${data.ticket}&${data.vol}`
+            break;
+
+        case 11: // BROKER SYMBOL DATA
+            message += `,${data.symbol}`
             break;
 
         case 13: // BROKER SYMBOLS
@@ -183,9 +187,50 @@ export async function getCopyTradeParams(account, copier, order) {
 
         return vol;
     })(); //todo: محاسبه شود بر اساس اختلاف کانترکت و مدل کپی کردن اکانت
-    data.sl = order.sl //todo: محاسبه شود بر اساس اختلاف اسپرد
-    data.tp = order.tp //todo: محاسبه شود بر اساس اختلاف اسپرد
-    data.slippage = 50 //todo: پرسیده شود اگر نیاز است محاسبه شود
+    data.sl = order.sl
+    data.tp = order.tp
+    const diff_in_points = 50
+    if (data.type == 'SELL') {
+        if (Number(data.sl)) {
+            let sl_points = (data.sl - data.open_price) / order.symbol_b.tick_size
+            let new_sl_points = Math.round(sl_points * 1.2)
+            if (new_sl_points - sl_points >= diff_in_points) {
+                data.sl += new_sl_points * order.symbol_b.tick_size
+            } else {
+                data.sl += diff_in_points * order.symbol_b.tick_size
+            }
+        }
+        if (Number(data.tp)) {
+            let tp_points = (data.open_price - data.tp) / order.symbol_b.tick_size
+            let new_tp_points = Math.round(tp_points * 1.2)
+            if (new_tp_points - tp_points >= diff_in_points) {
+                data.tp -= new_tp_points * order.symbol_b.tick_size
+            } else {
+                data.tp -= diff_in_points * order.symbol_b.tick_size
+            }
+        }
+    }
+    if (data.type == 'BUY') {
+        if (Number(data.sl)) {
+            let sl_points = (data.open_price - data.sl) / order.symbol_b.tick_size
+            let new_sl_points = Math.round(sl_points * 1.2)
+            if (new_sl_points - sl_points >= diff_in_points) {
+                data.sl -= new_sl_points * order.symbol_b.tick_size
+            } else {
+                data.sl -= diff_in_points * order.symbol_b.tick_size
+            }
+        }
+        if (Number(data.tp)) {
+            let tp_points = (data.tp - data.open_price) / order.symbol_b.tick_size
+            let new_tp_points = Math.round(tp_points * 1.2)
+            if (new_tp_points - tp_points >= diff_in_points) {
+                data.tp += new_tp_points * order.symbol_b.tick_size
+            } else {
+                data.tp += diff_in_points * order.symbol_b.tick_size
+            }
+        }
+    }
+    data.slippage = 50
     data.server = copier.server
 
     return data

@@ -1,8 +1,10 @@
 import RequestLog from "../../models/RequestLog.js"
-import { formatDateYMD } from '../../helpers/helper.js'
+import { formatDateYMD, makeMsgForHandler } from '../../helpers/helper.js'
 import GetUpdateService from '../GetUpdateService.js'
 import TradeTicket from '../../models/TradeTicket.js'
 import GetUpdate from "../../models/GetUpdate.js"
+import { ACTION_HANDLER } from "../../helpers/constant.js"
+import Account from "../../models/Account.js"
 
 export default async (req, res) => {
 
@@ -35,6 +37,24 @@ export default async (req, res) => {
         // 4.
         // ارسال دستورات در وضعیت انتظار و وابسته به این دیتا
         await GetUpdateService.updateWaitings(originOrderAcc, originOrderTicket, data.ticket)
+    } else {
+        const account = await Account.findOne({ acc: getUpdateDoc.origin_acc, server: getUpdateDoc.origin_server })
+        if (account && account.copiers?.length == 1) {
+            const order = {}
+            order.handler = ACTION_HANDLER.CLOSE_ORIGIN
+            order.status = 'pending'
+            order.acc = getUpdateDoc.origin_acc
+            order.ticket = getUpdateDoc.origin_ticket
+            order.symbol = getUpdateDoc.origin_symbol
+            order.origin_acc = getUpdateDoc.acc
+            order.origin_ticket = getUpdateDoc.ticket
+            order.origin_symbol = getUpdateDoc.symbol
+            order.symbol_title = getUpdateDoc.symbol_title
+            order.description = [`Copier Error: ${data.result_text} / ${getMqlError(data.result_code)}`]
+            order.keyid = makeID()
+            order.message = await makeMsgForHandler(order.handler, order)
+            await GetUpdateService.create(order)
+        }
     }
 
     // 5.

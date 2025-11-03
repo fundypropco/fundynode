@@ -70,6 +70,9 @@ async function processNewOrder(data) {
                 copyTradeData.status = 'pending'
                 copyTradeData.origin_acc = account.acc
                 copyTradeData.origin_ticket = localData.ticket
+                copyTradeData.origin_server = account.server
+                copyTradeData.origin_symbol = localData.symbol_a.symbol
+                copyTradeData.symbol_title = localData.symbol_a.title
                 copyTradeData.ticket = copyTradeData.origin_new_ticket = ''
                 copyTradeData.keyid = keyid++
                 copyTradeData.open_price = localData.open_price
@@ -86,9 +89,11 @@ async function processNewOrder(data) {
                 const order = {}
                 order.handler = ACTION_HANDLER.CLOSE_ORIGIN
                 order.status = 'pending'
-                order.acc = order.origin_acc = account.acc
-                order.ticket = order.origin_ticket = data.ticket
-                order.origin_new_ticket = ''
+                order.acc = account.acc
+                order.ticket = data.ticket
+                order.server = account.server
+                order.origin_acc = copier.acc
+                order.origin_server = copier.server
                 order.description = validatedSymbolData.description
                 order.keyid = keyid++
                 order.message = await makeMsgForHandler(order.handler, order)
@@ -183,7 +188,7 @@ function processMessage(msg) {
     const info_parts = info.split('&')
     data.ticket = info_parts[1]
     data.symbol = info_parts[2]
-    data.type = info_parts[3]
+    data.type = info_parts[3].replace(/[\s_]/g, "").toUpperCase()
     data.vol = info_parts[4]
     data.open_price = info_parts[5]
     data.open_time = info_parts[6] //todo: بررسی این فیلد برای سفارشات پندینگ و همچنین درخواست از سعید برای تغییر فرمت آن

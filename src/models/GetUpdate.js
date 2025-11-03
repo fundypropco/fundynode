@@ -15,6 +15,10 @@ const getUpdateSchema = new mongoose.Schema({
         default: '',
         index: true,
     },
+    symbol: {
+        type: String,
+        default: ''
+    },
     handler: {
         type: Number,
         index: true,
@@ -58,7 +62,19 @@ const getUpdateSchema = new mongoose.Schema({
     },
     origin_new_ticket: {
         type: Number,
-        default: ''
+        default: 0
+    },
+    origin_server: {
+        type: String,
+        default: '',
+    },
+    origin_symbol: {
+        type: String,
+        default: '',
+    },
+    symbol_title: {
+        type: String,
+        default: '',
     },
     updated_at: {
         type: Date,

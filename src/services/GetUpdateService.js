@@ -29,18 +29,23 @@ const create = async (data) => {
 
     if (!found) {
         const getUpdate = new GetUpdate({
+            server: data.server ?? '',
             acc: data.acc,
-            ticket: data.ticket,
+            ticket: data.ticket ?? 0,
+            symbol: data.symbol ?? '',
             handler: data.handler,
             message: data.message,
             datetime: Date.now(),
             keyid: data.keyid,
             try_count: 0,
-            status: data.status,
-            description: data.description,
-            origin_acc: data.origin_acc,
-            origin_ticket: data.origin_ticket,
-            origin_new_ticket: data.origin_new_ticket
+            status: data.status ?? 'pending',
+            description: data.description ?? [],
+            symbol_title: data.symbol_title ?? '',
+            origin_acc: data.origin_acc ?? 0,
+            origin_ticket: data.origin_ticket ?? 0,
+            origin_new_ticket: data.origin_new_ticket ?? 0,
+            origin_server: data.origin_server ?? '',
+            origin_symbol: data.origin_symbol ?? '',
         })
 
         return await getUpdate.save()
@@ -59,7 +64,13 @@ const updateStatus = async (data) => {
     };
 
     if (data.status != 'success') {
-        update.$push = { description: `${data.result_text} / ${getMqlError(data.result_code)}` };
+        update.$push = { description: `${data.result_text} / ${getMqlError(data.result_code)}` }
+    }
+
+    const ticketHandlers = [ACTION_HANDLER.BUY, ACTION_HANDLER.BUYLIMIT, ACTION_HANDLER.BUYSTOP, ACTION_HANDLER.SELL, ACTION_HANDLER.SELLLIMIT, ACTION_HANDLER.SELLSTOP]
+
+    if (ticketHandlers.includes(data.handler) && data.status == 'success' && data.ticket) {
+        update.$push = { ticket: data.ticket }
     }
 
     const result = await GetUpdate.findOneAndUpdate({

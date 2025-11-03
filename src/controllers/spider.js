@@ -11,6 +11,7 @@ import handleDelete from '../services/handlers/handleDelete.js'
 import handleResPartialClose from '../services/handlers/handleResPartialClose.js'
 import HandleResBrokerSymbols from '../services/handlers/HandleResBrokerSymbols.js'
 import HandleResCloseDelete from '../services/handlers/HandleResCloseDelete.js'
+import HandleResBrokerSymbolData from '../services/handlers/HandleResBrokerSymbolData.js'
 
 const getUpdates = asyncHandler(async (req, res) => {
     res.json(await GetUpdateService.getUnprocessed(req.params.acc))
@@ -48,9 +49,14 @@ const sendMessage = asyncHandler(async (req, res) => {
             return await handleResPartialClose(req, res)
         case "987":
             return await HandleResBrokerSymbols(req, res)
-
+        case "989":
+            return await HandleResBrokerSymbolData(req, res)
+        default:
+            return res.send({
+                status: 'error',
+                message: 'Wrong handler received!!!'
+            })
     }
-
 })
 
 export default {
