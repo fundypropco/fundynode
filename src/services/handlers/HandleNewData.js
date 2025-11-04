@@ -1,7 +1,10 @@
 
-import { formatDateYMD } from '../../helpers/helper.js'
+import { ACTION_HANDLER } from '../../helpers/constant.js'
+import { formatDateYMD, makeMsgForHandler } from '../../helpers/helper.js'
 import Account from '../../models/Account.js'
 import AccountReport from '../../models/AccountReport.js'
+import TradeTicket from '../../models/TradeTicket.js'
+import GetUpdateService from '../GetUpdateService.js'
 
 export default async (req, res) => {
 
@@ -42,6 +45,7 @@ function processMessage(msg) {
 async function updateAccount(data) {
     //todo:  بررسی اینکه اکانت کال شده است یا خیر و ارسال دستور بستن همه معاملات و غیرفعال کردن کپی روی آن حساب
     let account = await Account.findOne({ acc: data.acc });
+    const copy_state = account.copy
 
     if (!account) {
         account = new Account({
@@ -85,7 +89,66 @@ async function updateAccount(data) {
         account.eqlt = data.timestamp
     }
 
+    if (data.eq <= account.ddeq) {
+        account.copy = false
+    }
+
     await account.save()
+
+
+    //# 
+    // بررسی اینکه دراودان خورده یا نه 
+    // اگر دراودان خورده باید معاملات روی حساب ترید و حساب کپی بسته شود
+    if (data.eq <= account.ddeq && copy_state) {
+        for (const copier of account.copiers) {
+            const copierTickets = await TradeTicket.find({ acc_src: account.acc, acc_dist: copier.acc, status: 'open' })
+            if (copierTickets.length) {
+                const total = copierTickets.length
+                const parts = 3
+                const size = Math.floor(total / parts)
+                let keyid = makeID()
+                let tickets = []
+                for (const i = 0; i < total; i++) {
+                    const copierTicket = copierTickets[i]
+
+                    tickets.push(copierTicket.ticket_dist)
+                    if ((i + 1) % size === 0 || i === total - 1) {
+                        const order = {
+                            handler: ACTION_HANDLER.BULK_CLOSE,
+                            acc: copier.acc,
+                            server: copier.server,
+                            origin_acc: account.acc,
+                            origin_server: account.server,
+                            description: ['drawdown'],
+                            keyid: keyid++,
+                            tickets: tickets.join('&')
+                        }
+                        order.message = await makeMsgForHandler(order.handler, order)
+                        await GetUpdateService.create(order)
+                        tickets = []
+                    }
+                }
+            }
+        }
+
+        const tradeTickets = await TradeTicket.find({ acc_src: account.acc, status: 'open' })
+        if (tradeTickets.length) {
+            const tickets = [...new Set(tradeTickets.map(t => t.ticket_src))]
+            keyid = makeID()
+            for (const ticket of tickets) {
+                const origin_order = {
+                    handler: ACTION_HANDLER.CLOSE_ORIGIN,
+                    acc: account.acc,
+                    ticket: ticket,
+                    server: account.server,
+                    description: ['drawdown'],
+                    key_id: keyid++,
+                }
+                origin_order.message = await makeMsgForHandler(origin_order.handler, origin_order)
+                await GetUpdateService.create(order)
+            }
+        }
+    }
 }
 
 async function updateAccountReport(data) {

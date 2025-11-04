@@ -10,7 +10,7 @@ export default async (req, res) => {
 
     // 2.
     // بروزرسانی وضعیت دستور در صف دستورات
-    const getUpdateDoc = await GetUpdateService.updateStatus(data)
+    await GetUpdateService.updateStatus(data)
 
     // 3.
     // لاگ گرفتن از رکوئست دریافتی

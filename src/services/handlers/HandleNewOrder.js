@@ -73,7 +73,6 @@ async function processNewOrder(data) {
                 copyTradeData.origin_server = account.server
                 copyTradeData.origin_symbol = localData.symbol_a.symbol
                 copyTradeData.symbol_title = localData.symbol_a.title
-                copyTradeData.ticket = copyTradeData.origin_new_ticket = ''
                 copyTradeData.keyid = keyid++
                 copyTradeData.open_price = localData.open_price
                 copyTradeData.description = validatedSymbolData.description
@@ -89,11 +88,10 @@ async function processNewOrder(data) {
                 const order = {}
                 order.handler = ACTION_HANDLER.CLOSE_ORIGIN
                 order.status = 'pending'
-                order.acc = account.acc
-                order.ticket = data.ticket
-                order.server = account.server
-                order.origin_acc = copier.acc
-                order.origin_server = copier.server
+                order.acc = order.origin_acc = account.acc
+                order.ticket = order.origin_ticket = data.ticket
+                order.server = order.origin_server = account.server
+                order.symbol = order.origin_symbol = data.symbol
                 order.description = validatedSymbolData.description
                 order.keyid = keyid++
                 order.message = await makeMsgForHandler(order.handler, order)
@@ -113,36 +111,40 @@ async function processPartial(data) {
     if (account.copy) {
 
         let keyid = makeID()
+        const order = data.partial_item
 
-        for (const order of data.partial_items) {
-            //# بدست آوردن تیکتهای متناظر با این سفارش روی اکانتهای دیگر
-            const tickets = await TradeTicket.find({ acc_src: account.acc, ticket_src: order.closed_ticket })
+        //# بدست آوردن تیکتهای متناظر با این سفارش روی اکانتهای دیگر
+        const tickets = await TradeTicket.find({ acc_src: account.acc, ticket_src: order.closed_ticket })
 
-            //# بدست آوردن اکانتهای کپی کننده
-            for (const copier of account.copiers) {
-                const copyTradeData = {}
-                const copierOrder = tickets.find(t => t.acc_dist == copier.acc)
+        //# بدست آوردن اکانتهای کپی کننده
+        for (const copier of account.copiers) {
+            const copyTradeData = {}
+            const copierOrder = tickets.find(t => t.acc_dist == copier.acc)
 
-                copyTradeData.acc = copier.acc
-                copyTradeData.handler = ACTION_HANDLER.PARTIAL_CLOSE
-                copyTradeData.keyid = keyid++
-                copyTradeData.origin_acc = account.acc
-                copyTradeData.origin_ticket = order.closed_ticket
-                copyTradeData.origin_new_ticket = order.open_ticket
-                copyTradeData.description = []
-                copyTradeData.vol = order.closed_vol //todo: calc vol - getOrderVol(account, copier, '', data.close_vol)
+            copyTradeData.acc = copier.acc
+            copyTradeData.handler = ACTION_HANDLER.PARTIAL_CLOSE
+            copyTradeData.keyid = keyid++
+            copyTradeData.origin_acc = account.acc
+            copyTradeData.origin_ticket = order.closed_ticket
+            copyTradeData.origin_server = account.server
+            copyTradeData.origin_new_ticket = order.open_ticket
+            copyTradeData.description = []
+            copyTradeData.vol = order.closed_vol //todo: calc vol - getOrderVol(account, copier, '', data.close_vol)
 
-                if (copierOrder) {
-                    copyTradeData.ticket = copierOrder.ticket_dist
-                    copyTradeData.status = 'pending'
-                    copyTradeData.message = await makeMsgForHandler(copyTradeData.handler, copyTradeData)
-                    await GetUpdateService.create(copyTradeData)
-                } else {
-                    copyTradeData.ticket = '-1'
-                    copyTradeData.status = 'waiting'
-                    copyTradeData.message = await makeMsgForHandler(copyTradeData.handler, copyTradeData)
-                    await GetUpdateService.create(copyTradeData)
-                }
+            if (copierOrder) {
+                copyTradeData.origin_symbol = copierOrder.symbol_src
+                copyTradeData.ticket = copierOrder.ticket_dist
+                copyTradeData.server = copierOrder.server_dist
+                copyTradeData.symbol = copierOrder.symbol_dist
+                copyTradeData.symbol_title = copierOrder.symbol_title
+                copyTradeData.status = 'pending'
+                copyTradeData.message = await makeMsgForHandler(copyTradeData.handler, copyTradeData)
+                await GetUpdateService.create(copyTradeData)
+            } else {
+                copyTradeData.ticket = -1
+                copyTradeData.status = 'waiting'
+                copyTradeData.message = await makeMsgForHandler(copyTradeData.handler, copyTradeData)
+                await GetUpdateService.create(copyTradeData)
             }
         }
     }
@@ -200,11 +202,12 @@ function processMessage(msg) {
 
     if (partial_info != -1) {
         // partial
-        data.partial_items = partial_info.split(";")
+        data.partial_item = partial_info.split(";")
             .map(side => side.split("@"))
             .map(([closed_ticket, closed_vol, closed_time, open_ticket, open_vol, open_time]) => ({ closed_ticket, closed_vol, closed_time, open_ticket, open_vol, open_time }))
+            .find(pi => pi.open_ticket == data.ticket)
 
-        data.is_partial = data.partial_items.some(pi => pi.open_ticket == data.ticket)
+        data.is_partial = !!data.partial_item
     }
 
     return data

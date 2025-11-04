@@ -30,6 +30,10 @@ const accountSchema = new mongoose.Schema({
         // by admin
         type: Number
     },
+    ddeq: {
+        // drawdown equity amount
+        type: Number
+    },
     eq: {
         // equity
         type: Number

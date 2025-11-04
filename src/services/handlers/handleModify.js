@@ -37,13 +37,18 @@ export default async (req, res) => {
                 copyTradeData.keyid = keyid++
                 copyTradeData.origin_acc = account.acc
                 copyTradeData.origin_ticket = order.ticket
+                copyTradeData.origin_server = account.server
                 copyTradeData.description = []
                 copyTradeData.entry = order.entry
                 copyTradeData.sl = order.sl
                 copyTradeData.tp = order.tp
 
                 if (copierOrder) {
+                    copyTradeData.origin_symbol = copierOrder.symbol_src
                     copyTradeData.ticket = copierOrder.ticket_dist
+                    copyTradeData.server = copierOrder.server_dist
+                    copyTradeData.symbol = copierOrder.symbol_dist
+                    copyTradeData.symbol_title = copierOrder.symbol_title
                     copyTradeData.status = 'pending'
                     copyTradeData.message = await makeMsgForHandler(copyTradeData.handler, copyTradeData)
                     await GetUpdateService.create(copyTradeData)

@@ -24,31 +24,32 @@ export default async (req, res) => {
     if (getUpdateDoc.status == 'success') {
         // 3.
         // مپ کردن اکانت و تیکت های مرجع و کپی کننده 
-        const originOrderAcc = getUpdateDoc.origin_acc
-        const originOrderTicket = getUpdateDoc.origin_ticket
         const tradeTicket = new TradeTicket({
-            acc_src: originOrderAcc,
-            ticket_src: originOrderTicket,
+            acc_src: getUpdateDoc.origin_acc,
+            ticket_src: getUpdateDoc.origin_ticket,
+            server_src: getUpdateDoc.origin_server,
+            symbol_src: getUpdateDoc.origin_symbol,
             acc_dist: data.acc,
-            ticket_dist: data.ticket
+            ticket_dist: data.ticket,
+            server_dist: getUpdateDoc.server,
+            symbol_dist: getUpdateDoc.symbol,
+            symbol_title: getUpdateDoc.symbol_title,
         })
         await tradeTicket.save()
 
         // 4.
         // ارسال دستورات در وضعیت انتظار و وابسته به این دیتا
-        await GetUpdateService.updateWaitings(originOrderAcc, originOrderTicket, data.ticket)
+        await GetUpdateService.updateWaitings(getUpdateDoc.origin_acc, getUpdateDoc.origin_ticket, data.ticket)
     } else {
         const account = await Account.findOne({ acc: getUpdateDoc.origin_acc, server: getUpdateDoc.origin_server })
         if (account && account.copiers?.length == 1) {
             const order = {}
             order.handler = ACTION_HANDLER.CLOSE_ORIGIN
             order.status = 'pending'
-            order.acc = getUpdateDoc.origin_acc
-            order.ticket = getUpdateDoc.origin_ticket
-            order.symbol = getUpdateDoc.origin_symbol
-            order.origin_acc = getUpdateDoc.acc
-            order.origin_ticket = getUpdateDoc.ticket
-            order.origin_symbol = getUpdateDoc.symbol
+            order.acc = order.origin_acc = getUpdateDoc.origin_acc
+            order.ticket = order.origin_ticket = getUpdateDoc.origin_ticket
+            order.symbol = order.origin_symbol = getUpdateDoc.origin_symbol
+            order.server = order.origin_server = getUpdateDoc.origin_server
             order.symbol_title = getUpdateDoc.symbol_title
             order.description = [`Copier Error: ${data.result_text} / ${getMqlError(data.result_code)}`]
             order.keyid = makeID()

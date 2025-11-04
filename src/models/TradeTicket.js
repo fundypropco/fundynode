@@ -7,15 +7,45 @@ const tradeTicketSchema = new mongoose.Schema({
     ticket_src: {
         type: Number
     },
+    server_src: {
+        type: String
+    },
+    symbol_src: {
+        type: String
+    },
     acc_dist: {
         type: Number
     },
     ticket_dist: {
         type: Number
+    },
+    server_dist: {
+        type: String
+    },
+    symbol_dist: {
+        type: String
+    },
+    symbol_title: {
+        type: String
+    },
+    status: {
+        type: String,
+        enum: ['open', 'closed'],
+        index: true,
+        default: 'open'
+    },
+    created_at: {
+        type: Date,
+        default: Date.now
+    },
+    updated_at: {
+        type: Date,
+        default: Date.now
     }
 });
 
-tradeTicketSchema.index({ acc_src: 1, ticket_src: 1 })
+tradeTicketSchema.index({ acc_src: 1, ticket_src: 1, acc_dist: 1 })
+tradeTicketSchema.index({ acc_src: 1, acc_dist: 1 })
 
 const TradeTicket = mongoose.model('TradeTicket', tradeTicketSchema, 'trade_tickets');
 

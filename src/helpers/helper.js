@@ -63,12 +63,8 @@ export async function makeMsgForHandler(handler, data) {
             break;
 
         case 4: // CLOSE COPIER
-        case 23: // CLOSE TRADER
+        case 23: // CLOSE TRADER / ORIGIN
             message += `,${data.ticket}`
-            break;
-
-        case 22: // PARTIAL
-            message += `,${data.ticket}&${data.vol}`
             break;
 
         case 11: // BROKER SYMBOL DATA
@@ -77,6 +73,14 @@ export async function makeMsgForHandler(handler, data) {
 
         case 13: // BROKER SYMBOLS
             message += `,0`
+            break;
+
+        case 21: // BULK CLOSE
+            message += `,${data.tickets}`
+            break;
+
+        case 22: // PARTIAL
+            message += `,${data.ticket}&${data.vol}`
             break;
     }
 

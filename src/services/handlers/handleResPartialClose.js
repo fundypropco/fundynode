@@ -1,8 +1,6 @@
-import Account from '../../models/Account.js'
 import RequestLog from "../../models/RequestLog.js"
 import GetUpdateService from "../GetUpdateService.js"
 import { formatDateYMD, makeMsgForHandler, makeID } from '../../helpers/helper.js'
-import { ACTION_HANDLER } from '../../helpers/constant.js'
 import TradeTicket from '../../models/TradeTicket.js'
 
 export default async (req, res) => {
@@ -18,19 +16,29 @@ export default async (req, res) => {
     if (getUpdateDoc && getUpdateDoc.status == 'success') {
         // #.
         // مپ کردن اکانت و تیکت های مرجع و کپی کننده باقیمانده 
-        const originOrderAcc = getUpdateDoc.origin_acc
-        const originNewOrderTicket = getUpdateDoc.origin_new_ticket
         const tradeTicket = new TradeTicket({
-            acc_src: originOrderAcc,
-            ticket_src: originNewOrderTicket,
+            acc_src: getUpdateDoc.origin_acc,
+            ticket_src: getUpdateDoc.origin_new_ticket,
+            server_src: getUpdateDoc.origin_server,
+            symbol_src: getUpdateDoc.origin_symbol,
             acc_dist: data.acc,
-            ticket_dist: data.open_ticket
+            ticket_dist: data.open_ticket,
+            server_dist: getUpdateDoc.server,
+            symbol_dist: getUpdateDoc.symbol,
+            symbol_title: getUpdateDoc.symbol_title
         })
         await tradeTicket.save()
 
+        //#
+        // بستن مپ معامله کلوز شده
+        await TradeTicket.updateOne(
+            { acc_src: getUpdateDoc.origin_acc, ticket_src: getUpdateDoc.origin_ticket, acc_dist: data.acc },
+            { $set: { status: 'closed' } }
+        )
+
         // #.
         // ارسال دستورات در وضعیت انتظار و وابسته به این دیتا
-        await GetUpdateService.updateWaitings(originOrderAcc, originNewOrderTicket, data.open_ticket)
+        await GetUpdateService.updateWaitings(getUpdateDoc.origin_acc, getUpdateDoc.origin_new_ticket, data.open_ticket)
     }
 
     // 6.

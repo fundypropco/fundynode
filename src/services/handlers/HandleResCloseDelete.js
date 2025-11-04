@@ -1,6 +1,7 @@
 import RequestLog from "../../models/RequestLog.js"
 import { formatDateYMD } from '../../helpers/helper.js'
 import GetUpdateService from '../GetUpdateService.js'
+import TradeTicket from "../../models/TradeTicket.js"
 
 export default async (req, res) => {
 
@@ -11,6 +12,13 @@ export default async (req, res) => {
     // 2.
     // بروزرسانی وضعیت دستور در صف دستورات
     const getUpdateDoc = await GetUpdateService.updateStatus(data)
+
+    //#
+    // بستن مپ معامله کلوز شده
+    await TradeTicket.updateOne(
+        { acc_src: getUpdateDoc.origin_acc, ticket_src: getUpdateDoc.origin_ticket, acc_dist: data.acc },
+        { $set: { status: 'closed' } }
+    )
 
     // 3.
     // لاگ گرفتن از رکوئست دریافتی
