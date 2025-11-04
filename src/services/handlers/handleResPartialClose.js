@@ -2,6 +2,7 @@ import RequestLog from "../../models/RequestLog.js"
 import GetUpdateService from "../GetUpdateService.js"
 import { formatDateYMD, makeMsgForHandler, makeID } from '../../helpers/helper.js'
 import TradeTicket from '../../models/TradeTicket.js'
+import GetUpdate from "../../models/GetUpdate.js"
 
 export default async (req, res) => {
 
@@ -11,9 +12,22 @@ export default async (req, res) => {
 
     // #.
     // بروزرسانی وضعیت دستور در صف دستورات
-    const getUpdateDoc = await GetUpdateService.updateStatus(data)
+    await GetUpdateService.updateStatus(data)
+
+    const getUpdateDoc = await GetUpdate.findOne({
+        acc: data.acc,
+        handler: data.handler,
+        keyid: data.keyid,
+    })
 
     if (getUpdateDoc && getUpdateDoc.status == 'success') {
+        //#
+        // بستن معامله کلوز شده در تیکت مپ
+        const trade = await TradeTicket.findeOneAndUpdate(
+            { acc_src: getUpdateDoc.origin_acc, ticket_src: getUpdateDoc.origin_ticket, acc_dist: data.acc },
+            { $set: { status: 'closed' } }
+        )
+
         // #.
         // مپ کردن اکانت و تیکت های مرجع و کپی کننده باقیمانده 
         const tradeTicket = new TradeTicket({
@@ -25,20 +39,15 @@ export default async (req, res) => {
             ticket_dist: data.open_ticket,
             server_dist: getUpdateDoc.server,
             symbol_dist: getUpdateDoc.symbol,
-            symbol_title: getUpdateDoc.symbol_title
+            symbol_title: getUpdateDoc.symbol_title,
+            side: trade ? trade.side : 'none',
+            status: 'open'
         })
         await tradeTicket.save()
 
-        //#
-        // بستن مپ معامله کلوز شده
-        await TradeTicket.updateOne(
-            { acc_src: getUpdateDoc.origin_acc, ticket_src: getUpdateDoc.origin_ticket, acc_dist: data.acc },
-            { $set: { status: 'closed' } }
-        )
-
         // #.
         // ارسال دستورات در وضعیت انتظار و وابسته به این دیتا
-        await GetUpdateService.updateWaitings(getUpdateDoc.origin_acc, getUpdateDoc.origin_new_ticket, data.open_ticket)
+        await GetUpdateService.updateWaitings(getUpdateDoc.origin_acc, getUpdateDoc.origin_new_ticket, data.open_ticket, getUpdateDoc)
     }
 
     // 6.

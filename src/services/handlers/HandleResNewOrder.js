@@ -34,12 +34,18 @@ export default async (req, res) => {
             server_dist: getUpdateDoc.server,
             symbol_dist: getUpdateDoc.symbol,
             symbol_title: getUpdateDoc.symbol_title,
+            side: (() => {
+                if ([ACTION_HANDLER.BUY, ACTION_HANDLER.BUYLIMIT, ACTION_HANDLER.BUYSTOP].includes(data.handler)) return 'buy';
+                if ([ACTION_HANDLER.SELL, ACTION_HANDLER.SELLLIMIT, ACTION_HANDLER.SELLSTOP].includes(data.handler)) return 'sell';
+                return '';
+            })(),
+            status: 'open'
         })
         await tradeTicket.save()
 
         // 4.
         // ارسال دستورات در وضعیت انتظار و وابسته به این دیتا
-        await GetUpdateService.updateWaitings(getUpdateDoc.origin_acc, getUpdateDoc.origin_ticket, data.ticket)
+        await GetUpdateService.updateWaitings(getUpdateDoc.origin_acc, getUpdateDoc.origin_ticket, data.ticket, getUpdateDoc)
     } else {
         const account = await Account.findOne({ acc: getUpdateDoc.origin_acc, server: getUpdateDoc.origin_server })
         if (account && account.copiers?.length == 1) {

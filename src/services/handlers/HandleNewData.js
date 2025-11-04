@@ -99,7 +99,7 @@ async function updateAccount(data) {
     //# 
     // بررسی اینکه دراودان خورده یا نه 
     // اگر دراودان خورده باید معاملات روی حساب ترید و حساب کپی بسته شود
-    if (data.eq <= account.ddeq && copy_state) {
+    if (account.ddeq && data.eq <= account.ddeq && copy_state) {
         for (const copier of account.copiers) {
             const copierTickets = await TradeTicket.find({ acc_src: account.acc, acc_dist: copier.acc, status: 'open' })
             if (copierTickets.length) {

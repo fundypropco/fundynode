@@ -2,6 +2,7 @@ import RequestLog from "../../models/RequestLog.js"
 import GetUpdateService from "../GetUpdateService.js"
 import { formatDateYMD, makeID, makeMsgForHandler } from '../../helpers/helper.js'
 import { ACTION_HANDLER } from "../../helpers/constant.js"
+import TradeTicket from "../../models/TradeTicket.js"
 
 export default async (req, res) => {
 
@@ -21,10 +22,15 @@ export default async (req, res) => {
                     handler: ACTION_HANDLER.CLOSE,
                     acc: data.acc,
                     ticket: item.ticket,
+                    keyid: keyid++
                 }
-                order.keyid = keyid++
-                order.message = makeMsgForHandler(order.handler, order)
+                order.message = await makeMsgForHandler(order.handler, order)
                 await GetUpdateService.create(order)
+            } else {
+                await TradeTicket.updateOne(
+                    { acc_dist: data.acc, ticket_dist: item.ticket },
+                    { $set: { status: 'closed' } }
+                )
             }
         }
     }

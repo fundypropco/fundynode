@@ -191,53 +191,70 @@ export async function getCopyTradeParams(account, copier, order) {
 
         return vol;
     })(); //todo: محاسبه شود بر اساس اختلاف کانترکت و مدل کپی کردن اکانت
-    data.sl = order.sl
-    data.tp = order.tp
-    const diff_in_points = 50
-    if (data.type == 'SELL') {
-        if (Number(data.sl)) {
-            let sl_points = (data.sl - data.open_price) / order.symbol_b.tick_size
-            let new_sl_points = Math.round(sl_points * 1.2)
-            if (new_sl_points - sl_points >= diff_in_points) {
-                data.sl += new_sl_points * order.symbol_b.tick_size
-            } else {
-                data.sl += diff_in_points * order.symbol_b.tick_size
-            }
-        }
-        if (Number(data.tp)) {
-            let tp_points = (data.open_price - data.tp) / order.symbol_b.tick_size
-            let new_tp_points = Math.round(tp_points * 1.2)
-            if (new_tp_points - tp_points >= diff_in_points) {
-                data.tp -= new_tp_points * order.symbol_b.tick_size
-            } else {
-                data.tp -= diff_in_points * order.symbol_b.tick_size
-            }
-        }
-    }
-    if (data.type == 'BUY') {
-        if (Number(data.sl)) {
-            let sl_points = (data.open_price - data.sl) / order.symbol_b.tick_size
-            let new_sl_points = Math.round(sl_points * 1.2)
-            if (new_sl_points - sl_points >= diff_in_points) {
-                data.sl -= new_sl_points * order.symbol_b.tick_size
-            } else {
-                data.sl -= diff_in_points * order.symbol_b.tick_size
-            }
-        }
-        if (Number(data.tp)) {
-            let tp_points = (data.tp - data.open_price) / order.symbol_b.tick_size
-            let new_tp_points = Math.round(tp_points * 1.2)
-            if (new_tp_points - tp_points >= diff_in_points) {
-                data.tp += new_tp_points * order.symbol_b.tick_size
-            } else {
-                data.tp += diff_in_points * order.symbol_b.tick_size
-            }
-        }
-    }
+
+    const side = (() => {
+        if ([ACTION_HANDLER.BUY, ACTION_HANDLER.BUYLIMIT, ACTION_HANDLER.BUYSTOP].includes(data.handler)) return 'buy';
+        if ([ACTION_HANDLER.SELL, ACTION_HANDLER.SELLLIMIT, ACTION_HANDLER.SELLSTOP].includes(data.handler)) return 'sell';
+        return '';
+    })()
+    data.sl = getWiderSl(order.symbol_b, side, data.open_price, data.sl)
+    data.tp = getWiderTp(order.symbol_b, side, data.open_price, data.tp)
     data.slippage = 50
     data.server = copier.server
 
     return data
+}
+
+export function getWiderSl(symbolObj, side, en, sl) {
+    const diff_in_points = 50
+    let nsl = sl
+    if (Number(sl)) {
+        if (side == 'buy') {
+            const sl_points = Math.round((en - sl) / symbolObj.tick_size)
+            let nsl_points = Math.round(sl_points * 1.2)
+            if (nsl_points - sl_points >= diff_in_points) {
+                nsl -= nsl_points * symbolObj.tick_size
+            } else {
+                nsl -= diff_in_points * symbolObj.tick_size
+            }
+        }
+        else if (side == 'sell') {
+            const sl_points = Math.round((sl - en) / symbolObj.tick_size)
+            let nsl_points = Math.round(sl_points * 1.2)
+            if (nsl_points - sl_points >= diff_in_points) {
+                nsl += nsl_points * symbolObj.tick_size
+            } else {
+                nsl += diff_in_points * symbolObj.tick_size
+            }
+        }
+    }
+    return nsl
+}
+
+export function getWiderTp(symbolObj, side, en, tp) {
+    const diff_in_points = 50
+    let ntp = tp
+    if (Number(tp)) {
+        if (side == 'buy') {
+            const tp_points = Math.round((tp - en) / symbolObj.tick_size)
+            let ntp_points = Math.round(tp_points * 1.2)
+            if (ntp_points - tp_points >= diff_in_points) {
+                ntp += ntp_points * symbolObj.tick_size
+            } else {
+                ntp += diff_in_points * symbolObj.tick_size
+            }
+        }
+        else if (side == 'sell') {
+            const tp_points = Math.round((en - tp) / symbolObj.tick_size)
+            let ntp_points = Math.round(tp_points * 1.2)
+            if (ntp_points - tp_points >= diff_in_points) {
+                ntp -= ntp_points * symbolObj.tick_size
+            } else {
+                ntp -= diff_in_points * symbolObj.tick_size
+            }
+        }
+    }
+    return ntp
 }
 
 export function getOrderVol(accountObj, copierObj, originSymbol, originVol) {

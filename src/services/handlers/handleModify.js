@@ -1,9 +1,11 @@
 import Account from '../../models/Account.js'
 import RequestLog from "../../models/RequestLog.js"
 import GetUpdateService from "../GetUpdateService.js"
-import { formatDateYMD, makeMsgForHandler, makeID } from '../../helpers/helper.js'
+import { formatDateYMD, makeMsgForHandler, makeID, getWiderSl, getWiderTp } from '../../helpers/helper.js'
 import { ACTION_HANDLER } from '../../helpers/constant.js'
 import TradeTicket from '../../models/TradeTicket.js'
+import { get } from 'mongoose'
+import GetUpdate from '../../models/GetUpdate.js'
 
 export default async (req, res) => {
 
@@ -44,6 +46,9 @@ export default async (req, res) => {
                 copyTradeData.tp = order.tp
 
                 if (copierOrder) {
+                    const symbol = await Symbol.findOne({ server: copierOrder.server_dist, symbol: copierOrder.symbol_dist })
+                    copyTradeData.sl = Number(order.sl) ? getWiderSl(symbol, copierOrder.side, order.entry, order.sl) : order.sl
+                    copyTradeData.tp = Number(order.tp) ? getWiderTp(symbol, copierOrder.side, order.entry, order.top) : order.tp
                     copyTradeData.origin_symbol = copierOrder.symbol_src
                     copyTradeData.ticket = copierOrder.ticket_dist
                     copyTradeData.server = copierOrder.server_dist
@@ -53,7 +58,20 @@ export default async (req, res) => {
                     copyTradeData.message = await makeMsgForHandler(copyTradeData.handler, copyTradeData)
                     await GetUpdateService.create(copyTradeData)
                 } else {
-                    copyTradeData.ticket = '-1'
+                    if (Number(order.sl) || Number(order.tp)) {
+                        const doc = await GetUpdate.findOne({ acc: copier.acc, origin_acc: data.acc, origin_ticket: order.ticket, handler: { $in: [ACTION_HANDLER.BUY, ACTION_HANDLER.BUYLIMIT, ACTION_HANDLER.BUYSTOP, ACTION_HANDLER.SELL, ACTION_HANDLER.SELLLIMIT, ACTION_HANDLER.SELLSTOP] } })
+                        if (doc) {
+                            const side = (() => {
+                                if ([ACTION_HANDLER.BUY, ACTION_HANDLER.BUYLIMIT, ACTION_HANDLER.BUYSTOP].includes(doc.handler)) return 'buy';
+                                if ([ACTION_HANDLER.SELL, ACTION_HANDLER.SELLLIMIT, ACTION_HANDLER.SELLSTOP].includes(doc.handler)) return 'sell';
+                                return '';
+                            })()
+                            const symbolObj = await Symbol.findOne({ server: doc.server, symbol: doc.symbol })
+                            copyTradeData.sl = getWiderSl(symbolObj, side, order.entry, order.sl)
+                            copyTradeData.tp = getWiderSl(symbolObj, side, order.entry, order.tp)
+                        }
+                    }
+                    copyTradeData.ticket = -1
                     copyTradeData.status = 'waiting'
                     copyTradeData.message = await makeMsgForHandler(copyTradeData.handler, copyTradeData)
                     await GetUpdateService.create(copyTradeData)
@@ -61,7 +79,6 @@ export default async (req, res) => {
             }
         }
     }
-
 
     // 6.
     // لاگ گرفتن از رکوئست دریافتی

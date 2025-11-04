@@ -68,7 +68,7 @@ async function processClose(data) {
                 copyTradeData.message = await makeMsgForHandler(copyTradeData.handler, copyTradeData)
                 await GetUpdateService.create(copyTradeData)
             } else {
-                copyTradeData.ticket = '-1'
+                copyTradeData.ticket = -1
                 copyTradeData.message = await makeMsgForHandler(copyTradeData.handler, copyTradeData)
                 copyTradeData.status = 'waiting'
                 await GetUpdateService.create(copyTradeData)

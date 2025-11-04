@@ -86,13 +86,17 @@ const updateStatus = async (data) => {
     return result
 }
 
-const updateWaitings = async (origin_acc, origin_ticket, ticket) => {
+const updateWaitings = async (origin_acc, origin_ticket, ticket, doc) => {
     // همه داکیومنتهای مربوط به آپدیتهای متاتریدر را که در وضعیت انتظار قرار دارند و منشا مشترکی با این سفارش دارند را پیدا میکنیم
     // وضعیت آنها را به وضعیت اجرا تغییر داده و همچنین تیکت آنها را تکمیل میکنیم
     const waitingDocs = await GetUpdate.find({ status: 'waiting', origin_acc: origin_acc, origin_ticket: origin_ticket })
     for (const waitingDoc of waitingDocs) {
         waitingDoc.status = 'pending'
         waitingDoc.message = waitingDoc.message.replace('-1', ticket)
+        waitingDoc.origin_symbol = doc.origin_symbol
+        waitingDoc.server = doc.server
+        waitingDoc.symbol = doc.symbol
+        waitingDoc.symbol_title = doc.symbol_title
         await waitingDoc.save()
     }
 }

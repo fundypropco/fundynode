@@ -34,6 +34,11 @@ const tradeTicketSchema = new mongoose.Schema({
         index: true,
         default: 'open'
     },
+    side: {
+        type: String,
+        enum: ['buy', 'sell', 'none'],
+        default: 'none'
+    },
     created_at: {
         type: Date,
         default: Date.now
@@ -46,6 +51,7 @@ const tradeTicketSchema = new mongoose.Schema({
 
 tradeTicketSchema.index({ acc_src: 1, ticket_src: 1, acc_dist: 1 })
 tradeTicketSchema.index({ acc_src: 1, acc_dist: 1 })
+tradeTicketSchema.index({ acc_dist: 1, ticket_dist: 1 })
 
 const TradeTicket = mongoose.model('TradeTicket', tradeTicketSchema, 'trade_tickets');
 
