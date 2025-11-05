@@ -70,6 +70,7 @@ const updateStatus = async (data) => {
     const ticketHandlers = [ACTION_HANDLER.BUY, ACTION_HANDLER.BUYLIMIT, ACTION_HANDLER.BUYSTOP, ACTION_HANDLER.SELL, ACTION_HANDLER.SELLLIMIT, ACTION_HANDLER.SELLSTOP]
 
     if (ticketHandlers.includes(data.handler) && data.status == 'success' && data.ticket) {
+        update.$addToSet = update.$addToSet || {};
         update.$addToSet.ticket = data.ticket
     }
 
