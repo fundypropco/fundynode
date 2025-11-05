@@ -472,7 +472,7 @@ export function getWiderSl(symbolObj, side, en, sl) {
             } else {
                 nsl -= diff_in_points * symbolObj.tick_size
             }
-            ntp = Number(ntp.toFixed(symbolObj.digits))
+            nsl = Number(nsl.toFixed(symbolObj.digits))
         }
         else if (side == 'sell') {
             const sl_points = Math.round((sl - en) / symbolObj.tick_size)
@@ -482,7 +482,7 @@ export function getWiderSl(symbolObj, side, en, sl) {
             } else {
                 nsl += diff_in_points * symbolObj.tick_size
             }
-            ntp = Number(ntp.toFixed(symbolObj.digits))
+            nsl = Number(nsl.toFixed(symbolObj.digits))
         }
     }
     return nsl
