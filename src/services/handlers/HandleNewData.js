@@ -145,7 +145,7 @@ async function updateAccount(data) {
                     key_id: keyid++,
                 }
                 origin_order.message = await makeMsgForHandler(origin_order.handler, origin_order)
-                await GetUpdateService.create(order)
+                await GetUpdateService.create(origin_order)
             }
         }
     }
