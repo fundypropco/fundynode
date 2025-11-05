@@ -31,6 +31,7 @@ export default async (req, res) => {
             symbol.vol_min = data.symbol_info.vol_min
             symbol.vol_max = data.symbol_info.vol_max
             symbol.digits = data.symbol_info.digits
+            symbol.point = data.symbol_info.point
             await symbol.save();
         }
     }

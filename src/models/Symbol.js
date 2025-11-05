@@ -21,7 +21,8 @@ const symbolSchema = new mongoose.Schema({
     vol_step: Number,
     vol_min: Number,
     vol_max: Number,
-    digits: Number
+    digits: Number,
+    point: Number,
 })
 
 symbolSchema.index({ server: 1, title: 1 })
