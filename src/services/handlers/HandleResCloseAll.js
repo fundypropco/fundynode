@@ -67,10 +67,14 @@ function processMessage(msg) {
     data.timestamp = msg_parts[3] * 1000
     data.date = formatDateYMD(data.timestamp)
     data.keyid = msg_parts[4]
-    const info = msg_parts[2]
+    const info = msg_parts[2].toLowerCase()
 
     // msg info
-    data.tickets = info.split('&').slice(1)
+    data.tickets = []
+    if (!info.includes("no open trades")) {
+        data.tickets = info.split('&').slice(1)
+    }
+
     data.status = 'success'
 
     return data
