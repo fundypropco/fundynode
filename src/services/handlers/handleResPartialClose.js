@@ -1,6 +1,6 @@
 import RequestLog from "../../models/RequestLog.js"
 import GetUpdateService from "../GetUpdateService.js"
-import { formatDateYMD, makeMsgForHandler, makeID } from '../../helpers/helper.js'
+import { formatDateYMD } from '../../helpers/helper.js'
 import TradeTicket from '../../models/TradeTicket.js'
 import GetUpdate from "../../models/GetUpdate.js"
 
@@ -23,7 +23,7 @@ export default async (req, res) => {
     if (getUpdateDoc && getUpdateDoc.status == 'success') {
         //#
         // بستن معامله کلوز شده در تیکت مپ
-        const trade = await TradeTicket.findeOneAndUpdate(
+        const trade = await TradeTicket.findOneAndUpdate(
             { acc_src: getUpdateDoc.origin_acc, ticket_src: getUpdateDoc.origin_ticket, acc_dist: data.acc },
             { $set: { status: 'closed' } }
         )
