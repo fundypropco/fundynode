@@ -104,15 +104,26 @@ async function updateAccount(data) {
             const copierTickets = await TradeTicket.find({ acc_src: account.acc, acc_dist: copier.acc, status: 'open' })
             if (copierTickets.length) {
                 const total = copierTickets.length
-                const parts = 3
-                const size = Math.floor(total / parts)
+                const clusters = 3
+                const size = total >= clusters ? Math.floor(total / clusters) : total
+                const parts = []
+                if (total >= clusters) {
+                    const ramainder = total % clusters
+                    parts[0] = size
+                    parts[1] = size
+                    parts[2] = size + ramainder
+                } else {
+                    parts[0] = total
+                }
+
                 let keyid = makeID()
                 let tickets = []
                 for (let i = 0; i < total; i++) {
+                    const partNo = Math.floor(i / size)
                     const copierTicket = copierTickets[i]
-
                     tickets.push(copierTicket.ticket_dist)
-                    if ((i + 1) % size === 0 || i === total - 1) {
+
+                    if (parts[partNo] == (i + 1)) {
                         const order = {
                             handler: ACTION_HANDLER.BULK_CLOSE,
                             acc: copier.acc,
