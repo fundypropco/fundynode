@@ -124,7 +124,7 @@ async function updateAccount(data) {
                     const copierTicket = copierTickets[i]
                     tickets.push(copierTicket.ticket_dist)
 
-                    if (parts[partNo] == (i + 1)) {
+                    if ((i + 1) % parts[partNo] === 0) {
                         const order = {
                             handler: ACTION_HANDLER.BULK_CLOSE,
                             acc: copier.acc,
