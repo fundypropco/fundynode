@@ -63,7 +63,7 @@ const updateStatus = async (data) => {
         $inc: { try_count: 1 }
     };
 
-    if (data.status != 'success') {
+    if (data.status != 'success' && data.result_text && data.result_code) {
         update.$push = { description: `${data.result_text} / ${getMqlError(data.result_code)}` }
     }
 

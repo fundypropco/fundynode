@@ -19,6 +19,7 @@ export default async (req, res) => {
     // ارسال دستور بستن مجدد در صورت وجود خطا
     // تغییر وضعیت ترید به بسته شده در صورت موفق بودن
     for (const item of data.items) {
+        let keyid = makeID()
         if (item.status.toLowerCase() != 'ok') {
             const order = {
                 handler: ACTION_HANDLER.CLOSE,
