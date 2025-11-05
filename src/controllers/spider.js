@@ -12,6 +12,7 @@ import HandleResBrokerSymbols from '../services/handlers/HandleResBrokerSymbols.
 import HandleResCloseDelete from '../services/handlers/HandleResCloseDelete.js'
 import HandleResBrokerSymbolData from '../services/handlers/HandleResBrokerSymbolData.js'
 import handleResBulkClose from '../services/handlers/handleResBulkClose.js'
+import HandleResCloseAll from '../services/handlers/HandleResCloseAll.js'
 
 const getUpdates = asyncHandler(async (req, res) => {
     res.json(await GetUpdateService.getUnprocessed(req.params.acc))
