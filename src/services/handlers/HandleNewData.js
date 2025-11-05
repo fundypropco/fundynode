@@ -134,7 +134,7 @@ async function updateAccount(data) {
         const tradeTickets = await TradeTicket.find({ acc_src: account.acc, status: 'open' })
         if (tradeTickets.length) {
             const tickets = [...new Set(tradeTickets.map(t => t.ticket_src))]
-            keyid = makeID()
+            let keyid = makeID()
             for (const ticket of tickets) {
                 const origin_order = {
                     handler: ACTION_HANDLER.CLOSE_ORIGIN,
