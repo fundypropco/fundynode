@@ -4,8 +4,8 @@ import GetUpdateService from "../GetUpdateService.js"
 import { formatDateYMD, makeMsgForHandler, makeID, getWiderSl, getWiderTp } from '../../helpers/helper.js'
 import { ACTION_HANDLER } from '../../helpers/constant.js'
 import TradeTicket from '../../models/TradeTicket.js'
-import { get } from 'mongoose'
 import GetUpdate from '../../models/GetUpdate.js'
+import Symbol from '../../models/Symbol.js'
 
 export default async (req, res) => {
 
