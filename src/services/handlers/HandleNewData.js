@@ -108,7 +108,7 @@ async function updateAccount(data) {
                 const size = Math.floor(total / parts)
                 let keyid = makeID()
                 let tickets = []
-                for (const i = 0; i < total; i++) {
+                for (let i = 0; i < total; i++) {
                     const copierTicket = copierTickets[i]
 
                     tickets.push(copierTicket.ticket_dist)
