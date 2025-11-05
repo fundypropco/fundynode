@@ -7,7 +7,6 @@ import handleResNewOrder from '../services/handlers/HandleResNewOrder.js'
 import handleResModify from '../services/handlers/HandleResModify.js'
 import handleModify from '../services/handlers/handleModify.js'
 import handleClose from '../services/handlers/handleClose.js'
-import handleDelete from '../services/handlers/handleDelete.js'
 import handleResPartialClose from '../services/handlers/handleResPartialClose.js'
 import HandleResBrokerSymbols from '../services/handlers/HandleResBrokerSymbols.js'
 import HandleResCloseDelete from '../services/handlers/HandleResCloseDelete.js'
@@ -31,8 +30,6 @@ const sendMessage = asyncHandler(async (req, res) => {
             return await handleModify(req, res)
         case "504":
             return await handleNewData(req, res)
-        case "505":
-            return await handleDelete(req, res)
         case "999":
         case "998":
         case "995":

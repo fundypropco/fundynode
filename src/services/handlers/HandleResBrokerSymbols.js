@@ -107,7 +107,6 @@ function processMessage(msg) {
     const data = {};
 
     // msg parts
-    msg = msg.toUpperCase()
     const msg_parts = msg.split(',')
     data.acc = msg_parts[0].replace(/_.*/, '')
     data.handler = 1000 - parseInt(msg_parts[1])
