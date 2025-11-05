@@ -108,13 +108,13 @@ async function updateAccount(data) {
                 const total = copierTickets.length
                 const clusters = 3
                 const size = total >= clusters ? Math.floor(total / clusters) : total
-                const remainder = total % clusters;
-                const parts = [];
-                const clusterCount = Math.min(clusters, total)
+                const remainder = total > clusters ? total % clusters : 0
+                const parts = []
+                const clusterCount = total < clusters ? 1 : clusters
                 for (let i = 0; i < clusterCount; i++) {
-                    const prev = parts[i - 1] || 0;
-                    const extra = i === clusterCount - 1 ? remainder : 0;
-                    parts[i] = prev + size + extra;
+                    const prev = parts[i - 1] || 0
+                    const extra = i === clusterCount - 1 ? remainder : 0
+                    parts[i] = prev + size + extra
                 }
 
                 let keyid = makeID()
