@@ -20,7 +20,8 @@ const symbolSchema = new mongoose.Schema({
     tick_value: Number,
     vol_step: Number,
     vol_min: Number,
-    vol_max: Number
+    vol_max: Number,
+    digits: Number
 })
 
 symbolSchema.index({ server: 1, title: 1 })

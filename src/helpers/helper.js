@@ -452,8 +452,8 @@ export async function getCopyTradeParams(account, copier, order) {
         if ([ACTION_HANDLER.SELL, ACTION_HANDLER.SELLLIMIT, ACTION_HANDLER.SELLSTOP].includes(data.handler)) return 'sell';
         return '';
     })()
-    data.sl = getWiderSl(order.symbol_b, side, data.open_price, data.sl)
-    data.tp = getWiderTp(order.symbol_b, side, data.open_price, data.tp)
+    data.sl = getWiderSl(order.symbol_b, side, Number(data.open_price), Number(data.sl))
+    data.tp = getWiderTp(order.symbol_b, side, Number(data.open_price), Number(data.tp))
     data.slippage = 50
     data.server = copier.server
 
@@ -463,24 +463,26 @@ export async function getCopyTradeParams(account, copier, order) {
 export function getWiderSl(symbolObj, side, en, sl) {
     const diff_in_points = 50
     let nsl = sl
-    if (Number(sl)) {
+    if (sl) {
         if (side == 'buy') {
             const sl_points = Math.round((en - sl) / symbolObj.tick_size)
-            let nsl_points = Math.round(sl_points * 1.2)
+            const nsl_points = Math.round(sl_points * 1.2)
             if (nsl_points - sl_points >= diff_in_points) {
                 nsl -= nsl_points * symbolObj.tick_size
             } else {
                 nsl -= diff_in_points * symbolObj.tick_size
             }
+            ntp = Number(ntp.toFixed(symbolObj.digits))
         }
         else if (side == 'sell') {
             const sl_points = Math.round((sl - en) / symbolObj.tick_size)
-            let nsl_points = Math.round(sl_points * 1.2)
+            const nsl_points = Math.round(sl_points * 1.2)
             if (nsl_points - sl_points >= diff_in_points) {
                 nsl += nsl_points * symbolObj.tick_size
             } else {
                 nsl += diff_in_points * symbolObj.tick_size
             }
+            ntp = Number(ntp.toFixed(symbolObj.digits))
         }
     }
     return nsl
@@ -489,24 +491,26 @@ export function getWiderSl(symbolObj, side, en, sl) {
 export function getWiderTp(symbolObj, side, en, tp) {
     const diff_in_points = 50
     let ntp = tp
-    if (Number(tp)) {
+    if (tp) {
         if (side == 'buy') {
             const tp_points = Math.round((tp - en) / symbolObj.tick_size)
-            let ntp_points = Math.round(tp_points * 1.2)
+            const ntp_points = Math.round(tp_points * 1.2)
             if (ntp_points - tp_points >= diff_in_points) {
                 ntp += ntp_points * symbolObj.tick_size
             } else {
                 ntp += diff_in_points * symbolObj.tick_size
             }
+            ntp = Number(ntp.toFixed(symbolObj.digits))
         }
         else if (side == 'sell') {
             const tp_points = Math.round((en - tp) / symbolObj.tick_size)
-            let ntp_points = Math.round(tp_points * 1.2)
+            const ntp_points = Math.round(tp_points * 1.2)
             if (ntp_points - tp_points >= diff_in_points) {
                 ntp -= ntp_points * symbolObj.tick_size
             } else {
                 ntp -= diff_in_points * symbolObj.tick_size
             }
+            ntp = Number(ntp.toFixed(symbolObj.digits))
         }
     }
     return ntp

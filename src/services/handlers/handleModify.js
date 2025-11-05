@@ -47,8 +47,8 @@ export default async (req, res) => {
 
                 if (copierOrder) {
                     const symbol = await Symbol.findOne({ server: copierOrder.server_dist, symbol: copierOrder.symbol_dist })
-                    copyTradeData.sl = Number(order.sl) ? getWiderSl(symbol, copierOrder.side, order.entry, order.sl) : order.sl
-                    copyTradeData.tp = Number(order.tp) ? getWiderTp(symbol, copierOrder.side, order.entry, order.top) : order.tp
+                    copyTradeData.sl = Number(order.sl) ? getWiderSl(symbol, copierOrder.side, Number(order.entry), Number(order.sl)) : order.sl
+                    copyTradeData.tp = Number(order.tp) ? getWiderTp(symbol, copierOrder.side, Number(order.entry), Number(order.tp)) : order.tp
                     copyTradeData.origin_symbol = copierOrder.symbol_src
                     copyTradeData.ticket = copierOrder.ticket_dist
                     copyTradeData.server = copierOrder.server_dist
