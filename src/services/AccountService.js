@@ -1,6 +1,6 @@
-import { makeID, makeMsgForHandler } from "../helpers/helper"
-import TradeTicket from "../models/TradeTicket"
-import GetUpdateService from "./GetUpdateService"
+import { makeID, makeMsgForHandler } from "../helpers/helper.js"
+import TradeTicket from "../models/TradeTicket.js"
+import GetUpdateService from "./GetUpdateService.js"
 
 const closeAll = async (account) => {
     // تمام تریدهای مربوط به اکانت تریدر
