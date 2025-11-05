@@ -2,16 +2,23 @@ import RequestLog from "../../models/RequestLog.js"
 import { formatDateYMD } from '../../helpers/helper.js'
 import GetUpdateService from '../GetUpdateService.js'
 import TradeTicket from "../../models/TradeTicket.js"
+import GetUpdate from "../../models/GetUpdate.js"
 
 export default async (req, res) => {
 
-    // 1. 
+    // #. 
     // پردازش دیتای ورودی
     const data = processMessage(req.body.message)
 
-    // 2.
+    // #.
     // بروزرسانی وضعیت دستور در صف دستورات
-    const getUpdateDoc = await GetUpdateService.updateStatus(data)
+    await GetUpdateService.updateStatus(data)
+
+    const getUpdateDoc = await GetUpdate.findOne({
+        acc: data.acc,
+        handler: data.handler,
+        keyid: data.keyid,
+    })
 
     //#
     // بستن مپ معامله کلوز شده
@@ -20,7 +27,7 @@ export default async (req, res) => {
         { $set: { status: 'closed' } }
     )
 
-    // 3.
+    // #.
     // لاگ گرفتن از رکوئست دریافتی
     const requestLog = new RequestLog({
         type: 'GetUpdateResponse',
@@ -29,7 +36,7 @@ export default async (req, res) => {
     })
     await requestLog.save()
 
-    // 4. 
+    // #. 
     // ارسال پاسخ عملیات موفقیت آمیز
     res.send({
         status: 'success',
