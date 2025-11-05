@@ -48,22 +48,22 @@ const bulkClose = async (account) => {
         }
     }
 
-    if (tradeTickets.length) {
-        const tickets = [...new Set(tradeTickets.map(t => t.ticket_src))]
-        let keyid = makeID()
-        for (const ticket of tickets) {
-            const origin_order = {
-                handler: ACTION_HANDLER.CLOSE_ORIGIN,
-                acc: account.acc,
-                ticket: ticket,
-                server: account.server,
-                description: ['drawdown'],
-                keyid: keyid++,
-            }
-            origin_order.message = await makeMsgForHandler(origin_order.handler, origin_order)
-            await GetUpdateService.create(origin_order)
-        }
-    }
+    // if (tradeTickets.length) {
+    //     const tickets = [...new Set(tradeTickets.map(t => t.ticket_src))]
+    //     let keyid = makeID()
+    //     for (const ticket of tickets) {
+    //         const origin_order = {
+    //             handler: ACTION_HANDLER.CLOSE_ORIGIN,
+    //             acc: account.acc,
+    //             ticket: ticket,
+    //             server: account.server,
+    //             description: ['drawdown'],
+    //             keyid: keyid++,
+    //         }
+    //         origin_order.message = await makeMsgForHandler(origin_order.handler, origin_order)
+    //         await GetUpdateService.create(origin_order)
+    //     }
+    // }
 }
 
 const closeAll = async (account) => {
