@@ -14,24 +14,25 @@ export default async (req, res) => {
     // بروزرسانی وضعیت دستور در صف دستورات
     await GetUpdateService.updateStatus(data)
 
-    if (data.status == 'error') {
-        let keyid = makeID()
-        for (const item of data.items) {
-            if (item.status.toLowerCase() != 'ok') {
-                const order = {
-                    handler: ACTION_HANDLER.CLOSE,
-                    acc: data.acc,
-                    ticket: item.ticket,
-                    keyid: keyid++
-                }
-                order.message = await makeMsgForHandler(order.handler, order)
-                await GetUpdateService.create(order)
-            } else {
-                await TradeTicket.updateOne(
-                    { acc_dist: data.acc, ticket_dist: item.ticket },
-                    { $set: { status: 'closed' } }
-                )
+    // #
+    // بررسی نتیجه بسته شدن تک تک تیکتها 
+    // ارسال دستور بستن مجدد در صورت وجود خطا
+    // تغییر وضعیت ترید به بسته شده در صورت موفق بودن
+    for (const item of data.items) {
+        if (item.status.toLowerCase() != 'ok') {
+            const order = {
+                handler: ACTION_HANDLER.CLOSE,
+                acc: data.acc,
+                ticket: item.ticket,
+                keyid: keyid++
             }
+            order.message = await makeMsgForHandler(order.handler, order)
+            await GetUpdateService.create(order)
+        } else {
+            await TradeTicket.updateOne(
+                { acc_dist: data.acc, ticket_dist: item.ticket },
+                { $set: { status: 'closed' } }
+            )
         }
     }
 
@@ -51,8 +52,8 @@ export default async (req, res) => {
 
 function processMessage(msg) {
     // E.g. 
-    // 1006135456,979,OK&324252739&0&OK&324252745&0&OK&324252750&0&OK&324252751&0&,1758990053,10
-    // acc , 978 , OK & TICKET & RESULT_CODE @ OK & TICKET & RESULT_CODE , timestamp, keyid
+    // 1006135478_1,979,OK&331669782&0@OK&331669788&0,1762348292,377091361
+    // acc , 979 , OK & TICKET & RESULT_CODE @ OK & TICKET & RESULT_CODE , timestamp, keyid
     const data = {};
 
     // msg parts
