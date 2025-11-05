@@ -100,31 +100,30 @@ async function updateAccount(data) {
     // بررسی اینکه دراودان خورده یا نه 
     // اگر دراودان خورده باید معاملات روی حساب ترید و حساب کپی بسته شود
     if (account.ddeq && data.eq <= account.ddeq && copy_state) {
+        const tradeTickets = await TradeTicket.find({ acc_src: account.acc, status: 'open' })
+
         for (const copier of account.copiers) {
             const copierTickets = await TradeTicket.find({ acc_src: account.acc, acc_dist: copier.acc, status: 'open' })
             if (copierTickets.length) {
                 const total = copierTickets.length
                 const clusters = 3
                 const size = total >= clusters ? Math.floor(total / clusters) : total
-                const parts = []
-                if (total >= clusters) {
-                    const ramainder = total % clusters
-                    parts[0] = size
-                    parts[1] = size
-                    parts[2] = size + ramainder
-                } else {
-                    parts[0] = total
+                const remainder = total % clusters;
+                const parts = [];
+                const clusterCount = Math.min(clusters, total)
+                for (let i = 0; i < clusterCount; i++) {
+                    const prev = parts[i - 1] || 0;
+                    const extra = i === clusterCount - 1 ? remainder : 0;
+                    parts[i] = prev + size + extra;
                 }
 
                 let keyid = makeID()
                 let tickets = []
                 for (let i = 0; i < total; i++) {
-                    let partNo = Math.floor(i / size)
-                    partNo = partNo <= 2 ? partNo : 2
                     const copierTicket = copierTickets[i]
                     tickets.push(copierTicket.ticket_dist)
 
-                    if ((i + 1) % parts[partNo] === 0) {
+                    if (parts.includes(i + 1)) {
                         const order = {
                             handler: ACTION_HANDLER.BULK_CLOSE,
                             acc: copier.acc,
@@ -143,7 +142,6 @@ async function updateAccount(data) {
             }
         }
 
-        const tradeTickets = await TradeTicket.find({ acc_src: account.acc, status: 'open' })
         if (tradeTickets.length) {
             const tickets = [...new Set(tradeTickets.map(t => t.ticket_src))]
             let keyid = makeID()
