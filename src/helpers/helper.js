@@ -465,7 +465,7 @@ export function getWiderSl(symbolObj, side, en, sl) {
     let nsl = sl
     if (sl) {
         if (side == 'buy') {
-            const sl_points = Math.round((en - sl) / symbolObj.point)
+            const sl_points = Math.round(Math.abs(en - sl) / symbolObj.point)
             const nsl_points = Math.round(sl_points * 1.2)
             if (nsl_points - sl_points >= diff_in_points) {
                 nsl -= (nsl_points - sl_points) * symbolObj.point
@@ -475,7 +475,7 @@ export function getWiderSl(symbolObj, side, en, sl) {
             nsl = Number(nsl.toFixed(symbolObj.digits))
         }
         else if (side == 'sell') {
-            const sl_points = Math.round((sl - en) / symbolObj.point)
+            const sl_points = Math.round(Math.abs(sl - en) / symbolObj.point)
             const nsl_points = Math.round(sl_points * 1.2)
             if (nsl_points - sl_points >= diff_in_points) {
                 nsl += (nsl_points - sl_points) * symbolObj.point
@@ -493,7 +493,7 @@ export function getWiderTp(symbolObj, side, en, tp) {
     let ntp = tp
     if (tp) {
         if (side == 'buy') {
-            const tp_points = Math.round((tp - en) / symbolObj.point)
+            const tp_points = Math.round(Math.abs(tp - en) / symbolObj.point)
             const ntp_points = Math.round(tp_points * 1.2)
             if (ntp_points - tp_points >= diff_in_points) {
                 ntp += (ntp_points - tp_points) * symbolObj.point
@@ -503,7 +503,7 @@ export function getWiderTp(symbolObj, side, en, tp) {
             ntp = Number(ntp.toFixed(symbolObj.digits))
         }
         else if (side == 'sell') {
-            const tp_points = Math.round((en - tp) / symbolObj.point)
+            const tp_points = Math.round(Math.abs(en - tp) / symbolObj.point)
             const ntp_points = Math.round(tp_points * 1.2)
             if (ntp_points - tp_points >= diff_in_points) {
                 ntp -= (ntp_points - tp_points) * symbolObj.point
