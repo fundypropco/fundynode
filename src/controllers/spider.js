@@ -47,6 +47,8 @@ const sendMessage = asyncHandler(async (req, res) => {
             return await handleResPartialClose(req, res)
         case "979":
             return await handleResBulkClose(req, res)
+        case "980":
+            return await HandleResCloseAll(req, res)
         case "987":
             return await HandleResBrokerSymbols(req, res)
         case "989":

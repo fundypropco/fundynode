@@ -98,10 +98,8 @@ async function updateAccount(data) {
     // بررسی اینکه دراودان خورده یا نه 
     // اگر دراودان خورده باید معاملات روی حساب ترید و حساب کپی بسته شود
     if (account.ddeq && data.eq <= account.ddeq && copy_state) {
-        await AccountService.closeAll(account)
-        await new Promise(resolve => setTimeout(resolve, 500))
-        await AccountService.closeAll(account)
-        await new Promise(resolve => setTimeout(resolve, 500))
+        await AccountService.bulkClose(account)
+        await new Promise(resolve => setTimeout(resolve, 3000))
         await AccountService.closeAll(account)
     }
 }

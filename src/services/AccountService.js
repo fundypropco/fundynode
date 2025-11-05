@@ -3,7 +3,7 @@ import { makeID, makeMsgForHandler } from "../helpers/helper.js"
 import TradeTicket from "../models/TradeTicket.js"
 import GetUpdateService from "./GetUpdateService.js"
 
-const closeAll = async (account) => {
+const bulkClose = async (account) => {
     // تمام تریدهای مربوط به اکانت تریدر
     const tradeTickets = await TradeTicket.find({ acc_src: account.acc, status: 'open' })
 
@@ -66,6 +66,34 @@ const closeAll = async (account) => {
     }
 }
 
+const closeAll = async (account) => {
+    let keyid = makeID()
+    for (const copier of account.copiers) {
+        const copier_order = {
+            handler: ACTION_HANDLER.CLOSE_ALL,
+            acc: copier.acc,
+            server: copier.server,
+            origin_acc: account.acc,
+            origin_server: account.server,
+            description: ['drawdown'],
+            keyid: keyid++,
+        }
+        copier_order.message = await makeMsgForHandler(copier_order.handler, copier_order)
+        await GetUpdateService.create(copier_order)
+    }
+
+    const order = {
+        handler: ACTION_HANDLER.CLOSE_ALL,
+        acc: account.acc,
+        server: account.server,
+        description: ['drawdown'],
+        keyid: keyid++,
+    }
+    order.message = await makeMsgForHandler(order.handler, order)
+    await GetUpdateService.create(order)
+}
+
 export default {
     closeAll,
+    bulkClose
 }

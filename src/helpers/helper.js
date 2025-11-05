@@ -75,6 +75,10 @@ export async function makeMsgForHandler(handler, data) {
             message += `,0`
             break;
 
+        case 20: // BULK CLOSE
+            message += `,0`
+            break;
+
         case 21: // BULK CLOSE
             message += `,${data.tickets}`
             break;
