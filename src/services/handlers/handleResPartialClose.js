@@ -2,7 +2,6 @@ import RequestLog from "../../models/RequestLog.js"
 import GetUpdateService from "../GetUpdateService.js"
 import { formatDateYMD } from '../../helpers/helper.js'
 import TradeTicket from '../../models/TradeTicket.js'
-import GetUpdate from "../../models/GetUpdate.js"
 
 export default async (req, res) => {
 
@@ -12,13 +11,7 @@ export default async (req, res) => {
 
     // #.
     // بروزرسانی وضعیت دستور در صف دستورات
-    await GetUpdateService.updateStatus(data)
-
-    const getUpdateDoc = await GetUpdate.findOne({
-        acc: data.acc,
-        handler: data.handler,
-        keyid: data.keyid,
-    })
+    const getUpdateDoc = await GetUpdateService.updateStatus(data)
 
     if (getUpdateDoc && getUpdateDoc.status == 'success') {
         //#
@@ -27,6 +20,8 @@ export default async (req, res) => {
             { acc_src: getUpdateDoc.origin_acc, ticket_src: getUpdateDoc.origin_ticket, acc_dist: data.acc },
             { $set: { status: 'closed' } }
         )
+
+        const symbol = await Symbol.findOne({ server: getUpdateDoc.server, symbol: getUpdateDoc.symbol })
 
         // #.
         // مپ کردن اکانت و تیکت های مرجع و کپی کننده باقیمانده 
@@ -41,7 +36,8 @@ export default async (req, res) => {
             symbol_dist: getUpdateDoc.symbol,
             symbol_title: getUpdateDoc.symbol_title,
             side: trade ? trade.side : 'none',
-            status: 'open'
+            status: 'open',
+            tick_value: Number((symbol.tick_value * data.open_vol).toFixed(2)),
         })
         await tradeTicket.save()
 

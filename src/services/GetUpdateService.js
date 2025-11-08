@@ -77,7 +77,6 @@ const updateStatus = async (data) => {
         acc: data.acc,
         handler: data.handler,
         keyid: data.keyid,
-        status: { $ne: 'success' }
     }, update, {
         new: true,
         upsert: false

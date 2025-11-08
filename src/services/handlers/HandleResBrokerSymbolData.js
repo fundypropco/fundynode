@@ -1,7 +1,6 @@
 import RequestLog from "../../models/RequestLog.js"
 import GetUpdateService from '../GetUpdateService.js'
 import Symbol from "../../models/Symbol.js"
-import GetUpdate from "../../models/GetUpdate.js"
 
 export default async (req, res) => {
 
@@ -9,14 +8,7 @@ export default async (req, res) => {
     const data = processMessage(req.body.message)
 
     //# بروزرسانی وضعیت دستور در صف دستورات
-    await GetUpdateService.updateStatus(data)
-
-    //# بدست آوردن نام سرور
-    const getUpdateDoc = await GetUpdate.findOne({
-        acc: data.acc,
-        handler: data.handler,
-        keyid: data.keyid,
-    })
+    const getUpdateDoc = await GetUpdateService.updateStatus(data)
 
     if (getUpdateDoc) {
         //# 

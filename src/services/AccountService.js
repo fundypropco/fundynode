@@ -5,11 +5,12 @@ import GetUpdateService from "./GetUpdateService.js"
 
 const bulkClose = async (account) => {
     // تمام تریدهای مربوط به اکانت تریدر
-    const tradeTickets = await TradeTicket.find({ acc_src: account.acc, status: 'open' })
+    // مرتب سازی اول اپن بعد پندینگ - با ارزش ها اول لیست شوند
+    const tradeTickets = await TradeTicket.find({ acc_src: account.acc, status: { $ne: 'closed' } }).sort({ status: 1, tick_value: -1 })
 
     for (const copier of account.copiers) {
         // تریدهای مربوط به یک حساب کپی و ترید
-        const copierTickets = await TradeTicket.find({ acc_src: account.acc, acc_dist: copier.acc, status: 'open' })
+        const copierTickets = await TradeTicket.find({ acc_src: account.acc, acc_dist: copier.acc, status: { $ne: 'closed' } }).sort({ status: 1, tick_value: -1 })
         if (copierTickets.length) {
             const total = copierTickets.length
             const clusters = 3
@@ -47,23 +48,6 @@ const bulkClose = async (account) => {
             }
         }
     }
-
-    // if (tradeTickets.length) {
-    //     const tickets = [...new Set(tradeTickets.map(t => t.ticket_src))]
-    //     let keyid = makeID()
-    //     for (const ticket of tickets) {
-    //         const origin_order = {
-    //             handler: ACTION_HANDLER.CLOSE_ORIGIN,
-    //             acc: account.acc,
-    //             ticket: ticket,
-    //             server: account.server,
-    //             description: ['drawdown'],
-    //             keyid: keyid++,
-    //         }
-    //         origin_order.message = await makeMsgForHandler(origin_order.handler, origin_order)
-    //         await GetUpdateService.create(origin_order)
-    //     }
-    // }
 }
 
 const closeAll = async (account) => {

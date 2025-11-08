@@ -151,21 +151,30 @@ async function processPartial(data) {
 }
 
 async function isDuplicatedOrder(data) {
-    const is_duplicated = await GetUpdate.findOne({
-        origin_acc: data.acc,
-        origin_ticket: data.ticket,
-        status: { $in: ['success', 'pending'] },
-        handler: {
-            $in: [
-                ACTION_HANDLER.BUY,
-                ACTION_HANDLER.BUYLIMIT,
-                ACTION_HANDLER.BUYSTOP,
-                ACTION_HANDLER.SELL,
-                ACTION_HANDLER.SELLLIMIT,
-                ACTION_HANDLER.SELLSTOP,
-            ]
-        }
+    // const is_dup = await GetUpdate.findOne({
+    //     origin_acc: data.acc,
+    //     origin_ticket: data.ticket,
+    //     status: { $in: ['success', 'pending'] },
+    //     handler: {
+    //         $in: [
+    //             ACTION_HANDLER.BUY,
+    //             ACTION_HANDLER.BUYLIMIT,
+    //             ACTION_HANDLER.BUYSTOP,
+    //             ACTION_HANDLER.SELL,
+    //             ACTION_HANDLER.SELLLIMIT,
+    //             ACTION_HANDLER.SELLSTOP,
+    //         ]
+    //     }
+    // })
+
+    const is_duplicated = await TradeTicket.findOne({
+        acc_src: data.acc,
+        ticket_src: data.ticket,
     })
+
+    if (is_duplicated.status === 'pending' && ['BUY', 'SELL'].includes(data.type)) {
+        await TradeTicket.updateMany({ acc_src: data.acc, ticket_src: data.ticket }, { $set: { status: 'open' } })
+    }
 
     return !!is_duplicated
 }

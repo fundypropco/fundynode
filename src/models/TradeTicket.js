@@ -28,9 +28,14 @@ const tradeTicketSchema = new mongoose.Schema({
     symbol_title: {
         type: String
     },
+    tick_value: {
+        type: Number,
+        default: 0,
+        index: true
+    },
     status: {
         type: String,
-        enum: ['open', 'closed'],
+        enum: ['open', 'closed', 'pending'],
         index: true,
         default: 'open'
     },

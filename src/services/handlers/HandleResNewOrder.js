@@ -2,27 +2,24 @@ import RequestLog from "../../models/RequestLog.js"
 import { formatDateYMD, makeMsgForHandler } from '../../helpers/helper.js'
 import GetUpdateService from '../GetUpdateService.js'
 import TradeTicket from '../../models/TradeTicket.js'
-import GetUpdate from "../../models/GetUpdate.js"
 import { ACTION_HANDLER } from "../../helpers/constant.js"
 import Account from "../../models/Account.js"
 
 export default async (req, res) => {
 
-    // 1. 
+    // #. 
     // پردازش دیتای ورودی
     const data = processMessage(req.body.message)
 
-    // 2.
+    // #.
     // بروزرسانی وضعیت دستور در صف دستورات
-    await GetUpdateService.updateStatus(data)
+    const getUpdateDoc = await GetUpdateService.updateStatus(data)
 
-    const getUpdateDoc = await GetUpdate.findOne({
-        acc: data.acc,
-        handler: data.handler,
-        keyid: data.keyid,
-    })
     if (getUpdateDoc.status == 'success') {
-        // 3.
+        const symbol = await Symbol.findOne({ server: getUpdateDoc.server, symbol: getUpdateDoc.symbol })
+        const lot = getUpdateDoc.message.split(',')[4]
+
+        // #.
         // مپ کردن اکانت و تیکت های مرجع و کپی کننده 
         const tradeTicket = new TradeTicket({
             acc_src: getUpdateDoc.origin_acc,
@@ -35,15 +32,20 @@ export default async (req, res) => {
             symbol_dist: getUpdateDoc.symbol,
             symbol_title: getUpdateDoc.symbol_title,
             side: (() => {
-                if ([ACTION_HANDLER.BUY, ACTION_HANDLER.BUYLIMIT, ACTION_HANDLER.BUYSTOP].includes(data.handler)) return 'buy';
-                if ([ACTION_HANDLER.SELL, ACTION_HANDLER.SELLLIMIT, ACTION_HANDLER.SELLSTOP].includes(data.handler)) return 'sell';
-                return '';
+                if ([ACTION_HANDLER.BUY, ACTION_HANDLER.BUYLIMIT, ACTION_HANDLER.BUYSTOP].includes(data.handler)) return 'buy'
+                if ([ACTION_HANDLER.SELL, ACTION_HANDLER.SELLLIMIT, ACTION_HANDLER.SELLSTOP].includes(data.handler)) return 'sell'
+                return ''
             })(),
-            status: 'open'
+            status: (() => {
+                if ([ACTION_HANDLER.BUY, ACTION_HANDLER.SELL].includes(data.handler)) return 'open'
+                if ([ACTION_HANDLER.BUYLIMIT, ACTION_HANDLER.BUYSTOP, ACTION_HANDLER.SELLLIMIT, ACTION_HANDLER.SELLSTOP].includes(data.handler)) return 'pending'
+                return ''
+            })(),
+            tick_value: Number((symbol.tick_value * lot).toFixed(2)),
         })
         await tradeTicket.save()
 
-        // 4.
+        // #.
         // ارسال دستورات در وضعیت انتظار و وابسته به این دیتا
         await GetUpdateService.updateWaitings(getUpdateDoc.origin_acc, getUpdateDoc.origin_ticket, data.ticket, getUpdateDoc)
     } else {
@@ -64,7 +66,7 @@ export default async (req, res) => {
         }
     }
 
-    // 5.
+    // #.
     // لاگ گرفتن از رکوئست دریافتی
     const requestLog = new RequestLog({
         type: 'GetUpdateResponse',
@@ -73,7 +75,7 @@ export default async (req, res) => {
     })
     await requestLog.save()
 
-    // 6. 
+    // #. 
     // ارسال پاسخ عملیات موفقیت آمیز
     res.send({
         status: 'success',

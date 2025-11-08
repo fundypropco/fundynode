@@ -3,7 +3,6 @@ import { makeMsgForHandler, normalizeSymbol, makeID } from '../../helpers/helper
 import GetUpdateService from '../GetUpdateService.js'
 import SymbolAlias from "../../models/SymbolAlias.js"
 import Symbol from "../../models/Symbol.js"
-import GetUpdate from "../../models/GetUpdate.js"
 import { ACTION_HANDLER } from "../../helpers/constant.js"
 
 export default async (req, res) => {
@@ -12,20 +11,14 @@ export default async (req, res) => {
     const data = processMessage(req.body.message)
 
     //# بروزرسانی وضعیت دستور در صف دستورات
-    await GetUpdateService.updateStatus(data)
+    const getUpdateDoc = await GetUpdateService.updateStatus(data)
 
-    //# بدست آوردن نام سرور
-    const getUpdateDoc = await GetUpdate.findOne({
-        acc: data.acc,
-        handler: data.handler,
-        keyid: data.keyid,
-    })
     const serverName = getUpdateDoc ? getUpdateDoc.server : 'Test-Server'
 
     //#
     // استفاده از جدول راهنمای نمادهای معاملاتی برای تشخیص نمادهای قابل معامله در این بروکر
-    // 'XAUUSD' → 'XAUUSD'
-    // 'XAUUSD_o' → 'XAUUSD'
+    // 'US30' → 'US30'
+    // 'YM' → 'US30'
     const symbolAliases = await SymbolAlias.find().lean();
     const aliasMap = new Map();
     for (const item of symbolAliases) {

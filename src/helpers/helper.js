@@ -559,5 +559,5 @@ export function normalizeSymbol(symbol) {
     // EURUSD.i → EURUSD
     // EURUSD_o → EURUSD
     // EURUSD.pe → EURUSD
-    return symbol.replace(/[^A-Za-z0-9]+.*/i, '');
+    return symbol.replace(/[^A-Za-z0-9]+.*/i, '').toUpperCase();
 }

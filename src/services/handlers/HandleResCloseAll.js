@@ -2,7 +2,6 @@ import RequestLog from "../../models/RequestLog.js"
 import { formatDateYMD } from '../../helpers/helper.js'
 import GetUpdateService from '../GetUpdateService.js'
 import TradeTicket from "../../models/TradeTicket.js"
-import GetUpdate from "../../models/GetUpdate.js"
 
 export default async (req, res) => {
 
@@ -12,13 +11,7 @@ export default async (req, res) => {
 
     // #.
     // بروزرسانی وضعیت دستور در صف دستورات
-    await GetUpdateService.updateStatus(data)
-
-    const getUpdateDoc = await GetUpdate.findOne({
-        acc: data.acc,
-        handler: data.handler,
-        keyid: data.keyid,
-    })
+    const getUpdateDoc = await GetUpdateService.updateStatus(data)
 
     //#
     // بستن مپ معامله کلوز شده
