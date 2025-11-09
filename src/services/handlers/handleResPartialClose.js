@@ -2,6 +2,7 @@ import RequestLog from "../../models/RequestLog.js"
 import GetUpdateService from "../GetUpdateService.js"
 import { formatDateYMD } from '../../helpers/helper.js'
 import TradeTicket from '../../models/TradeTicket.js'
+import Symbol from "../../models/Symbol.js"
 
 export default async (req, res) => {
 

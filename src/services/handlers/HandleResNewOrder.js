@@ -4,6 +4,7 @@ import GetUpdateService from '../GetUpdateService.js'
 import TradeTicket from '../../models/TradeTicket.js'
 import { ACTION_HANDLER } from "../../helpers/constant.js"
 import Account from "../../models/Account.js"
+import Symbol from "../../models/Symbol.js"
 
 export default async (req, res) => {
 
