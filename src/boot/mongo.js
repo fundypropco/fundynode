@@ -6,6 +6,8 @@ import { createAccountReportIndexes } from "../models/AccountReport.js";
 import { createBrokerIndexes } from "../models/Broker.js";
 import { createGetUpdateIndexes } from "../models/GetUpdate.js";
 import { createSymbolIndexes } from "../models/Symbol.js";
+import { createTelegramMessageIndexes } from "../models/TelegramMessage.js";
+import { createTelegramPermissionIndexes } from "../models/TelegramPermission.js";
 
 const MONGO_URI = process.env.MONGO_URI;
 
@@ -27,6 +29,8 @@ export default async function startMongoDB(retries = 10, delay = 5000) {
                 createBrokerIndexes(),
                 createGetUpdateIndexes(),
                 createSymbolIndexes(),
+                createTelegramMessageIndexes(),
+                createTelegramPermissionIndexes()
             ]);
 
             console.log("✅ MongoDB indexes synced successfully");
