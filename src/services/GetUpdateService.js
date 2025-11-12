@@ -33,6 +33,7 @@ const create = async (data) => {
             acc: data.acc,
             ticket: data.ticket ?? 0,
             symbol: data.symbol ?? '',
+            vol: data.vol ?? 0,
             handler: data.handler,
             message: data.message,
             datetime: Date.now(),
@@ -46,6 +47,7 @@ const create = async (data) => {
             origin_new_ticket: data.origin_new_ticket ?? 0,
             origin_server: data.origin_server ?? '',
             origin_symbol: data.origin_symbol ?? '',
+            origin_vol: data.origin_vol ?? 0,
         })
 
         return await getUpdate.save()

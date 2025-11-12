@@ -18,7 +18,7 @@ export default async (req, res) => {
 
     if (getUpdateDoc.status == 'success') {
         const symbol = await Symbol.findOne({ server: getUpdateDoc.server, symbol: getUpdateDoc.symbol })
-        const lot = getUpdateDoc.message.split(',')[4]
+        const vol = getUpdateDoc.vol
 
         // #.
         // مپ کردن اکانت و تیکت های مرجع و کپی کننده 
@@ -42,7 +42,7 @@ export default async (req, res) => {
                 if ([ACTION_HANDLER.BUYLIMIT, ACTION_HANDLER.BUYSTOP, ACTION_HANDLER.SELLLIMIT, ACTION_HANDLER.SELLSTOP].includes(data.handler)) return 'pending'
                 return ''
             })(),
-            tick_value: Number((symbol.tick_value * lot).toFixed(2)),
+            tick_value: Number((symbol.tick_value * vol).toFixed(2)),
         })
         await tradeTicket.save()
 

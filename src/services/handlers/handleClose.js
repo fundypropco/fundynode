@@ -104,6 +104,7 @@ async function processPartial(data) {
             copyTradeData.origin_server = account.server
             copyTradeData.origin_new_ticket = order.open_ticket
             copyTradeData.description = []
+            copyTradeData.origin_vol = order.closed_vol
             copyTradeData.vol = order.closed_vol //todo: calc vol - getOrderVol(account, copier, '', data.close_vol)
 
             if (copierOrder) {

@@ -72,6 +72,7 @@ async function processNewOrder(data) {
                 copyTradeData.origin_ticket = localData.ticket
                 copyTradeData.origin_server = account.server
                 copyTradeData.origin_symbol = localData.symbol_a.symbol
+                copyTradeData.origin_vol = data.vol
                 copyTradeData.symbol_title = localData.symbol_a.title
                 copyTradeData.keyid = keyid++
                 copyTradeData.open_price = localData.open_price
@@ -129,6 +130,7 @@ async function processPartial(data) {
             copyTradeData.origin_server = account.server
             copyTradeData.origin_new_ticket = order.open_ticket
             copyTradeData.description = []
+            copyTradeData.origin_vol = order.closed_vol
             copyTradeData.vol = order.closed_vol //todo: calc vol - getOrderVol(account, copier, '', data.close_vol)
 
             if (copierOrder) {

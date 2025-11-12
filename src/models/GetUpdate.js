@@ -19,6 +19,10 @@ const getUpdateSchema = new mongoose.Schema({
         type: String,
         default: ''
     },
+    vol: {
+        type: Number,
+        default: 0
+    },
     handler: {
         type: Number,
         index: true,
@@ -71,6 +75,10 @@ const getUpdateSchema = new mongoose.Schema({
     origin_symbol: {
         type: String,
         default: '',
+    },
+    origin_vol: {
+        type: Number,
+        default: 0,
     },
     symbol_title: {
         type: String,
