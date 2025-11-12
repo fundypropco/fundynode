@@ -172,7 +172,7 @@ async function isDuplicatedOrder(data) {
         ticket_src: data.ticket,
     })
 
-    if (is_duplicated.status === 'pending' && ['BUY', 'SELL'].includes(data.type)) {
+    if (is_duplicated && is_duplicated.status === 'pending' && ['BUY', 'SELL'].includes(data.type)) {
         await TradeTicket.updateMany({ acc_src: data.acc, ticket_src: data.ticket }, { $set: { status: 'open' } })
     }
 
