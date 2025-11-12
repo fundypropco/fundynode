@@ -50,7 +50,7 @@ export default async (req, res) => {
     // 6.
     // لاگ گرفتن از رکوئست دریافتی
     const requestLog = new RequestLog({
-        type: 'SendMessage',
+        type: 'GetUpdateResponse',
         message: req.body.message,
         datetime: Date.now()
     })
