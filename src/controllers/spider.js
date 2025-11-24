@@ -15,7 +15,8 @@ import handleResBulkClose from '../services/handlers/handleResBulkClose.js'
 import HandleResCloseAll from '../services/handlers/HandleResCloseAll.js'
 
 const getUpdates = asyncHandler(async (req, res) => {
-    res.json(await GetUpdateService.getUnprocessed(req.params.acc))
+    const result = await GetUpdateService.getUnprocessed(req.params.acc)
+    res.json(result)
 })
 
 const sendMessage = asyncHandler(async (req, res) => {

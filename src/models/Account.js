@@ -1,13 +1,29 @@
 import mongoose from "mongoose"
 
 const copierSchema = new mongoose.Schema({
-    acc: Number,
-    server: String,
-    initial: Number,
+    acc: {
+        type: Number,
+        index: true,
+    },
+    server: {
+        type: String,
+        index: true,
+    },
+    copy: {
+        type: Boolean,
+        default: true,
+    },
     vol: {
         type: String,
         enum: ['calc', 'exact']
+    },
+    profit_bl: {
+        type: Number
+    },
+    profit_eq: {
+        type: Number
     }
+
 }, { _id: false })
 
 const accountSchema = new mongoose.Schema({
@@ -16,104 +32,31 @@ const accountSchema = new mongoose.Schema({
         required: true,
         unique: true
     },
-    initial: {
-        // by admin
-        type: Number
-    },
-    tddp: {
-        // total drawdown percent
-        // by admin
-        type: Number
-    },
-    tddv: {
-        // total drawdown value
-        // by admin
-        type: Number
-    },
-    ddeq: {
-        // drawdown equity amount
-        type: Number
-    },
-    eq: {
-        // equity
-        type: Number
-    },
-    eqh: {
-        // equity_high
-        type: Number
-    },
-    eqht: {
-        // equity_high_time
-        type: Date
-    },
-    eql: {
-        // equity_low
-        type: Number
-    },
-    eqlt: {
-        // equity_low_time
-        type: Date
-    },
-    bl: {
-        // balance
-        type: Number
-    },
-    blh: {
-        // balance_high
-        type: Number
-    },
-    blht: {
-        // balance_high_time
-        type: Date
-    },
-    bll: {
-        // balance_low
-        type: Number
-    },
-    bllt: {
-        // balance_low_time
-        type: Date
-    },
-    otc: {
-        // open trade count
-        type: Number
-    },
-    htc: {
-        // history trade count
-        type: Number
-    },
-    profit: {
-        type: Number
-    },
-    timestamp: {
-        // تایم استمپ بروکر در لحظه کپچر کردن دیتای حساب
-        type: String
-    },
-    copiers: {
-        type: [copierSchema],
-        default: []
-    },
     server: {
         type: String,
         default: "",
         index: true
     },
+    initial: {
+        type: Number
+    },
+    drawdown: {
+        type: Number
+    },
     copy: {
         type: Boolean,
         default: false
     },
-    created_at: {
-        type: Date,
-        default: Date.now
+    copiers: {
+        type: [copierSchema],
+        default: []
     },
-    updated_at: {
-        // تایم استمپ لحظه رسیدن دیتا و بروزرسانی در نود
+    created_at: {
         type: Date,
         default: Date.now
     }
 });
 
-accountSchema.index({ "copiers.server": 1 })
 
 const Account = mongoose.model('Account', accountSchema, 'accounts');
 

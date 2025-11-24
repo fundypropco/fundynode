@@ -1,28 +1,28 @@
 import RequestLog from "../../models/RequestLog.js"
 import { formatDateYMD } from '../../helpers/helper.js'
 import GetUpdateService from '../GetUpdateService.js'
-import TradeTicket from "../../models/TradeTicket.js"
+import TradeMap from "../../models/TradeMap.js"
 
 export default async (req, res) => {
 
     // #. 
-    // پردازش دیتای ورودی
+    // پردازش دیتای ورودی 
     const data = processMessage(req.body.message)
 
     // #.
-    // بروزرسانی وضعیت دستور در صف دستورات
+    // بروزرسانی وضعیت دستور در صف دستورات 
     const getUpdateDoc = await GetUpdateService.updateStatus(data)
 
     //#
-    // بستن مپ معامله کلوز شده
+    // بستن مپ معامله کلوز شده 
     for (const ticket of data.tickets) {
         if (getUpdateDoc.origin_acc) {
-            await TradeTicket.updateMany(
+            await TradeMap.updateMany(
                 { acc_dist: data.acc, ticket_dist: ticket },
                 { $set: { status: 'closed' } }
             )
         } else {
-            await TradeTicket.updateMany(
+            await TradeMap.updateMany(
                 { acc_src: data.acc, ticket_src: ticket },
                 { $set: { status: 'closed' } }
             )
@@ -30,7 +30,7 @@ export default async (req, res) => {
     }
 
     // #.
-    // لاگ گرفتن از رکوئست دریافتی
+    // لاگ گرفتن از رکوئست دریافتی 
     const requestLog = new RequestLog({
         type: 'GetUpdateResponse',
         message: req.body.message,
@@ -39,7 +39,7 @@ export default async (req, res) => {
     await requestLog.save()
 
     // #. 
-    // ارسال پاسخ عملیات موفقیت آمیز
+    // ارسال پاسخ عملیات موفقیت آمیز 
     res.send({
         status: 'success',
     })

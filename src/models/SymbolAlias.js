@@ -9,7 +9,11 @@ const symbolAliasSchema = new mongoose.Schema({
     alias: {
         type: [String],
         default: []
-    }
+    },
+    weight: {
+        type: Number,
+        default: 0,
+    },
 });
 
 const SymbolAlias = mongoose.model('SymbolAlias', symbolAliasSchema, 'symbol_alias');

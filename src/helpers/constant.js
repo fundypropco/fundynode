@@ -12,7 +12,8 @@ const ACTION_HANDLER = {
     CLOSE_ALL: 20,
     BULK_CLOSE: 21,
     PARTIAL_CLOSE: 22,
-    CLOSE_ORIGIN: 23
+    CLOSE_ORIGIN: 23,
+    OPEN_TRADES_PROFIT: 30
 }
 
 export {

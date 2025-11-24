@@ -1,5 +1,12 @@
-import startMongoDB from './mongo.js'
-import startRedis from './redis.js'
+import getMongo from "./mongo.js"
+import getRedis from "./redis.js"
+import { getAppQueue } from "./queue.js"
 
-await startMongoDB()
-await startRedis()
+export default async function boot() {
+    await Promise.all([
+        getMongo(),
+        getRedis(),
+        getAppQueue(),
+    ])
+    console.log("🚀 System Boot Completed")
+}

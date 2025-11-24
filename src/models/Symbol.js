@@ -11,7 +11,7 @@ const symbolSchema = new mongoose.Schema({
         required: true,
     },
     symbol: {
-        // نام نماد در بروکر
+        // نام نماد در بروکر 
         type: String,
         required: true,
     },
@@ -23,6 +23,11 @@ const symbolSchema = new mongoose.Schema({
     vol_max: Number,
     digits: Number,
     point: Number,
+    weight: {
+        type: Number,
+        default: 1,
+        index: true
+    },
 })
 
 symbolSchema.index({ server: 1, title: 1 })

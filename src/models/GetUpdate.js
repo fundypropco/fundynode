@@ -1,39 +1,13 @@
 import mongoose from "mongoose"
 
 const getUpdateSchema = new mongoose.Schema({
-    acc: {
-        type: Number,
-        index: true,
-    },
-    ticket: {
-        type: Number,
-        index: true,
-        default: 0
-    },
-    server: {
-        type: String,
-        default: '',
-        index: true,
-    },
-    symbol: {
-        type: String,
-        default: ''
-    },
-    vol: {
-        type: Number,
-        default: 0
-    },
+
     handler: {
         type: Number,
         index: true,
     },
     message: {
         type: String
-    },
-    datetime: {
-        type: Date,
-        default: Date.now,
-        index: true
     },
     keyid: {
         type: Number,
@@ -50,9 +24,45 @@ const getUpdateSchema = new mongoose.Schema({
         index: true,
         default: 'pending'
     },
+    side: {
+        type: String,
+        enum: ['buy', 'buy_limit', 'buy_stop', 'sell', 'sell_limit', 'sell_stop', 'none'],
+        default: 'none'
+    },
     description: {
         type: [String],
         default: []
+    },
+
+    server: {
+        type: String,
+        default: '',
+        index: true,
+    },
+    acc: {
+        type: Number,
+        index: true,
+    },
+    ticket: {
+        type: Number,
+        index: true,
+        default: 0
+    },
+    symbol: {
+        type: String,
+    },
+    vol: {
+        type: Number,
+    },
+    sl: {
+        type: Number
+    },
+    tp: {
+        type: Number
+    },
+
+    origin_server: {
+        type: String,
     },
     origin_acc: {
         type: Number,
@@ -64,32 +74,61 @@ const getUpdateSchema = new mongoose.Schema({
         index: true,
         default: 0
     },
-    origin_new_ticket: {
-        type: Number,
-        default: 0
-    },
-    origin_server: {
-        type: String,
-        default: '',
-    },
     origin_symbol: {
         type: String,
-        default: '',
-    },
-    origin_vol: {
-        type: Number,
-        default: 0,
     },
     symbol_title: {
         type: String,
-        default: '',
+    },
+    origin_vol: {
+        type: Number,
+    },
+    origin_open_price: {
+        type: Number
+    },
+    origin_open_time: {
+        type: String,
+    },
+    origin_close_price: {
+        type: Number
+    },
+    origin_close_time: {
+        type: String,
+    },
+    origin_sl: {
+        type: Number
+    },
+    origin_tp: {
+        type: Number
+    },
+    origin_commission: {
+        type: Number
+    },
+    origin_comment: {
+        type: Number
+    },
+    origin_magic: {
+        type: Number
+    },
+    origin_new_ticket: {
+        type: Number,
+    },
+    origin_new_vol: {
+        type: Number,
+    },
+    origin_new_open_time: {
+        type: String,
+    },
+
+    created_at: {
+        type: Date,
+        default: Date.now
     },
     updated_at: {
         type: Date,
         default: Date.now
     }
 });
-
 
 getUpdateSchema.index({ acc: 1, handler: 1 })
 getUpdateSchema.index({ server: 1, handler: 1 })

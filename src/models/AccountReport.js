@@ -5,7 +5,11 @@ const accountReportSchema = new mongoose.Schema({
         type: Date,
         required: true
     },
-    acc: {
+    acc_src: {
+        type: Number,
+        required: true,
+    },
+    acc_dist: {
         type: Number,
         required: true,
     },
@@ -59,7 +63,7 @@ const accountReportSchema = new mongoose.Schema({
     }
 })
 
-accountReportSchema.index({ acc: 1, date: 1 })
+accountReportSchema.index({ acc_src: 1, acc_dist: 1, date: 1 })
 
 const AccountReport = mongoose.model('AccountReport', accountReportSchema, 'account_reports')
 

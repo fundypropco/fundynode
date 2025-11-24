@@ -36,13 +36,17 @@ const brokerSymbolSeeder = async (serverName = 'all') => {
                     ]
                 }
             },
-            { $unwind: { path: "$copiers", preserveNullAndEmptyArrays: true } },
+            {
+                $unwind: {
+                    path: "$copiers", preserveNullAndEmptyArrays: true
+                }
+            },
             {
                 $match: {
                     copy: true,
                     $or: [
                         { server: serverName },
-                        { "copiers.server": serverName }
+                        { "copiers.server": serverName, "copiers.copy": true }
                     ]
                 }
             },

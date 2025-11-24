@@ -31,6 +31,29 @@ services:
         max-size: "50m"
         max-file: "3"
 
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    container_name: fundyworker
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - MONGO_URI=mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@my-mongo:27017/${MONGO_INITDB_DATABASE}?authSource=admin
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: pm2-runtime worker.ecosystem.config.cjs
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+
   mongo:
     image: mongo:8
     container_name: my-mongo

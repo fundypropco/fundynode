@@ -1,7 +1,7 @@
 import RequestLog from "../../models/RequestLog.js"
 import GetUpdateService from "../GetUpdateService.js"
 import { formatDateYMD } from '../../helpers/helper.js'
-import TradeTicket from '../../models/TradeTicket.js'
+import TradeMap from '../../models/TradeMap.js'
 import Symbol from "../../models/Symbol.js"
 
 export default async (req, res) => {
@@ -15,9 +15,9 @@ export default async (req, res) => {
     const getUpdateDoc = await GetUpdateService.updateStatus(data)
 
     if (getUpdateDoc && getUpdateDoc.status == 'success') {
-        //#
-        // بستن معامله کلوز شده در تیکت مپ
-        const trade = await TradeTicket.findOneAndUpdate(
+        // #.
+        // بستن معامله کلوز شده در تیکت مپ 
+        const trade = await TradeMap.findOneAndUpdate(
             { acc_src: getUpdateDoc.origin_acc, ticket_src: getUpdateDoc.origin_ticket, acc_dist: data.acc },
             { $set: { status: 'closed' } }
         )
@@ -26,7 +26,7 @@ export default async (req, res) => {
 
         // #.
         // مپ کردن اکانت و تیکت های مرجع و کپی کننده باقیمانده 
-        const tradeTicket = new TradeTicket({
+        const tradeMap = new TradeMap({
             acc_src: getUpdateDoc.origin_acc,
             ticket_src: getUpdateDoc.origin_new_ticket,
             server_src: getUpdateDoc.origin_server,
@@ -40,7 +40,7 @@ export default async (req, res) => {
             status: 'open',
             tick_value: Number((symbol.tick_value * data.open_vol).toFixed(2)),
         })
-        await tradeTicket.save()
+        await tradeMap.save()
 
         // #.
         // ارسال دستورات در وضعیت انتظار و وابسته به این دیتا

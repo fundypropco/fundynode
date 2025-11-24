@@ -1,24 +1,24 @@
 import Account from '../../models/Account.js'
 import RequestLog from "../../models/RequestLog.js"
 import GetUpdateService from "../GetUpdateService.js"
-import { formatDateYMD, makeMsgForHandler, makeID } from '../../helpers/helper.js'
-import { ACTION_HANDLER } from '../../helpers/constant.js'
-import TradeTicket from '../../models/TradeTicket.js'
+import { makeID } from '../../helpers/helper.js'
+import TradeMap from '../../models/TradeMap.js'
 
 export default async (req, res) => {
 
-    //# پردازش پیام ورودی
+    // #.
+    //پردازش پیام ورودی 
     const data = processMessage(req.body.message)
 
     if (!data.is_partial) {
-        // اگر کلوز کامل باشد
+        // اگر کلوز کامل باشد 
         await processClose(data)
     } else {
-        // اگر پارشیال کلوز باشد
+        // اگر پارشیال کلوز باشد 
         await processPartial(data)
     }
 
-    // 6.
+    // #.
     // لاگ گرفتن از رکوئست دریافتی
     const requestLog = new RequestLog({
         type: 'SendMessage',
@@ -34,44 +34,34 @@ export default async (req, res) => {
 
 async function processClose(data) {
 
-    //# پیدا کردن اکانت مربوط به عملیات دریافتی
+    // #
+    // پیدا کردن اکانت مربوط به عملیات دریافتی 
     const account = await Account.findOne({ acc: data.acc });
 
-    //# بررسی اینکه آیا قابلیت برای این اکانت فعال هست یا نه
+    // #.
+    // بررسی اینکه آیا قابلیت برای این اکانت فعال هست یا نه 
     if (account.copy) {
 
         let keyid = makeID()
+        data.keyid = keyid
 
-        //# بدست آوردن تیکتهای متناظر با این سفارش روی اکانتهای دیگر
-        const tickets = await TradeTicket.find({ acc_src: account.acc, ticket_src: data.ticket })
+        // #.
+        // بدست آوردن تیکتهای متناظر با این سفارش روی اکانتهای دیگر 
+        const tradeMaps = await TradeMap.find({ acc_src: account.acc, ticket_src: data.ticket })
 
-        //# بدست آوردن اکانتهای کپی کننده
+        // #.
+        // بدست آوردن اکانتهای کپی کننده 
         for (const copier of account.copiers) {
-            const copyTradeData = {}
-            const copierOrder = tickets.find(t => t.acc_dist == copier.acc)
+            if (copier.copy) {
+                const tradeMap = tradeMaps.find(t => t.acc_dist == copier.acc)
+                const getUpdateData = await GetUpdateService.prepareCloseData(account, copier, data, tradeMap)
+                await GetUpdateService.create(getUpdateData)
 
-            copyTradeData.acc = copier.acc
-            copyTradeData.server = copier.server
-            copyTradeData.handler = ACTION_HANDLER.CLOSE
-            copyTradeData.keyid = keyid++
-            copyTradeData.origin_acc = account.acc
-            copyTradeData.origin_ticket = data.ticket
-            copyTradeData.origin_server = account.server
-
-            if (copierOrder) {
-                copyTradeData.origin_symbol = copierOrder.symbol_src
-                copyTradeData.ticket = copierOrder.ticket_dist
-                copyTradeData.server = copierOrder.server_dist
-                copyTradeData.symbol = copierOrder.symbol_dist
-                copyTradeData.symbol_title = copierOrder.symbol_title
-                copyTradeData.status = 'pending'
-                copyTradeData.message = await makeMsgForHandler(copyTradeData.handler, copyTradeData)
-                await GetUpdateService.create(copyTradeData)
-            } else {
-                copyTradeData.ticket = -1
-                copyTradeData.message = await makeMsgForHandler(copyTradeData.handler, copyTradeData)
-                copyTradeData.status = 'waiting'
-                await GetUpdateService.create(copyTradeData)
+                if (tradeMap) {
+                    tradeMap.close_time_src = data.closed_time
+                    tradeMap.close_price_src = data.closed_price
+                    await tradeMap.save()
+                }
             }
         }
     }
@@ -79,48 +69,36 @@ async function processClose(data) {
 
 async function processPartial(data) {
 
-    //# پیدا کردن اکانت مربوط به عملیات دریافتی
+    // #.
+    // پیدا کردن اکانت مربوط به عملیات دریافتی 
     const account = await Account.findOne({ acc: data.acc });
 
-    //# بررسی اینکه آیا قابلیت برای این اکانت فعال هست یا نه
+    // #.
+    // بررسی اینکه آیا قابلیت برای این اکانت فعال هست یا نه 
     if (account.copy) {
 
         let keyid = makeID()
-        const order = data.partial_item
+        const partialInfo = data.partial_item
+        partialInfo.keyid = keyid
+        partialInfo.closed_price = data.closed_price
 
-        //# بدست آوردن تیکتهای متناظر با این سفارش روی اکانتهای دیگر
-        const tickets = await TradeTicket.find({ acc_src: account.acc, ticket_src: order.closed_ticket })
+        // #.
+        // بدست آوردن تیکتهای متناظر با این سفارش روی اکانتهای دیگر 
+        const tradeMaps = await TradeMap.find({ acc_src: account.acc, ticket_src: partialInfo.closed_ticket })
 
-        //# بدست آوردن اکانتهای کپی کننده
+        // #.
+        // بدست آوردن اکانتهای کپی کننده 
         for (const copier of account.copiers) {
-            const copyTradeData = {}
-            const copierOrder = tickets.find(t => t.acc_dist == copier.acc)
+            if (copier.copy) {
+                const tradeMap = tradeMaps.find(t => t.acc_dist == copier.acc)
+                const getUpdateData = await GetUpdateService.preparePartialCloseData(account, copier, partialInfo, tradeMap)
+                await GetUpdateService.create(getUpdateData)
 
-            copyTradeData.acc = copier.acc
-            copyTradeData.handler = ACTION_HANDLER.PARTIAL_CLOSE
-            copyTradeData.keyid = keyid++
-            copyTradeData.origin_acc = account.acc
-            copyTradeData.origin_ticket = order.closed_ticket
-            copyTradeData.origin_server = account.server
-            copyTradeData.origin_new_ticket = order.open_ticket
-            copyTradeData.description = []
-            copyTradeData.origin_vol = order.closed_vol
-            copyTradeData.vol = order.closed_vol //todo: calc vol - getOrderVol(account, copier, '', data.close_vol)
-
-            if (copierOrder) {
-                copyTradeData.origin_symbol = copierOrder.symbol_src
-                copyTradeData.ticket = copierOrder.ticket_dist
-                copyTradeData.server = copierOrder.server_dist
-                copyTradeData.symbol = copierOrder.symbol_dist
-                copyTradeData.symbol_title = copierOrder.symbol_title
-                copyTradeData.status = 'pending'
-                copyTradeData.message = await makeMsgForHandler(copyTradeData.handler, copyTradeData)
-                await GetUpdateService.create(copyTradeData)
-            } else {
-                copyTradeData.ticket = -1
-                copyTradeData.status = 'waiting'
-                copyTradeData.message = await makeMsgForHandler(copyTradeData.handler, copyTradeData)
-                await GetUpdateService.create(copyTradeData)
+                if (tradeMap) {
+                    tradeMap.close_time_src = partialInfo.closed_time
+                    tradeMap.close_price_src = partialInfo.closed_price
+                    await tradeMap.save()
+                }
             }
         }
     }
@@ -137,17 +115,16 @@ function processMessage(msg) {
     const msg_parts = msg.split(',')
     data.acc = msg_parts[0].replace(/_.*/, '')
     data.timestamp = msg_parts[3] * 1000
-    data.date = formatDateYMD(data.timestamp)
     let info = msg_parts[2]
     const partial_info = msg_parts[4]
     data.is_partial = false
 
     // msg info
     const info_parts = info.split('&')
-    data.ticket = info_parts[1]
+    data.closed_ticket = info_parts[1]
     data.closed_price = info_parts[2]
     data.closed_time = info_parts[3]
-    data.vol = info_parts[4]
+    data.closed_vol = info_parts[4]
 
     if (partial_info != -1) {
         // partial

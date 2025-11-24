@@ -7,28 +7,32 @@ import { ACTION_HANDLER } from "../../helpers/constant.js"
 
 export default async (req, res) => {
 
-    //# پردازش دیتای ورودی
+    // #
+    // پردازش دیتای ورودی 
     const data = processMessage(req.body.message)
 
-    //# بروزرسانی وضعیت دستور در صف دستورات
+    // #
+    //بروزرسانی وضعیت دستور در صف دستورات 
     const getUpdateDoc = await GetUpdateService.updateStatus(data)
 
     const serverName = getUpdateDoc ? getUpdateDoc.server : 'Test-Server'
 
-    //#
-    // استفاده از جدول راهنمای نمادهای معاملاتی برای تشخیص نمادهای قابل معامله در این بروکر
+    // #
+    // استفاده از جدول راهنمای نمادهای معاملاتی برای تشخیص نمادهای قابل معامله در این بروکر 
     // 'US30' → 'US30'
     // 'YM' → 'US30'
-    const symbolAliases = await SymbolAlias.find().lean();
-    const aliasMap = new Map();
+    const symbolAliases = await SymbolAlias.find().lean()
+    const aliasMap = new Map()
+    const weightMap = new Map()
     for (const item of symbolAliases) {
-        aliasMap.set(item.title, item.title);
+        aliasMap.set(item.title, item.title)
         for (const alias of item.alias) {
-            aliasMap.set(alias, item.title);
+            aliasMap.set(alias, item.title)
         }
+        weightMap.set(item.title, item.weight)
     }
 
-    //# 
+    // # 
     // بدست آوردن نمادهای قابل معامله 
     const tradableSymbols = data.symbols.filter(rawSymbol => {
         const normalized = normalizeSymbol(rawSymbol)
@@ -36,20 +40,20 @@ export default async (req, res) => {
         return Boolean(title)
     })
 
-    //# 
-    // آپدیت کردن اطلاعات دیتابیس
+    // # 
+    // آپدیت کردن اطلاعات دیتابیس 
     await Symbol.bulkWrite(
         tradableSymbols.map(rawSymbol => {
             const normalized = normalizeSymbol(rawSymbol)
 
-            // بررسی وجود نام نماد در جدول راهنمای بالا
+            // بررسی وجود نام نماد در جدول راهنمای بالا 
             const title = aliasMap.get(normalized) || aliasMap.get(rawSymbol);
 
             if (title) {
                 return {
                     updateOne: {
                         filter: { title: title, server: serverName },
-                        update: { $set: { symbol: rawSymbol, server: serverName } },
+                        update: { $set: { symbol: rawSymbol, server: serverName, weight: weightMap.get(title) } },
                         upsert: true
                     }
                 }
@@ -59,10 +63,10 @@ export default async (req, res) => {
         }).filter(Boolean)
     )
 
-    //# 
-    // درخواست برای ارسال اطلاعات نماد
+    // # 
+    // درخواست برای ارسال اطلاعات نماد 
     let keyid = makeID()
-    const promises = [];
+    const promises = []
     for (const symbol of tradableSymbols) {
         const promise = (async () => {
             const getUpdateData = {
@@ -72,14 +76,15 @@ export default async (req, res) => {
                 symbol: symbol,
                 keyid: keyid++,
             }
-            getUpdateData.message = await makeMsgForHandler(getUpdateData.handler, getUpdateData);
-            return GetUpdateService.create(getUpdateData);
+            getUpdateData.message = await makeMsgForHandler(getUpdateData.handler, getUpdateData)
+            return GetUpdateService.create(getUpdateData)
         })()
-        promises.push(promise);
+        promises.push(promise)
     }
-    await Promise.all(promises);
+    await Promise.all(promises)
 
-    //# لاگ گرفتن از رکوئست دریافتی
+    // #
+    // لاگ گرفتن از رکوئست دریافتی 
     const requestLog = new RequestLog({
         type: 'GetUpdateResponse',
         message: req.body.message,
@@ -87,7 +92,8 @@ export default async (req, res) => {
     })
     await requestLog.save()
 
-    //# ارسال پاسخ عملیات موفقیت آمیز
+    // #
+    // ارسال پاسخ عملیات موفقیت آمیز 
     res.send({
         status: 'success',
     })

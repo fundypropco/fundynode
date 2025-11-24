@@ -1,16 +1,16 @@
 import { ACTION_HANDLER } from "../helpers/constant.js"
 import { makeID, makeMsgForHandler } from "../helpers/helper.js"
-import TradeTicket from "../models/TradeTicket.js"
+import TradeMap from "../models/TradeMap.js"
 import GetUpdateService from "./GetUpdateService.js"
 
 const bulkClose = async (account) => {
     // تمام تریدهای مربوط به اکانت تریدر
     // مرتب سازی اول اپن بعد پندینگ - با ارزش ها اول لیست شوند
-    const tradeTickets = await TradeTicket.find({ acc_src: account.acc, status: { $ne: 'closed' } }).sort({ status: 1, tick_value: -1 })
+    const tradeMaps = await TradeMap.find({ status: { $ne: 'closed' }, acc_src: account.acc }).sort({ status: 1, tick_value: -1 })
 
     for (const copier of account.copiers) {
         // تریدهای مربوط به یک حساب کپی و ترید
-        const copierTickets = await TradeTicket.find({ acc_src: account.acc, acc_dist: copier.acc, status: { $ne: 'closed' } }).sort({ status: 1, tick_value: -1 })
+        const copierTickets = await TradeMap.find({ status: { $ne: 'closed' }, acc_src: account.acc, acc_dist: copier.acc }).sort({ status: 1, tick_value: -1 })
         if (copierTickets.length) {
             const total = copierTickets.length
             const clusters = 3

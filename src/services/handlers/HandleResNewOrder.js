@@ -1,10 +1,11 @@
 import RequestLog from "../../models/RequestLog.js"
-import { formatDateYMD, makeMsgForHandler } from '../../helpers/helper.js'
+import { makeMsgForHandler } from '../../helpers/helper.js'
 import GetUpdateService from '../GetUpdateService.js'
-import TradeTicket from '../../models/TradeTicket.js'
+import TradeMap from '../../models/TradeMap.js'
 import { ACTION_HANDLER } from "../../helpers/constant.js"
 import Account from "../../models/Account.js"
 import Symbol from "../../models/Symbol.js"
+import { symbol } from "joi"
 
 export default async (req, res) => {
 
@@ -22,48 +23,59 @@ export default async (req, res) => {
 
         // #.
         // مپ کردن اکانت و تیکت های مرجع و کپی کننده 
-        const tradeTicket = new TradeTicket({
+        const tradeMap = new TradeMap({
             acc_src: getUpdateDoc.origin_acc,
             ticket_src: getUpdateDoc.origin_ticket,
             server_src: getUpdateDoc.origin_server,
             symbol_src: getUpdateDoc.origin_symbol,
+            vol_src: getUpdateDoc.origin_vol,
+            sl_src: getUpdateDoc.origin_sl,
+            tp_src: getUpdateDoc.origin_tp,
+            open_price_src: getUpdateDoc.origin_open_price,
+            open_time_src: getUpdateDoc.origin_open_time,
+
             acc_dist: data.acc,
             ticket_dist: data.ticket,
             server_dist: getUpdateDoc.server,
             symbol_dist: getUpdateDoc.symbol,
+            vol_dist: getUpdateDoc.vol,
+            sl_dist: getUpdateDoc.sl,
+            tp_dist: getUpdateDoc.tp,
+            // todo: 
+            // این مقادیر از mql دریافت شود 
+            open_price_dist: '',
+            open_time_dist: '',
+
             symbol_title: getUpdateDoc.symbol_title,
-            side: (() => {
-                if ([ACTION_HANDLER.BUY, ACTION_HANDLER.BUYLIMIT, ACTION_HANDLER.BUYSTOP].includes(data.handler)) return 'buy'
-                if ([ACTION_HANDLER.SELL, ACTION_HANDLER.SELLLIMIT, ACTION_HANDLER.SELLSTOP].includes(data.handler)) return 'sell'
-                return ''
-            })(),
+            side: getUpdateDoc.side,
             status: (() => {
-                if ([ACTION_HANDLER.BUY, ACTION_HANDLER.SELL].includes(data.handler)) return 'open'
-                if ([ACTION_HANDLER.BUYLIMIT, ACTION_HANDLER.BUYSTOP, ACTION_HANDLER.SELLLIMIT, ACTION_HANDLER.SELLSTOP].includes(data.handler)) return 'pending'
+                if (['buy', 'sell'].includes(getUpdateDoc.side)) return 'open'
+                if (['buy_limit', 'buy_stop', 'sell_limit', 'sell_stop'].includes(getUpdateDoc.side)) return 'pending'
                 return ''
             })(),
             tick_value: Number((symbol.tick_value * vol).toFixed(2)),
+            symbol_weight: symbol.weight
         })
-        await tradeTicket.save()
+        await tradeMap.save()
 
         // #.
-        // ارسال دستورات در وضعیت انتظار و وابسته به این دیتا
+        // ارسال دستورات در وضعیت انتظار و وابسته به این دیتا 
         await GetUpdateService.updateWaitings(getUpdateDoc.origin_acc, getUpdateDoc.origin_ticket, data.ticket, getUpdateDoc)
     } else {
         const account = await Account.findOne({ acc: getUpdateDoc.origin_acc, server: getUpdateDoc.origin_server })
         if (account && account.copiers?.length == 1) {
-            const order = {}
-            order.handler = ACTION_HANDLER.CLOSE_ORIGIN
-            order.status = 'pending'
-            order.acc = order.origin_acc = getUpdateDoc.origin_acc
-            order.ticket = order.origin_ticket = getUpdateDoc.origin_ticket
-            order.symbol = order.origin_symbol = getUpdateDoc.origin_symbol
-            order.server = order.origin_server = getUpdateDoc.origin_server
-            order.symbol_title = getUpdateDoc.symbol_title
-            order.description = [`Copier Error: ${data.result_text} / ${getMqlError(data.result_code)}`]
-            order.keyid = makeID()
-            order.message = await makeMsgForHandler(order.handler, order)
-            await GetUpdateService.create(order)
+            const getUpdateData = await GetUpdateService.prepareCloseOriginData(account, {
+                description: [`Copier Error: ${data.result_text} / ${getMqlError(data.result_code)}`],
+                keyid: makeID(),
+                side: getUpdateDoc.side,
+                ticket: getUpdateDoc.origin_ticket,
+                origin_ticket: getUpdateDoc.origin_ticket,
+                symbol: getUpdateDoc.origin_symbol,
+                symbol_title: getUpdateDoc.symbol_title,
+                origin_symbol: getUpdateDoc.origin_symbol,
+                vol: getUpdateDoc.origin_vol,
+            })
+            await GetUpdateService.create(getUpdateData)
         }
     }
 
@@ -94,7 +106,6 @@ function processMessage(msg) {
     data.acc = msg_parts[0].replace(/_.*/, '')
     data.handler = 1000 - parseInt(msg_parts[1])
     data.timestamp = msg_parts[3] * 1000
-    data.date = formatDateYMD(data.timestamp)
     data.keyid = msg_parts[4]
     const info = msg_parts[2]
 

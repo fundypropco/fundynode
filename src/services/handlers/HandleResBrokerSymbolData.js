@@ -4,15 +4,17 @@ import Symbol from "../../models/Symbol.js"
 
 export default async (req, res) => {
 
-    //# پردازش دیتای ورودی
+    // #.
+    //پردازش دیتای ورودی 
     const data = processMessage(req.body.message)
 
-    //# بروزرسانی وضعیت دستور در صف دستورات
+    // #.
+    // بروزرسانی وضعیت دستور در صف دستورات 
     const getUpdateDoc = await GetUpdateService.updateStatus(data)
 
     if (getUpdateDoc) {
-        //# 
-        // بروزرسانی اطلاعات نماد
+        // # 
+        // بروزرسانی اطلاعات نماد 
         const symbol = await Symbol.findOne({ symbol: getUpdateDoc.symbol, server: getUpdateDoc.server })
 
         if (symbol) {
@@ -28,7 +30,8 @@ export default async (req, res) => {
         }
     }
 
-    //# لاگ گرفتن از رکوئست دریافتی
+    // #
+    // لاگ گرفتن از رکوئست دریافتی 
     const requestLog = new RequestLog({
         type: 'GetUpdateResponse',
         message: req.body.message,
@@ -36,7 +39,8 @@ export default async (req, res) => {
     })
     await requestLog.save()
 
-    //# ارسال پاسخ عملیات موفقیت آمیز
+    // #
+    //ارسال پاسخ عملیات موفقیت آمیز 
     res.send({
         status: 'success',
     })

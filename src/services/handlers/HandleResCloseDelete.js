@@ -1,27 +1,45 @@
 import RequestLog from "../../models/RequestLog.js"
 import { formatDateYMD } from '../../helpers/helper.js'
 import GetUpdateService from '../GetUpdateService.js'
-import TradeTicket from "../../models/TradeTicket.js"
+import TradeMap from "../../models/TradeMap.js"
 
 export default async (req, res) => {
 
     // #. 
-    // پردازش دیتای ورودی
+    // پردازش دیتای ورودی 
     const data = processMessage(req.body.message)
 
     // #.
-    // بروزرسانی وضعیت دستور در صف دستورات
+    // بروزرسانی وضعیت دستور در صف دستورات 
     const getUpdateDoc = await GetUpdateService.updateStatus(data)
 
-    //#
-    // بستن مپ معامله کلوز شده
-    await TradeTicket.updateOne(
-        { acc_src: getUpdateDoc.origin_acc, ticket_src: getUpdateDoc.origin_ticket, acc_dist: data.acc },
-        { $set: { status: 'closed' } }
+    // #.
+    // بستن مپ معامله کلوز شده 
+    await TradeMap.updateOne(
+        {
+            acc_src: getUpdateDoc.origin_acc,
+            ticket_src: getUpdateDoc.origin_ticket,
+            acc_dist: data.acc
+        },
+        [
+            {
+                $set: {
+                    status: {
+                        $switch: {
+                            branches: [
+                                { case: { $eq: ["$status", "open"] }, then: "closed" },
+                                { case: { $eq: ["$status", "pending"] }, then: "canceled" }
+                            ],
+                            default: "$status"
+                        }
+                    }
+                }
+            }
+        ]
     )
 
     // #.
-    // لاگ گرفتن از رکوئست دریافتی
+    // لاگ گرفتن از رکوئست دریافتی 
     const requestLog = new RequestLog({
         type: 'GetUpdateResponse',
         message: req.body.message,
@@ -30,7 +48,7 @@ export default async (req, res) => {
     await requestLog.save()
 
     // #. 
-    // ارسال پاسخ عملیات موفقیت آمیز
+    // ارسال پاسخ عملیات موفقیت آمیز 
     res.send({
         status: 'success',
     })

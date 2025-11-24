@@ -1,5 +1,5 @@
 import Symbol from "../models/Symbol.js"
-import startRedis from '../boot/redis.js'
+import getRedis from "../boot/redis.js"
 import { ACTION_HANDLER } from './constant.js'
 
 export function getHandlerOfMsg(msg) {
@@ -10,12 +10,11 @@ export function getHandlerOfMsg(msg) {
     return parts[1];
 }
 
-async function getMqlClusterNo(handler, acc, max = 3) {
-    const redis = await startRedis()
-
+async function getMqlClusterNo(handler, acc, origin_acc, max = 3) {
+    const redis = await getRedis()
     handler = Number(handler)
 
-    const clustringHandlers = [
+    const copyClustringHandlers = [
         ACTION_HANDLER.BUY,
         ACTION_HANDLER.SELL,
         ACTION_HANDLER.BUYLIMIT,
@@ -23,68 +22,81 @@ async function getMqlClusterNo(handler, acc, max = 3) {
         ACTION_HANDLER.SELLLIMIT,
         ACTION_HANDLER.SELLSTOP,
         ACTION_HANDLER.CLOSE,
-        ACTION_HANDLER.MODIFY,
         ACTION_HANDLER.PARTIAL_CLOSE,
         ACTION_HANDLER.BULK_CLOSE,
+        ACTION_HANDLER.MODIFY,
     ]
 
-    if (clustringHandlers.includes(handler)) {
-        let c = await redis.incr("spider_" + acc);
+    if (copyClustringHandlers.includes(handler)) {
+        let keyname = `spider_${acc}`
+        if (origin_acc) {
+            keyname = `spider_${acc}_${origin_acc}`
+        }
+
+        let c = await redis.incr(keyname);
         if (c > max) {
-            await redis.set("spider_" + acc, 1);
+            await redis.set(keyname, 1);
             c = 1;
         }
-        return c;
+        return '_' + c;
     } else {
-        return 1
+        return ''
     }
 }
 
 export async function makeMsgForHandler(handler, data) {
-    let mql_cluster_no = await getMqlClusterNo(handler, data.acc)
-    let message = `${data.acc}_${mql_cluster_no},${handler}`;
+    let mql_cluster_no = await getMqlClusterNo(handler, data.acc, data.origin_acc ?? '')
+    let message = ''
 
     // set rule
     switch (handler) {
-        case 1: // BUY
-        case 2: // SELL
-            message += `,${data.symbol}&${data.vol}&${data.slippage}&${data.sl}&${data.tp}&${data.comment}&${data.magic}`
+        case ACTION_HANDLER.BUY:
+        case ACTION_HANDLER.SELL:
+            message += `${data.acc}_${data.origin_acc}${mql_cluster_no},${handler},${data.symbol}&${data.vol}&${data.slippage}&${data.sl}&${data.tp}&${data.comment}&${data.magic}`
             break;
 
-        case 5: // BUYLIMIT
-        case 6: // BUYSTOP
-        case 7: // SELLLIMIT
-        case 8: // SELLSTOP
-            message += `,${data.symbol}&${data.open_price}&${data.vol}&${data.slippage}&${data.sl}&${data.tp}&${data.comment}&${data.magic}`
-            break;
+        case ACTION_HANDLER.BUYLIMIT:
+        case ACTION_HANDLER.BUYSTOP:
+        case ACTION_HANDLER.SELLLIMIT:
+        case ACTION_HANDLER.SELLSTOP:
+            message += `${data.acc}_${data.origin_acc}${mql_cluster_no},${data.symbol}&${data.open_price}&${data.vol}&${data.slippage}&${data.sl}&${data.tp}&${data.comment}&${data.magic}`
+            break
 
-        case 3: // MODIFY
-            message += `,${data.ticket}&${data.entry}&${data.sl}&${data.tp}`
-            break;
+        case ACTION_HANDLER.MODIFY:
+            message += `${data.acc}_${data.origin_acc}${mql_cluster_no},${data.ticket}&${data.entry}&${data.sl}&${data.tp}`
+            break
 
-        case 4: // CLOSE COPIER
-        case 23: // CLOSE TRADER / ORIGIN
-            message += `,${data.ticket}`
-            break;
+        case ACTION_HANDLER.CLOSE:
+            message += `${data.acc}_${data.origin_acc}${mql_cluster_no},${data.ticket}`
+            break
 
-        case 11: // BROKER SYMBOL DATA
+        case ACTION_HANDLER.CLOSE_ORIGIN:
+            message = `${data.acc},${handler},${data.ticket}`
+            break
+
+        case ACTION_HANDLER.CLOSE_ALL:
+            message += `${data.acc}_${data.origin_acc}${mql_cluster_no},0`
+            break
+
+        case ACTION_HANDLER.BULK_CLOSE:
+            message += `${data.acc}_${data.origin_acc}${mql_cluster_no},${data.tickets}`
+            break
+
+        case ACTION_HANDLER.PARTIAL_CLOSE:
+            message += `${data.acc}_${data.origin_acc}${mql_cluster_no},${data.ticket}&${data.vol}`
+            break
+
+        case ACTION_HANDLER.BROKER_SYMBOLS:
+            message = `${data.acc},${handler},0`
+            break
+
+        case ACTION_HANDLER.BROKER_SYMBOL_DATA:
+            message = `${data.acc},${handler}`;
             message += `,${data.symbol}`
             break;
 
-        case 13: // BROKER SYMBOLS
-            message += `,0`
-            break;
-
-        case 20: // BULK CLOSE
-            message += `,0`
-            break;
-
-        case 21: // BULK CLOSE
-            message += `,${data.tickets}`
-            break;
-
-        case 22: // PARTIAL
-            message += `,${data.ticket}&${data.vol}`
+        case ACTION_HANDLER.OPEN_TRADES_PROFIT:
+            message += `${data.acc}_${data.origin_acc}${mql_cluster_no},${data.tickets}`
             break;
     }
 
@@ -94,11 +106,54 @@ export async function makeMsgForHandler(handler, data) {
 }
 
 export function formatDateYMD(timestamp) {
-    const d = new Date(timestamp);
-    const y = d.getFullYear();
-    const m = d.getMonth() + 1;
-    const day = d.getDate();
-    return `${y}-${m < 10 ? '0' + m : m}-${day < 10 ? '0' + day : day}`;
+    const d = new Date(timestamp)
+    const y = d.getUTCFullYear()
+    const m = d.getUTCMonth() + 1
+    const day = d.getUTCDate()
+
+    return `${y}-${m < 10 ? '0' + m : m}-${day < 10 ? '0' + day : day}`
+}
+
+export function formatDateUTC(timestamp, format = "YMDHIS") {
+    const d = new Date(timestamp)
+    const y = d.getUTCFullYear()
+    const m = d.getUTCMonth() + 1
+    const day = d.getUTCDate()
+    const h = d.getUTCHours()
+    const min = d.getUTCMinutes()
+    const sec = d.getUTCSeconds()
+
+    if (format === 'YMD')
+        return `${y}-${m < 10 ? '0' + m : m}-${day < 10 ? '0' + day : day}`
+    else if (format === 'YMDHI')
+        return `${y}-${m < 10 ? '0' + m : m}-${day < 10 ? '0' + day : day} ${h < 10 ? '0' + h : h}:${min < 10 ? '0' + min : min}`
+    else if (format === 'YMDHIS')
+        return `${y}-${m < 10 ? '0' + m : m}-${day < 10 ? '0' + day : day} ${h < 10 ? '0' + h : h}:${min < 10 ? '0' + min : min}:${sec < 10 ? '0' + sec : sec}`
+}
+
+export function formatDate(timestamp, format = "YMDHIS", timezone = "Asia/Tehran") {
+    const d = new Date(timestamp)
+
+    const options = {
+        timeZone: timezone,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+    }
+
+    const parts = new Intl.DateTimeFormat('en-CA', options).formatToParts(d);
+    const get = type => parts.find(p => p.type === type).value;
+
+    if (format === 'YMD')
+        return `${get("year")}-${get("month")}-${get("day")}`
+    else if (format === 'YMDHI')
+        return `${get("year")}-${get("month")}-${get("day")} ${get("hour")}:${get("minute")}`
+    else if (format === 'YMDHIS')
+        return `${get("year")}-${get("month")}-${get("day")} ${get("hour")}:${get("minute")}:${get("second")}`
 }
 
 export function makeID() {
@@ -431,10 +486,9 @@ export function getMqlError(no) {
     }
 }
 
+// todo : حذف این بخش 
 export async function getCopyTradeParams(account, copier, order) {
     const data = order
-    data.acc = copier.acc
-    data.symbol = order.symbol_b.symbol
     data.vol = (() => {
         let vol = order.vol
         if (copier.vol == 'exact') {
@@ -451,16 +505,6 @@ export async function getCopyTradeParams(account, copier, order) {
         return vol;
     })(); //todo: محاسبه شود بر اساس اختلاف کانترکت و مدل کپی کردن اکانت
 
-    const side = (() => {
-        if ([ACTION_HANDLER.BUY, ACTION_HANDLER.BUYLIMIT, ACTION_HANDLER.BUYSTOP].includes(data.handler)) return 'buy';
-        if ([ACTION_HANDLER.SELL, ACTION_HANDLER.SELLLIMIT, ACTION_HANDLER.SELLSTOP].includes(data.handler)) return 'sell';
-        return '';
-    })()
-    data.sl = getWiderSl(order.symbol_b, side, Number(data.open_price), Number(data.sl))
-    data.tp = getWiderTp(order.symbol_b, side, Number(data.open_price), Number(data.tp))
-    data.slippage = 50
-    data.server = copier.server
-
     return data
 }
 
@@ -468,7 +512,7 @@ export function getWiderSl(symbolObj, side, en, sl) {
     const diff_in_points = 50
     let nsl = sl
     if (sl) {
-        if (side == 'buy') {
+        if (['buy', 'buy_limit', 'buy_stop'].includes(side)) {
             const sl_points = Math.round(Math.abs(en - sl) / symbolObj.point)
             const nsl_points = Math.round(sl_points * 1.2)
             if (nsl_points - sl_points >= diff_in_points) {
@@ -478,7 +522,7 @@ export function getWiderSl(symbolObj, side, en, sl) {
             }
             nsl = Number(nsl.toFixed(symbolObj.digits))
         }
-        else if (side == 'sell') {
+        else if (['sell', 'sell_limit', 'sell_stop'].includes(side)) {
             const sl_points = Math.round(Math.abs(sl - en) / symbolObj.point)
             const nsl_points = Math.round(sl_points * 1.2)
             if (nsl_points - sl_points >= diff_in_points) {
@@ -496,7 +540,7 @@ export function getWiderTp(symbolObj, side, en, tp) {
     const diff_in_points = 50
     let ntp = tp
     if (tp) {
-        if (side == 'buy') {
+        if (['buy', 'buy_limit', 'buy_stop'].includes(side)) {
             const tp_points = Math.round(Math.abs(tp - en) / symbolObj.point)
             const ntp_points = Math.round(tp_points * 1.2)
             if (ntp_points - tp_points >= diff_in_points) {
@@ -506,7 +550,7 @@ export function getWiderTp(symbolObj, side, en, tp) {
             }
             ntp = Number(ntp.toFixed(symbolObj.digits))
         }
-        else if (side == 'sell') {
+        else if (['sell', 'sell_limit', 'sell_stop'].includes(side)) {
             const tp_points = Math.round(Math.abs(en - tp) / symbolObj.point)
             const ntp_points = Math.round(tp_points * 1.2)
             if (ntp_points - tp_points >= diff_in_points) {
@@ -518,6 +562,42 @@ export function getWiderTp(symbolObj, side, en, tp) {
         }
     }
     return ntp
+}
+
+export async function prepareGetUpdateOrderData(account, copier, data) {
+    const perparedData = {}
+
+    perparedData.handler = ACTION_HANDLER[data.type]
+    perparedData.server = copier.server
+    perparedData.acc = copier.acc
+    perparedData.ticket = ''
+    perparedData.symbol = data.symbol_b.symbol
+    perparedData.symbol_title = data.symbol_a.title
+    perparedData.side = getOrderSide(data.side)
+    perparedData.vol = data.vol
+    perparedData.sl = getWiderSl(data.symbol_b, perparedData.side, Number(data.open_price), Number(data.sl))
+    perparedData.tp = getWiderTp(data.symbol_b, perparedData.side, Number(data.open_price), Number(data.tp))
+    perparedData.slippage = 50
+    perparedData.description = data.description
+    perparedData.status = 'pending'
+    perparedData.keyid++
+
+    perparedData.origin_server = account.server
+    perparedData.origin_acc = account.acc
+    perparedData.origin_ticket = data.ticket
+    perparedData.origin_symbol = data.symbol_a.symbol
+    perparedData.origin_vol = data.vol
+    perparedData.origin_sl = data.sl
+    perparedData.origin_tp = data.tp
+    perparedData.origin_open_price = data.open_price
+    perparedData.origin_open_time = formatDate(data.open_time)
+    perparedData.origin_commission = ''
+    perparedData.origin_comment = ''
+    perparedData.origin_magic = ''
+
+    perparedData.message = await makeMsgForHandler(data.handler, data)
+
+    return perparedData
 }
 
 export function getOrderVol(accountObj, copierObj, originSymbol, originVol) {
@@ -560,4 +640,22 @@ export function normalizeSymbol(symbol) {
     // EURUSD_o → EURUSD
     // EURUSD.pe → EURUSD
     return symbol.replace(/[^A-Za-z0-9]+.*/i, '').toUpperCase();
+}
+
+export function getOrderSide(side) {
+    if (side === 'BUY') {
+        return 'buy'
+    } else if (side === 'BUYLIMIT') {
+        return 'buy_limit'
+    } else if (side === 'BUYSTOP') {
+        return 'buy_stop'
+    } else if (side === 'SELL') {
+        return 'sell'
+    } else if (side === 'SELLLIMIT') {
+        return 'sell_limit'
+    } else if (side === 'SELLSTOP') {
+        return 'sell_stop'
+    } else {
+        return side
+    }
 }

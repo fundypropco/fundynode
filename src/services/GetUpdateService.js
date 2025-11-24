@@ -1,5 +1,5 @@
 import GetUpdate from "../models/GetUpdate.js"
-import { getMqlError } from "../helpers/helper.js"
+import { formatDate, getMqlError, getOrderSide, getWiderSl, getWiderTp, makeMsgForHandler } from "../helpers/helper.js"
 import { ACTION_HANDLER } from "../helpers/constant.js"
 
 const create = async (data) => {
@@ -34,20 +34,34 @@ const create = async (data) => {
             ticket: data.ticket ?? 0,
             symbol: data.symbol ?? '',
             vol: data.vol ?? 0,
+            sl: data.sl ?? 0,
+            tp: data.tp ?? 0,
             handler: data.handler,
             message: data.message,
             datetime: Date.now(),
             keyid: data.keyid,
             try_count: 0,
             status: data.status ?? 'pending',
+            side: data.side ?? 'none',
             description: data.description ?? [],
             symbol_title: data.symbol_title ?? '',
             origin_acc: data.origin_acc ?? 0,
             origin_ticket: data.origin_ticket ?? 0,
-            origin_new_ticket: data.origin_new_ticket ?? 0,
             origin_server: data.origin_server ?? '',
             origin_symbol: data.origin_symbol ?? '',
             origin_vol: data.origin_vol ?? 0,
+            origin_sl: data.origin_sl ?? 0,
+            origin_tp: data.origin_tp ?? 0,
+            origin_open_price: data.origin_open_price ?? 0,
+            origin_open_time: data.origin_open_time ?? '',
+            origin_close_price: data.origin_close_price ?? 0,
+            origin_close_time: data.origin_close_time ?? '',
+            origin_commission: data.origin_commission ?? '',
+            origin_comment: data.origin_comment ?? '',
+            origin_magic: data.origin_magic ?? '',
+            origin_new_ticket: data.origin_new_ticket ?? 0,
+            origin_new_vol: data.origin_new_vol ?? 0,
+            origin_new_open_time: data.origin_new_open_time ?? '',
         })
 
         return await getUpdate.save()
@@ -93,9 +107,9 @@ const updateWaitings = async (origin_acc, origin_ticket, ticket, doc) => {
     const waitingDocs = await GetUpdate.find({ status: 'waiting', origin_acc: origin_acc, origin_ticket: origin_ticket })
     for (const waitingDoc of waitingDocs) {
         waitingDoc.status = 'pending'
+        waitingDoc.ticket = ticket
         waitingDoc.message = waitingDoc.message.replace('-1', ticket)
         waitingDoc.origin_symbol = doc.origin_symbol
-        waitingDoc.server = doc.server
         waitingDoc.symbol = doc.symbol
         waitingDoc.symbol_title = doc.symbol_title
         await waitingDoc.save()
@@ -108,9 +122,9 @@ const getUnprocessed = async (acc) => {
     //         { status: 'pending' },
     //         { status: 'error', try_count: { $lt: 3 } }
     //     ]
-    // }).sort('datetime')
+    // }).sort('-created_at')
 
-    let results = await GetUpdate.find({ acc, status: 'pending' }).sort('-datetime')
+    let results = await GetUpdate.find({ acc, status: 'pending' }).sort('-created_at')
 
     const finalResults = results.map(doc => ({
         update_id: doc.keyid,
@@ -123,9 +137,176 @@ const getUnprocessed = async (acc) => {
     }
 }
 
+const prepareOrderData = async (account, copier, data) => {
+    const perparedData = {}
+
+    perparedData.handler = ACTION_HANDLER[data.type]
+    perparedData.server = copier.server
+    perparedData.acc = copier.acc
+    perparedData.symbol = data.symbol_b.symbol
+    perparedData.symbol_title = data.symbol_a.title
+    perparedData.side = getOrderSide(data.side)
+    perparedData.vol = data.vol
+    perparedData.sl = getWiderSl(data.symbol_b, perparedData.side, Number(data.open_price), Number(data.sl))
+    perparedData.tp = getWiderTp(data.symbol_b, perparedData.side, Number(data.open_price), Number(data.tp))
+    perparedData.slippage = 50
+    perparedData.description = data.description
+    perparedData.status = 'pending'
+    perparedData.keyid = data.keyid++
+
+    perparedData.origin_server = account.server
+    perparedData.origin_acc = account.acc
+    perparedData.origin_ticket = data.ticket
+    perparedData.origin_symbol = data.symbol_a.symbol
+    perparedData.origin_vol = data.vol
+    perparedData.origin_sl = data.sl
+    perparedData.origin_tp = data.tp
+    perparedData.origin_open_price = data.open_price
+    perparedData.origin_open_time = data.open_time
+    perparedData.origin_commission = data.commission
+    perparedData.origin_comment = data.comment
+    perparedData.origin_magic = data.magic
+
+    perparedData.message = await makeMsgForHandler(perparedData.handler, perparedData)
+
+    return perparedData
+}
+
+const prepareCloseOriginData = async (account, data) => {
+    const perparedData = {}
+
+    perparedData.handler = ACTION_HANDLER.CLOSE_ORIGIN
+    perparedData.server = account.server
+    perparedData.acc = account.acc
+    perparedData.ticket = data.ticket
+    perparedData.side = data.side
+    perparedData.symbol = data.symbol
+    perparedData.symbol_title = data.symbol_title ?? ''
+    perparedData.description = data.description ?? []
+    perparedData.status = 'pending'
+    perparedData.keyid = data.keyid++
+
+    perparedData.origin_server = account.server
+    perparedData.origin_acc = account.acc
+    perparedData.origin_ticket = data.ticket
+    perparedData.origin_symbol = data.symbol
+    perparedData.origin_vol = data.vol
+    perparedData.origin_sl = data.sl ?? ''
+    perparedData.origin_tp = data.tp ?? ''
+    perparedData.origin_open_price = data.open_price ?? ''
+    perparedData.origin_open_time = data.open_time ?? ''
+    perparedData.origin_commission = data.commission ?? ''
+    perparedData.origin_comment = data.comment ?? ''
+    perparedData.origin_magic = data.magic ?? ''
+
+    perparedData.message = await makeMsgForHandler(perparedData.handler, perparedData)
+
+    return perparedData
+}
+
+const preparePartialCloseData = async (account, copier, data, tradeMap) => {
+    const perparedData = {}
+
+    perparedData.handler = ACTION_HANDLER.PARTIAL_CLOSE
+    perparedData.server = copier.server
+    perparedData.acc = copier.acc
+    perparedData.ticket = tradeMap?.ticket_dist ?? -1
+    perparedData.symbol = tradeMap?.symbol_dist ?? ''
+    perparedData.symbol_title = tradeMap?.symbol_title ?? ''
+    perparedData.vol = data.closed_vol
+    perparedData.status = tradeMap ? 'pending' : 'waiting'
+    perparedData.keyid = data.keyid++
+
+    perparedData.origin_server = account.server
+    perparedData.origin_acc = account.acc
+    perparedData.origin_ticket = data.closed_ticket
+    perparedData.origin_symbol = tradeMap?.symbol_src ?? ''
+    perparedData.origin_vol = data.closed_vol
+    perparedData.origin_close_price = data.closed_price
+    perparedData.origin_close_time = data.closed_time
+    perparedData.origin_new_open_time = data.open_time
+    perparedData.origin_new_ticket = data.open_ticket
+    perparedData.origin_new_vol = data.open_vol
+
+    perparedData.message = await makeMsgForHandler(perparedData.handler, perparedData)
+
+    return perparedData
+}
+
+const prepareCloseData = async (account, copier, data, tradeMap) => {
+    const perparedData = {}
+
+    perparedData.handler = ACTION_HANDLER.CLOSE
+    perparedData.server = copier.server
+    perparedData.acc = copier.acc
+    perparedData.ticket = tradeMap?.ticket_dist ?? -1
+    perparedData.symbol = tradeMap?.symbol_dist ?? ''
+    perparedData.symbol_title = tradeMap?.symbol_title ?? ''
+    perparedData.vol = data.closed_vol
+    perparedData.status = tradeMap ? 'pending' : 'waiting'
+    perparedData.keyid = data.keyid++
+
+    perparedData.origin_server = account.server
+    perparedData.origin_acc = account.acc
+    perparedData.origin_ticket = data.closed_ticket
+    perparedData.origin_symbol = tradeMap?.symbol_src ?? ''
+    perparedData.origin_vol = data.closed_vol
+    perparedData.origin_close_time = data.closed_time
+    perparedData.origin_close_price = data.closed_price
+
+    perparedData.message = await makeMsgForHandler(perparedData.handler, perparedData)
+
+    return perparedData
+}
+
+const prepareModifyData = async (account, copier, data, tradeMap) => {
+    const perparedData = {}
+
+    let symbol = null
+    let side = null
+    if (Number(data.sl) || Number(data.tp)) {
+        if (tradeMap) {
+            side = tradeMap.side
+            symbol = await Symbol.findOne({ server: tradeMap.server_dist, symbol: tradeMap.symbol_dist })
+        } else {
+            const doc = await GetUpdate.findOne({ acc: copier.acc, origin_acc: account.acc, origin_ticket: data.ticket, handler: { $in: [ACTION_HANDLER.BUY, ACTION_HANDLER.BUYLIMIT, ACTION_HANDLER.BUYSTOP, ACTION_HANDLER.SELL, ACTION_HANDLER.SELLLIMIT, ACTION_HANDLER.SELLSTOP] } })
+            side = doc.side
+            symbol = await Symbol.findOne({ server: doc.server, symbol: doc.symbol })
+        }
+    }
+
+    perparedData.handler = ACTION_HANDLER.MODIFY
+    perparedData.server = copier.server
+    perparedData.acc = copier.acc
+    perparedData.ticket = tradeMap?.ticket_dist ?? -1
+    perparedData.symbol = tradeMap?.symbol_dist ?? ''
+    perparedData.symbol_title = tradeMap?.symbol_title ?? ''
+    perparedData.status = tradeMap ? 'pending' : 'waiting'
+    perparedData.entry = data.entry
+    perparedData.sl = Number(data.sl) && symbol && side ? getWiderSl(symbol, side, Number(data.entry), Number(data.sl)) : data.sl
+    perparedData.tp = Number(data.tp) && symbol && side ? getWiderTp(symbol, side, Number(data.entry), Number(data.tp)) : data.tp
+    perparedData.keyid = data.keyid++
+
+    perparedData.origin_server = account.server
+    perparedData.origin_acc = account.acc
+    perparedData.origin_ticket = data.ticket
+    perparedData.origin_symbol = tradeMap?.symbol_src ?? ''
+    perparedData.origin_sl = data.sl
+    perparedData.origin_tp = data.tp
+
+    perparedData.message = await makeMsgForHandler(perparedData.handler, perparedData)
+
+    return perparedData
+}
+
 export default {
     create,
     updateStatus,
     updateWaitings,
-    getUnprocessed
+    getUnprocessed,
+    prepareOrderData,
+    prepareCloseOriginData,
+    preparePartialCloseData,
+    prepareCloseData,
+    prepareModifyData,
 }

@@ -4,16 +4,16 @@ import GetUpdateService from '../GetUpdateService.js'
 
 export default async (req, res) => {
 
-    // 1. 
-    // پردازش دیتای ورودی
+    // #. 
+    // پردازش دیتای ورودی 
     const data = processMessage(req.body.message)
 
-    // 2.
-    // بروزرسانی وضعیت دستور در صف دستورات
+    // #.
+    // بروزرسانی وضعیت دستور در صف دستورات 
     await GetUpdateService.updateStatus(data)
 
     // 3.
-    // لاگ گرفتن از رکوئست دریافتی
+    // لاگ گرفتن از رکوئست دریافتی 
     const requestLog = new RequestLog({
         type: 'GetUpdateResponse',
         message: req.body.message,
@@ -22,7 +22,7 @@ export default async (req, res) => {
     await requestLog.save()
 
     // 4. 
-    // ارسال پاسخ عملیات موفقیت آمیز
+    // ارسال پاسخ عملیات موفقیت آمیز 
     res.send({
         status: 'success',
     })
