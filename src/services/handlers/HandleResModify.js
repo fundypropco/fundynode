@@ -1,6 +1,7 @@
 import RequestLog from "../../models/RequestLog.js"
 import { formatDateYMD } from '../../helpers/helper.js'
 import GetUpdateService from '../GetUpdateService.js'
+import TradeMap from "../../models/TradeMap.js"
 
 export default async (req, res) => {
 

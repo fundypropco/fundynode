@@ -154,7 +154,7 @@ const prepareOrderData = async (account, copier, data) => {
     perparedData.acc = copier.acc
     perparedData.symbol = data.symbol_b.symbol
     perparedData.symbol_title = data.symbol_a.title
-    perparedData.side = getOrderSide(data.side)
+    perparedData.side = data.side
     perparedData.vol = data.vol
     perparedData.sl = getWiderSl(data.symbol_b, perparedData.side, Number(data.open_price), Number(data.sl))
     perparedData.tp = getWiderTp(data.symbol_b, perparedData.side, Number(data.open_price), Number(data.tp))

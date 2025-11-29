@@ -136,7 +136,7 @@ async function processPartial(data) {
 async function isDuplicatedOrder(account, copier, data) {
     const tradeMap = await TradeMap.findOne({ acc_src: account.acc, ticket_src: data.ticket, acc_dist: copier.acc })
 
-    if (tradeMap && tradeMap.status === 'pending' && ['buy', 'sell'].includes(side)) {
+    if (tradeMap && tradeMap.status === 'pending' && ['buy', 'sell'].includes(data.side)) {
         const orderData = {
             keyid: makeID(),
         }
