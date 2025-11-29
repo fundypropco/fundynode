@@ -161,6 +161,8 @@ const prepareOrderData = async (account, copier, data) => {
     perparedData.description = data.description
     perparedData.status = 'pending'
     perparedData.keyid = data.keyid++
+    perparedData.magic = account.acc
+    perparedData.comment = data.comment
 
     perparedData.origin_server = account.server
     perparedData.origin_acc = account.acc

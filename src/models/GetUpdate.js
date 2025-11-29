@@ -96,7 +96,7 @@ const getUpdateSchema = new mongoose.Schema({
         type: String,
     },
     origin_open_time_utc: {
-        type: String,
+        type: Date,
     },
     origin_close_price: {
         type: Number
