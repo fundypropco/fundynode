@@ -5,7 +5,7 @@ export async function runEquityRefresh() {
 }
 
 export async function runSeed() {
-    return add2AppQueue('run-seeders')
+    return await add2AppQueue('run-seeders')
 }
 
 export default async function runSchedule() {
