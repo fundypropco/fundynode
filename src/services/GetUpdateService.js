@@ -1,4 +1,5 @@
 import GetUpdate from "../models/GetUpdate.js"
+import Symbol from "../models/Symbol.js"
 import { formatDate, getMqlError, getOrderSide, getWiderSl, getWiderTp, makeMsgForHandler } from "../helpers/helper.js"
 import { ACTION_HANDLER } from "../helpers/constant.js"
 
