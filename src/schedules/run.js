@@ -9,8 +9,9 @@ export async function runSeed() {
 }
 
 export default async function runSchedule() {
-    return Promise.all([
-        //runEquityRefresh(),
-        
-    ])
+    return await new Promise(resolve => setTimeout(resolve, 3000))
+    // return Promise.all([
+    //     //runEquityRefresh(),
+
+    // ])
 }
