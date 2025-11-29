@@ -4,13 +4,13 @@ import TradeMap from "../models/TradeMap.js"
 import GetUpdateService from "./GetUpdateService.js"
 
 const bulkClose = async (account) => {
-    // تمام تریدهای مربوط به اکانت تریدر
-    // مرتب سازی اول اپن بعد پندینگ - با ارزش ها اول لیست شوند
-    const tradeMaps = await TradeMap.find({ status: { $ne: 'closed' }, acc_src: account.acc }).sort({ status: 1, tick_value: -1 })
+    // تمام تریدهای مربوط به اکانت تریدر 
+    // مرتب سازی اول اپن بعد پندینگ - با ارزش ها اول لیست شوند 
+    const tradeMaps = await TradeMap.find({ status: { $nin: ['closed', 'canceled', 'deleted'] }, acc_src: account.acc }).sort({ status: 1, symbol_weight: -1, tick_value: -1 })
 
     for (const copier of account.copiers) {
-        // تریدهای مربوط به یک حساب کپی و ترید
-        const copierTickets = await TradeMap.find({ status: { $ne: 'closed' }, acc_src: account.acc, acc_dist: copier.acc }).sort({ status: 1, tick_value: -1 })
+        // تریدهای مربوط به یک حساب کپی و ترید 
+        const copierTickets = await TradeMap.find({ status: { $nin: ['closed', 'canceled', 'deleted'] }, acc_src: account.acc, acc_dist: copier.acc }).sort({ status: 1, symbol_weight: -1, tick_value: -1 })
         if (copierTickets.length) {
             const total = copierTickets.length
             const clusters = 3
@@ -67,7 +67,7 @@ const closeAll = async (account) => {
     }
 
     const order = {
-        handler: ACTION_HANDLER.CLOSE_ALL,
+        handler: ACTION_HANDLER.CLOSE_ALL_ORIGIN,
         acc: account.acc,
         server: account.server,
         description: ['drawdown'],

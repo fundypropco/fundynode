@@ -11,7 +11,6 @@ const copierSchema = new mongoose.Schema({
     },
     copy: {
         type: Boolean,
-        default: true,
     },
     vol: {
         type: String,
@@ -34,7 +33,6 @@ const accountSchema = new mongoose.Schema({
     },
     server: {
         type: String,
-        default: "",
         index: true
     },
     initial: {
@@ -45,7 +43,6 @@ const accountSchema = new mongoose.Schema({
     },
     copy: {
         type: Boolean,
-        default: false
     },
     copiers: {
         type: [copierSchema],
@@ -55,8 +52,9 @@ const accountSchema = new mongoose.Schema({
         type: Date,
         default: Date.now
     }
-});
+})
 
+accountSchema.index({ acc: 1, "copiers.acc": 1 })
 
 const Account = mongoose.model('Account', accountSchema, 'accounts');
 

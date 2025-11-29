@@ -1,11 +1,9 @@
 import RequestLog from "../../models/RequestLog.js"
-import { makeMsgForHandler } from '../../helpers/helper.js'
 import GetUpdateService from '../GetUpdateService.js'
 import TradeMap from '../../models/TradeMap.js'
-import { ACTION_HANDLER } from "../../helpers/constant.js"
 import Account from "../../models/Account.js"
 import Symbol from "../../models/Symbol.js"
-import { symbol } from "joi"
+import { formatDate } from "../../helpers/helper.js"
 
 export default async (req, res) => {
 
@@ -19,32 +17,37 @@ export default async (req, res) => {
 
     if (getUpdateDoc.status == 'success') {
         const symbol = await Symbol.findOne({ server: getUpdateDoc.server, symbol: getUpdateDoc.symbol })
-        const vol = getUpdateDoc.vol
 
         // #.
         // مپ کردن اکانت و تیکت های مرجع و کپی کننده 
         const tradeMap = new TradeMap({
+            server_src: getUpdateDoc.origin_server,
             acc_src: getUpdateDoc.origin_acc,
             ticket_src: getUpdateDoc.origin_ticket,
-            server_src: getUpdateDoc.origin_server,
             symbol_src: getUpdateDoc.origin_symbol,
             vol_src: getUpdateDoc.origin_vol,
+            open_price_src: getUpdateDoc.origin_open_price,
             sl_src: getUpdateDoc.origin_sl,
             tp_src: getUpdateDoc.origin_tp,
-            open_price_src: getUpdateDoc.origin_open_price,
             open_time_src: getUpdateDoc.origin_open_time,
+            open_timestamp_src: getUpdateDoc.origin_open_timestamp,
+            open_time_utc_src: getUpdateDoc.origin_open_time_utc,
+            magic_src: getUpdateDoc.origin_magic,
+            comment_src: getUpdateDoc.origin_comment,
 
             acc_dist: data.acc,
             ticket_dist: data.ticket,
             server_dist: getUpdateDoc.server,
             symbol_dist: getUpdateDoc.symbol,
-            vol_dist: getUpdateDoc.vol,
-            sl_dist: getUpdateDoc.sl,
-            tp_dist: getUpdateDoc.tp,
-            // todo: 
-            // این مقادیر از mql دریافت شود 
-            open_price_dist: '',
-            open_time_dist: '',
+            vol_dist: data.vol,
+            sl_dist: data.sl,
+            tp_dist: data.tp,
+            open_price_dist: data.open_price,
+            open_time_dist: formatDate(data.open_timestamp),
+            open_timestamp_dist: data.open_timestamp,
+            open_time_utc_dist: data.open_timestamp,
+            magic_dist: data.magic,
+            comment_dist: data.comment,
 
             symbol_title: getUpdateDoc.symbol_title,
             side: getUpdateDoc.side,
@@ -53,7 +56,7 @@ export default async (req, res) => {
                 if (['buy_limit', 'buy_stop', 'sell_limit', 'sell_stop'].includes(getUpdateDoc.side)) return 'pending'
                 return ''
             })(),
-            tick_value: Number((symbol.tick_value * vol).toFixed(2)),
+            tick_value: Number((symbol.tick_value * getUpdateDoc.vol).toFixed(2)),
             symbol_weight: symbol.weight
         })
         await tradeMap.save()
@@ -74,6 +77,7 @@ export default async (req, res) => {
                 symbol_title: getUpdateDoc.symbol_title,
                 origin_symbol: getUpdateDoc.origin_symbol,
                 vol: getUpdateDoc.origin_vol,
+                origin_vol: getUpdateDoc.origin_vol
             })
             await GetUpdateService.create(getUpdateData)
         }
@@ -103,7 +107,7 @@ function processMessage(msg) {
 
     // msg parts
     const msg_parts = msg.split(',')
-    data.acc = msg_parts[0].replace(/_.*/, '')
+    data.acc = msg_parts[0].split('_')[0]
     data.handler = 1000 - parseInt(msg_parts[1])
     data.timestamp = msg_parts[3] * 1000
     data.keyid = msg_parts[4]
@@ -112,9 +116,22 @@ function processMessage(msg) {
     // msg info
     const info_parts = info.split('&')
     data.result_text = info_parts[0]
-    data.ticket = info_parts[1]
-    data.result_code = info_parts[2]
-    data.status = data.result_code == 0 ? 'success' : 'error'
+    data.result_code = 0
+
+    if (data.result_text.toLowerCase().includes('ok')) {
+        data.status = 'success'
+        data.ticket = info_parts[1]
+        data.open_timestamp = info_parts[2] * 1000
+        data.vol = info_parts[3]
+        data.open_price = info_parts[4]
+        data.sl = info_parts[5]
+        data.tp = info_parts[6]
+        data.magic = info_parts[7]
+        data.comment = info_parts[8]
+    } else {
+        data.status = 'error'
+        data.result_code = info_parts[2]
+    }
 
     return data
 }

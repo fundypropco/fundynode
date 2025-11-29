@@ -60,6 +60,12 @@ const getUpdateSchema = new mongoose.Schema({
     tp: {
         type: Number
     },
+    comment: {
+        type: String
+    },
+    magic: {
+        type: String
+    },
 
     origin_server: {
         type: String,
@@ -77,9 +83,6 @@ const getUpdateSchema = new mongoose.Schema({
     origin_symbol: {
         type: String,
     },
-    symbol_title: {
-        type: String,
-    },
     origin_vol: {
         type: Number,
     },
@@ -89,19 +92,28 @@ const getUpdateSchema = new mongoose.Schema({
     origin_open_time: {
         type: String,
     },
+    origin_open_timestamp: {
+        type: String,
+    },
+    origin_open_time_utc: {
+        type: String,
+    },
     origin_close_price: {
         type: Number
     },
     origin_close_time: {
         type: String,
     },
+    origin_close_timestamp: {
+        type: String,
+    },
+    origin_close_time_utc: {
+        type: Date,
+    },
     origin_sl: {
         type: Number
     },
     origin_tp: {
-        type: Number
-    },
-    origin_commission: {
         type: Number
     },
     origin_comment: {
@@ -110,6 +122,16 @@ const getUpdateSchema = new mongoose.Schema({
     origin_magic: {
         type: Number
     },
+    origin_commission: {
+        type: Number
+    },
+    origin_swap: {
+        type: Number
+    },
+    origin_profit: {
+        type: Number
+    },
+
     origin_new_ticket: {
         type: Number,
     },
@@ -119,7 +141,16 @@ const getUpdateSchema = new mongoose.Schema({
     origin_new_open_time: {
         type: String,
     },
+    origin_new_open_timestamp: {
+        type: String,
+    },
+    origin_new_open_time_utc: {
+        type: Date,
+    },
 
+    symbol_title: {
+        type: String,
+    },
     created_at: {
         type: Date,
         default: Date.now

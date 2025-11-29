@@ -10,6 +10,7 @@ export async function runSeed() {
 
 export default async function runSchedule() {
     return Promise.all([
-        runEquityRefresh(),
+        //runEquityRefresh(),
+        
     ])
 }

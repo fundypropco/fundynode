@@ -1,7 +1,7 @@
 import Account from '../../models/Account.js'
 import RequestLog from "../../models/RequestLog.js"
 import GetUpdateService from "../GetUpdateService.js"
-import { isValidSymbols, makeID, getOrderSide } from '../../helpers/helper.js'
+import { isValidSymbols, makeID, getOrderSide, formatDate } from '../../helpers/helper.js'
 import TradeMap from '../../models/TradeMap.js'
 
 export default async (req, res) => {
@@ -32,13 +32,6 @@ export default async (req, res) => {
 
 async function processNewOrder(data) {
 
-    // # 
-    // بررسی اینکه آیا این سفارش تکراری است یا خیر 
-    const is_duplicated = await isDuplicatedOrder(data)
-    if (is_duplicated) {
-        return
-    }
-
     // #
     // پیدا کردن اکانت مربوط به عملیات دریافتی 
     const account = await Account.findOne({ acc: data.acc });
@@ -52,6 +45,12 @@ async function processNewOrder(data) {
         // بدست آوردن اکانتهای کپی کننده
         for (const copier of account.copiers) {
             if (copier.copy) {
+                // # 
+                // بررسی اینکه آیا این سفارش تکراری است یا خیر 
+                const is_duplicated = await isDuplicatedOrder(account, copier, data)
+                if (is_duplicated) {
+                    continue
+                }
                 const localData = JSON.parse(JSON.stringify(data))
                 localData.keyid = keyid
                 // #
@@ -120,8 +119,13 @@ async function processPartial(data) {
                 await GetUpdateService.create(getUpdateData)
 
                 if (tradeMap) {
-                    tradeMap.close_time_src = partialInfo.closed_time
-                    tradeMap.close_price_src = 0
+                    tradeMap.close_time_src = formatDate(partialInfo.closed_timestamp)
+                    tradeMap.close_timestamp_src = partialInfo.closed_timestamp
+                    tradeMap.close_time_utc_src = partialInfo.closed_timestamp
+                    tradeMap.close_price_src = partialInfo.closed_price
+                    tradeMap.commission_src = partialInfo.closed_commission
+                    tradeMap.swap_src = partialInfo.closed_swap
+                    tradeMap.profit_src = partialInfo.closed_profit
                     await tradeMap.save()
                 }
             }
@@ -129,37 +133,18 @@ async function processPartial(data) {
     }
 }
 
-async function isDuplicatedOrder(data) {
-    // const is_dup = await GetUpdate.findOne({
-    //     origin_acc: data.acc,
-    //     origin_ticket: data.ticket,
-    //     status: { $in: ['success', 'pending'] },
-    //     handler: {
-    //         $in: [
-    //             ACTION_HANDLER.BUY,
-    //             ACTION_HANDLER.BUYLIMIT,
-    //             ACTION_HANDLER.BUYSTOP,
-    //             ACTION_HANDLER.SELL,
-    //             ACTION_HANDLER.SELLLIMIT,
-    //             ACTION_HANDLER.SELLSTOP,
-    //         ]
-    //     }
-    // })
+async function isDuplicatedOrder(account, copier, data) {
+    const tradeMap = await TradeMap.findOne({ acc_src: account.acc, ticket_src: data.ticket, acc_dist: copier.acc })
 
-    const is_duplicated = await TradeMap.findOne({ acc_src: data.acc, ticket_src: data.ticket })
-
-    if (is_duplicated && is_duplicated.status === 'pending' && ['BUY', 'SELL'].includes(data.type)) {
-        await TradeMap.updateMany(
-            { acc_src: data.acc, ticket_src: data.ticket },
-            {
-                $set: {
-                    status: 'open'
-                }
-            }
-        )
+    if (tradeMap && tradeMap.status === 'pending' && ['buy', 'sell'].includes(side)) {
+        const orderData = {
+            keyid: makeID(),
+        }
+        const getUpdateData = await GetUpdateService.prepareOpenPendingOrderData(account, copier, orderData, tradeMap)
+        await GetUpdateService.create(getUpdateData)
     }
 
-    return !!is_duplicated
+    return !!tradeMap
 }
 
 function processMessage(msg) {
@@ -172,7 +157,7 @@ function processMessage(msg) {
     // msg parts
     const msg_parts = msg.split(',')
     data.acc = msg_parts[0].replace(/_.*/, '')
-    data.timestamp = msg_parts[3] * 1000
+    data.timestamp = msg_parts[3] + '000'
     const info = msg_parts[2]
     const partial_info = msg_parts[4]
     data.is_partial = false
@@ -183,20 +168,42 @@ function processMessage(msg) {
     data.symbol = info_parts[2]
     data.type = info_parts[3].replace(/[\s_]/g, "").toUpperCase()
     data.side = getOrderSide(data.type)
-    data.vol = info_parts[4]
-    data.open_price = info_parts[5]
-    data.open_time = info_parts[6]
-    data.sl = info_parts[7]
-    data.tp = info_parts[8]
-    data.commission = info_parts[9]
+    data.vol = Number(info_parts[4])
+    data.open_price = Number(info_parts[5])
+    data.open_timestamp = info_parts[6] + '000'
+    data.sl = Number(info_parts[7])
+    data.tp = Number(info_parts[8])
+    data.commission = Number(info_parts[9])
     data.magic = info_parts[10]
     data.comment = info_parts[11]
 
     if (partial_info != -1) {
         // partial
-        data.partial_item = partial_info.split(";")
-            .map(side => side.split("@"))
-            .map(([closed_ticket, closed_vol, closed_time, open_ticket, open_vol, open_time]) => ({ closed_ticket, closed_vol, closed_time, open_ticket, open_vol, open_time }))
+        data.partial_item = partial_info.trim().split("@").filter(Boolean)
+            .map(side => side.split("&"))
+            .map(([
+                closed_ticket,
+                closed_vol,
+                closed_price,
+                closed_timestamp,
+                closed_swap,
+                closed_commission,
+                closed_profit,
+                open_ticket,
+                open_vol,
+                open_timestamp
+            ]) => ({
+                closed_ticket,
+                closed_vol: Number(closed_vol),
+                closed_price: Number(closed_price),
+                closed_timestamp: closed_timestamp + '000',
+                closed_swap: Number(closed_swap),
+                closed_commission: Number(closed_commission),
+                closed_profit: Number(closed_profit),
+                open_ticket,
+                open_vol: Number(open_vol),
+                open_timestamp: open_timestamp + '000'
+            }))
             .find(pi => pi.open_ticket == data.ticket)
 
         data.is_partial = !!data.partial_item

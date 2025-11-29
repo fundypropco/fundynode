@@ -36,8 +36,8 @@ export async function getOpenTradesProfit() {
     ])
 
     let keyid = makeID()
+    const promises = []
     for (const result of results) {
-        const promises = []
         const promise = (async () => {
             const getUpdateData = {
                 handler: ACTION_HANDLER.OPEN_TRADES_PROFIT,

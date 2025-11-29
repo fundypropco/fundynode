@@ -1,0 +1,148 @@
+import RequestLog from "../../models/RequestLog.js"
+import GetUpdateService from '../GetUpdateService.js'
+import TradeMap from '../../models/TradeMap.js'
+import Account from "../../models/Account.js"
+import { formatDate } from "../../helpers/helper.js"
+
+export default async (req, res) => {
+
+    // #. 
+    // پردازش دیتای ورودی
+    const data = processMessage(req.body.message)
+
+    // #.
+    // بروزرسانی وضعیت دستور در صف دستورات
+    const getUpdateDoc = await GetUpdateService.updateStatus(data)
+
+    if (getUpdateDoc.status == 'success') {
+
+        if (data.state == 'new_open') {
+            const oldTradeMap = await TradeMap.findOneAndUpdate(
+                {
+                    acc_src: getUpdateDoc.origin_acc,
+                    ticket_src: getUpdateDoc.origin_ticket,
+                    acc_dist: data.acc,
+                    ticket_dist: data.deleted_ticket
+                },
+                {
+                    $set: {
+                        status: 'deleted',
+                        close_time_dist: data.open_timestamp,
+                        close_time_utc_dist: formatDate(data.open_timestamp, 'YMDHIS')
+                    }
+                }
+            )
+
+            const newTradeMap = new TradeMap({
+                acc_src: oldTradeMap.acc_src,
+                ticket_src: oldTradeMap.ticket_src,
+                server_src: oldTradeMap.server_src,
+                symbol_src: oldTradeMap.symbol_src,
+                vol_src: oldTradeMap.vol_src,
+                sl_src: oldTradeMap.sl_src,
+                tp_src: oldTradeMap.tp_src,
+                open_price_src: oldTradeMap.open_price_src,
+                open_time_src: oldTradeMap.open_time_src,
+                open_time_utc_src: oldTradeMap.open_time_utc_src,
+
+                acc_dist: data.acc,
+                ticket_dist: data.open_ticket,
+                server_dist: oldTradeMap.server_dist,
+                symbol_dist: oldTradeMap.symbol_dist,
+                vol_dist: oldTradeMap.vol_dist,
+                sl_dist: oldTradeMap.sl_dist,
+                tp_dist: oldTradeMap.tp_dist,
+                open_price_dist: data.open_price,
+                open_time_dist: formatDate(data.open_timestamp, 'YMDHIS'),
+                open_time_utc_dist: data.open_timestamp,
+
+                side: oldTradeMap.side,
+                tick_value: oldTradeMap.tick_value,
+                symbol_title: oldTradeMap.symbol_title,
+                symbol_weight: oldTradeMap.symbol_weight,
+
+                status: 'open'
+            })
+
+            await newTradeMap.save()
+
+        } else if (data.state == 'already_open') {
+            await TradeMap.updateOne(
+                {
+                    acc_src: getUpdateDoc.origin_acc,
+                    ticket_src: getUpdateDoc.origin_ticket,
+                    acc_dist: data.acc,
+                    ticket_dist: getUpdateDoc.ticket
+                },
+                {
+                    $set: {
+                        status: 'open',
+                        open_price_dist: data.open_price,
+                        open_time_dist: formatDate(data.open_timestamp, 'YMDHIS'),
+                        open_time_utc_dist: data.open_timestamp,
+                    }
+                }
+            )
+        }
+    } else {
+        // todo 
+        // هماهنگی شود که چه کاری اینجا انجام شود 
+    }
+
+    // #.
+    // لاگ گرفتن از رکوئست دریافتی
+    const requestLog = new RequestLog({
+        type: 'GetUpdateResponse',
+        message: req.body.message,
+        datetime: Date.now()
+    })
+    await requestLog.save()
+
+    // #. 
+    // ارسال پاسخ عملیات موفقیت آمیز
+    res.send({
+        status: 'success',
+    })
+}
+
+function processMessage(msg) {
+    // E.g. 
+    // 1006135456 , 975 , EXIST & open_timestamp & open_price & sl & tp & magic ,1727109056,10
+    // acc, 975, CANCELED & old_ticket & OPEN & new_ticket & new_open_price & local_time & tehran_timestamp, current_timestamp, id
+    const data = {};
+
+    // msg parts
+    const msg_parts = msg.split(',')
+    data.acc = msg_parts[0].split('_')[0]
+    data.handler = 1000 - parseInt(msg_parts[1])
+    data.timestamp = msg_parts[3] * 1000
+    data.keyid = msg_parts[4]
+    const info = msg_parts[2]
+
+    // msg info
+    const info_parts = info.split('&')
+    data.status = 'success'
+    data.result_text = info_parts[0]
+    data.result_code = 0
+    data.state = ''
+
+    if (data.result_text.toLowerCase().includes('exist')) {
+        data.state = 'already_open'
+        data.open_price = info_parts[2]
+        data.open_timestamp = info_parts[1] * 1000
+    } else {
+        data.state = 'new_open'
+        data.deleted_ticket = info_parts[1]
+        data.open_ticket = info_parts[3]
+        data.open_price = info_parts[4]
+        data.open_timestamp = info_parts[5] * 1000
+    }
+
+    if (data.result_text.toLowerCase().includes("cant") || data.result_text.toLowerCase().includes("not")) {
+        data.status = 'error'
+        data.result_text = info_parts[0]
+        data.result_code = info_parts[1]
+    }
+
+    return data
+}

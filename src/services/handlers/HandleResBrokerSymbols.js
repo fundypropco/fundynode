@@ -107,7 +107,7 @@ function processMessage(msg) {
 
     // msg parts
     const msg_parts = msg.split(',')
-    data.acc = msg_parts[0].replace(/_.*/, '')
+    data.acc = msg_parts[0].split('_')[0]
     data.handler = 1000 - parseInt(msg_parts[1])
     data.status = 'success'
     data.result_text = 'success'

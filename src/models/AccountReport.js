@@ -2,7 +2,7 @@ import mongoose from "mongoose"
 
 const accountReportSchema = new mongoose.Schema({
     date: {
-        type: Date,
+        type: String,
         required: true
     },
     acc_src: {
@@ -13,54 +13,77 @@ const accountReportSchema = new mongoose.Schema({
         type: Number,
         required: true,
     },
-    eqi: {
-        // day initial equity
+
+    eq_initial: {
         type: Number
     },
-    eqit: {
-        // day initial equity time
+    eq_initial_time: {
         type: Date
     },
-    eqh: {
-        // equity_high
+
+    eq_high: {
         type: Number
     },
-    eqht: {
-        // equity_high_time
+    eq_high_time: {
         type: Date
     },
-    eql: {
-        // equity_low
+
+    total_eq_high: {
         type: Number
     },
-    eqlt: {
-        // equity_low_time
+    total_eq_high_time: {
         type: Date
     },
-    bli: {
-        // day initial balance
+
+    eq_low: {
         type: Number
     },
-    blit: {
-        // day initial balance time
+    eq_low_time: {
         type: Date
     },
-    blh: {
-        // balance_high
+
+    total_eq_low: {
         type: Number
     },
-    blht: {
-        // balance_high_time
+    total_eq_low_time: {
         type: Date
     },
-    bll: {
-        // balance_low
+
+    bl_initial: {
         type: Number
     },
-    bllt: {
-        // balance_low_time
+    bl_initial_time: {
+        type: Date
+    },
+
+    bl_high: {
+        type: Number
+    },
+    bl_high_time: {
+        type: Date
+    },
+
+    total_bl_high: {
+        type: Number
+    },
+    total_bl_high_time: {
+        type: Date
+    },
+
+    bl_low: {
+        type: Number
+    },
+    bl_low_time: {
+        type: Date
+    },
+
+    total_bl_low: {
+        type: Number
+    },
+    total_bl_low_time: {
         type: Date
     }
+
 })
 
 accountReportSchema.index({ acc_src: 1, acc_dist: 1, date: 1 })

@@ -20,7 +20,7 @@ function processMessage(msg) {
     // E.g. 
     // 1006135456,504,DETAIL&100828.030&100827.390&-0.640&2&316,1758999477,-1
     // acc , 504 , DETAIL & balance & equity & profit & open_trade_count & history_trade_count , timestamp , -1
-    const data = {};
+    const data = {}
 
     // msg parts
     const msg_parts = msg.split(',')

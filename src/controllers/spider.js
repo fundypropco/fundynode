@@ -13,6 +13,8 @@ import HandleResCloseDelete from '../services/handlers/HandleResCloseDelete.js'
 import HandleResBrokerSymbolData from '../services/handlers/HandleResBrokerSymbolData.js'
 import handleResBulkClose from '../services/handlers/handleResBulkClose.js'
 import HandleResCloseAll from '../services/handlers/HandleResCloseAll.js'
+import HandleOpenTrades from '../services/handlers/HandleOpenTrades.js'
+import HandleResOpenPendingOrder from '../services/handlers/HandleResOpenPendingOrder.js'
 
 const getUpdates = asyncHandler(async (req, res) => {
     const result = await GetUpdateService.getUnprocessed(req.params.acc)
@@ -24,6 +26,8 @@ const sendMessage = asyncHandler(async (req, res) => {
     const handlerNo = getHandlerOfMsg(req.body.message)
 
     switch (handlerNo) {
+        case "400":
+            return await HandleOpenTrades(req, res)
         case "500":
             return await handleNewOrder(req, res)
         case "501":
@@ -55,6 +59,8 @@ const sendMessage = asyncHandler(async (req, res) => {
             return await HandleResBrokerSymbols(req, res)
         case "989":
             return await HandleResBrokerSymbolData(req, res)
+        case "975":
+            return await HandleResOpenPendingOrder(req, res)
         default:
             return res.send({
                 status: 'error',

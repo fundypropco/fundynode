@@ -22,6 +22,12 @@ const tradeMapSchema = new mongoose.Schema({
     open_time_src: {
         type: String
     },
+    open_timestamp_src: {
+        type: String
+    },
+    open_time_utc_src: {
+        type: Date
+    },
     sl_src: {
         type: Number
     },
@@ -33,7 +39,27 @@ const tradeMapSchema = new mongoose.Schema({
     },
     close_time_src: {
         type: String,
-        default: ''
+    },
+    close_timestamp_src: {
+        type: String,
+    },
+    close_time_utc_src: {
+        type: Date
+    },
+    magic_src: {
+        type: String
+    },
+    comment_src: {
+        type: String
+    },
+    commission_src: {
+        type: Number
+    },
+    swap_src: {
+        type: Number
+    },
+    profit_src: {
+        type: Number
     },
 
     acc_dist: {
@@ -57,6 +83,12 @@ const tradeMapSchema = new mongoose.Schema({
     open_time_dist: {
         type: String,
     },
+    open_timestamp_dist: {
+        type: String,
+    },
+    open_time_utc_dist: {
+        type: Date,
+    },
     sl_dist: {
         type: Number
     },
@@ -69,6 +101,28 @@ const tradeMapSchema = new mongoose.Schema({
     close_time_dist: {
         type: String,
         default: '',
+    },
+    close_timestamp_dist: {
+        type: String,
+        default: '',
+    },
+    close_time_utc_dist: {
+        type: Date
+    },
+    magic_dist: {
+        type: String,
+    },
+    comment_dist: {
+        type: String
+    },
+    commission_dist: {
+        type: Number
+    },
+    swap_dist: {
+        type: Number
+    },
+    profit_dist: {
+        type: Number
     },
 
     symbol_title: {
@@ -86,7 +140,7 @@ const tradeMapSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['open', 'closed', 'pending', 'canceled'],
+        enum: ['open', 'closed', 'pending', 'canceled', 'deleted'],
     },
     side: {
         type: String,
@@ -96,15 +150,11 @@ const tradeMapSchema = new mongoose.Schema({
     created_at: {
         type: Date,
         default: Date.now
-    },
-    updated_at: {
-        type: Date,
-        default: Date.now
     }
 });
 
-tradeMapSchema.index({ acc_src: 1, ticket_src: 1, acc_dist: 1 })
-tradeMapSchema.index({ status: 1, acc_src: 1, acc_dist: 1 })
+tradeMapSchema.index({ acc_src: 1, ticket_src: 1, acc_dist: 1, ticket_dist: 1 })
+tradeMapSchema.index({ acc_src: 1, acc_dist: 1, status: 1 })
 tradeMapSchema.index({ acc_dist: 1, ticket_dist: 1 })
 
 const TradeMap = mongoose.model('TradeMap', tradeMapSchema, 'trade_maps');

@@ -3,7 +3,6 @@ import boot from './src/boot/index.js'
 import getRedis from "./src/boot/redis.js";
 import logger from "./src/helpers/logger.js"
 import seed from './src/seeders/seed.js'
-import { getOpenTradesProfit } from './src/schedules/job.js'
 
 await boot()
 const redis = await getRedis()
@@ -15,9 +14,9 @@ const worker = new Worker("app-queue",
             if (job.name === 'run-seeders') {
                 await seed()
             }
-            if (job.name === 'equity-refresh') {
-                await getOpenTradesProfit()
-            }
+            // if (job.name === 'equity-refresh') {
+            //     await getOpenTradesProfit()
+            // }
         } catch (err) {
             console.log(err)
             logger.error(err)

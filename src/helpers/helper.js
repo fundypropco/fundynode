@@ -62,6 +62,10 @@ export async function makeMsgForHandler(handler, data) {
             message += `${data.acc}_${data.origin_acc}${mql_cluster_no},${data.symbol}&${data.open_price}&${data.vol}&${data.slippage}&${data.sl}&${data.tp}&${data.comment}&${data.magic}`
             break
 
+        case ACTION_HANDLER.OPEN_PENDING_ORDER:
+            message = `${data.acc}_${data.origin_acc}${mql_cluster_no},${handler},${data.ticket}`
+            break
+
         case ACTION_HANDLER.MODIFY:
             message += `${data.acc}_${data.origin_acc}${mql_cluster_no},${data.ticket}&${data.entry}&${data.sl}&${data.tp}`
             break
@@ -74,8 +78,12 @@ export async function makeMsgForHandler(handler, data) {
             message = `${data.acc},${handler},${data.ticket}`
             break
 
+        case ACTION_HANDLER.CLOSE_ALL_ORIGIN:
+            message += `${data.acc},0`
+            break
+
         case ACTION_HANDLER.CLOSE_ALL:
-            message += `${data.acc}_${data.origin_acc}${mql_cluster_no},0`
+            message += `${data.acc},${data.origin_acc}`
             break
 
         case ACTION_HANDLER.BULK_CLOSE:
