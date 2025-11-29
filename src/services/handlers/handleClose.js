@@ -124,7 +124,7 @@ function processMessage(msg) {
     // msg parts
     const msg_parts = msg.split(',')
     data.acc = msg_parts[0].replace(/_.*/, '')
-    data.timestamp = msg_parts[3] + '000'
+    data.timestamp = msg_parts[3] * 1000
     let info = msg_parts[2]
     const partial_info = msg_parts[4]
     data.is_partial = false
@@ -161,13 +161,13 @@ function processMessage(msg) {
                 closed_ticket,
                 closed_vol: Number(closed_vol),
                 closed_price: Number(closed_price),
-                closed_timestamp: closed_timestamp + '000',
+                closed_timestamp: closed_timestamp * 1000,
                 swap: Number(swap),
                 commission: Number(commission),
                 profit: Number(profit),
                 open_ticket,
                 open_vol: Number(open_vol),
-                open_timestamp: open_timestamp + '000'
+                open_timestamp: open_timestamp * 1000
             }))
             .find(pi => pi.closed_ticket == data.ticket)
 

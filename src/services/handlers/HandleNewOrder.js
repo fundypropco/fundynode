@@ -157,7 +157,7 @@ function processMessage(msg) {
     // msg parts
     const msg_parts = msg.split(',')
     data.acc = msg_parts[0].replace(/_.*/, '')
-    data.timestamp = msg_parts[3] + '000'
+    data.timestamp = msg_parts[3] * 1000
     const info = msg_parts[2]
     const partial_info = msg_parts[4]
     data.is_partial = false
@@ -170,7 +170,7 @@ function processMessage(msg) {
     data.side = getOrderSide(data.type)
     data.vol = Number(info_parts[4])
     data.open_price = Number(info_parts[5])
-    data.open_timestamp = info_parts[6] + '000'
+    data.open_timestamp = info_parts[6] * 1000
     data.sl = Number(info_parts[7])
     data.tp = Number(info_parts[8])
     data.commission = Number(info_parts[9])
@@ -196,13 +196,13 @@ function processMessage(msg) {
                 closed_ticket,
                 closed_vol: Number(closed_vol),
                 closed_price: Number(closed_price),
-                closed_timestamp: closed_timestamp + '000',
+                closed_timestamp: closed_timestamp * 1000,
                 closed_swap: Number(closed_swap),
                 closed_commission: Number(closed_commission),
                 closed_profit: Number(closed_profit),
                 open_ticket,
                 open_vol: Number(open_vol),
-                open_timestamp: open_timestamp + '000'
+                open_timestamp: open_timestamp * 1000
             }))
             .find(pi => pi.open_ticket == data.ticket)
 

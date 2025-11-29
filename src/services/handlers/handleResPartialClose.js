@@ -117,7 +117,7 @@ function processMessage(msg) {
     const msg_parts = msg.split(',')
     data.acc = msg_parts[0].split('_')[0]
     data.handler = 1000 - parseInt(msg_parts[1])
-    data.timestamp = msg_parts[3] + '000'
+    data.timestamp = msg_parts[3] * 1000
     data.date = formatDateYMD(data.timestamp)
     let info = msg_parts[2]
     data.keyid = msg_parts[4]
@@ -132,7 +132,7 @@ function processMessage(msg) {
         data.closed_ticket = info_parts[1]
         data.open_ticket = info_parts[2]
         data.open_vol = Number(info_parts[3])
-        data.closed_timestamp = info_parts[4] + '000'
+        data.closed_timestamp = info_parts[4] * 1000
         data.closed_price = Number(info_parts[5])
         data.swap = Number(info_parts[6])
         data.commission = Number(info_parts[7])

@@ -85,7 +85,7 @@ function processMessage(msg) {
     const msg_parts = msg.split(',')
     data.acc = msg_parts[0].split('_')[0]
     data.handler = 1000 - parseInt(msg_parts[1])
-    data.timestamp = msg_parts[3] + '000'
+    data.timestamp = msg_parts[3] * 1000
     data.keyid = msg_parts[4]
     const info = msg_parts[2]
 
@@ -103,13 +103,13 @@ function processMessage(msg) {
         data.ticket = info_parts[1]
         if (data.result_text.toLowerCase().includes('close')) {
             data.closed_price = Number(info_parts[2])
-            data.closed_timestamp = info_parts[3] + '000'
+            data.closed_timestamp = info_parts[3] * 1000
             data.swap = Number(info_parts[4])
             data.commission = Number(info_parts[5])
             data.profit = Number(info_parts[6])
         }
         else if (data.result_text.toLowerCase().includes('delete')) {
-            data.closed_timestamp = info_parts[2] + '000'
+            data.closed_timestamp = info_parts[2] * 1000
         }
     } else {
         data.status = 'error'
