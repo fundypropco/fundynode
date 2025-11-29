@@ -67,7 +67,7 @@ export async function makeMsgForHandler(handler, data) {
             break
 
         case ACTION_HANDLER.MODIFY:
-            message += `${data.acc}_${data.origin_acc}${mql_cluster_no},${handler},${data.ticket}&${data.entry}&${data.sl}&${data.tp}`
+            message += `${data.acc}_${data.origin_acc}${mql_cluster_no},${handler},${data.ticket}&${data.origin_open_price}&${data.sl}&${data.tp}`
             break
 
         case ACTION_HANDLER.CLOSE:

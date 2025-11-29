@@ -71,7 +71,7 @@ function processMessage(msg) {
     info = info.replace(/^[^&]*&/, "")
     data.items = info.split("@")
         .map(part => part.split("&"))
-        .map(([ticket, sl, tp, entry]) => ({ ticket, sl, tp, entry }))
+        .map(([ticket, sl, tp, open_price]) => ({ ticket, sl, tp, open_price }))
 
     return data
 }

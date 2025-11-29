@@ -305,9 +305,9 @@ const prepareModifyData = async (account, copier, data, tradeMap) => {
     perparedData.symbol = tradeMap?.symbol_dist ?? ''
     perparedData.symbol_title = tradeMap?.symbol_title ?? ''
     perparedData.status = tradeMap ? 'pending' : 'waiting'
-    perparedData.entry = data.entry
-    perparedData.sl = Number(data.sl) && symbol && side ? getWiderSl(symbol, side, Number(data.entry), Number(data.sl)) : data.sl
-    perparedData.tp = Number(data.tp) && symbol && side ? getWiderTp(symbol, side, Number(data.entry), Number(data.tp)) : data.tp
+    perparedData.sl = Number(data.sl) && symbol && side ? getWiderSl(symbol, side, Number(data.open_price), Number(data.sl)) : data.sl
+    perparedData.tp = Number(data.tp) && symbol && side ? getWiderTp(symbol, side, Number(data.open_price), Number(data.tp)) : data.tp
+    perparedData.side = tradeMap?.side ?? 'none'
     perparedData.keyid = data.keyid++
 
     perparedData.origin_server = account.server
@@ -316,6 +316,7 @@ const prepareModifyData = async (account, copier, data, tradeMap) => {
     perparedData.origin_symbol = tradeMap?.symbol_src ?? ''
     perparedData.origin_sl = data.sl
     perparedData.origin_tp = data.tp
+    perparedData.origin_open_price = data.open_price
 
     perparedData.message = await makeMsgForHandler(perparedData.handler, perparedData)
 
