@@ -2,6 +2,7 @@ import RequestLog from "../../models/RequestLog.js"
 import { formatDate } from '../../helpers/helper.js'
 import GetUpdateService from '../GetUpdateService.js'
 import TradeMap from "../../models/TradeMap.js"
+import Account from "../../models/Account.js"
 
 export default async (req, res) => {
 

@@ -1,7 +1,7 @@
 import Account from '../../models/Account.js'
 import RequestLog from "../../models/RequestLog.js"
 import GetUpdateService from "../GetUpdateService.js"
-import { getOrderSide, makeID } from '../../helpers/helper.js'
+import { formatDate, getOrderSide, makeID } from '../../helpers/helper.js'
 import TradeMap from '../../models/TradeMap.js'
 
 export default async (req, res) => {
