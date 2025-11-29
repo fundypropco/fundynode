@@ -3,7 +3,7 @@ import GetUpdateService from '../GetUpdateService.js'
 import TradeMap from '../../models/TradeMap.js'
 import Account from "../../models/Account.js"
 import Symbol from "../../models/Symbol.js"
-import { formatDate } from "../../helpers/helper.js"
+import { formatDate, getMqlError } from "../../helpers/helper.js"
 
 export default async (req, res) => {
 
