@@ -59,7 +59,7 @@ export async function makeMsgForHandler(handler, data) {
         case ACTION_HANDLER.BUYSTOP:
         case ACTION_HANDLER.SELLLIMIT:
         case ACTION_HANDLER.SELLSTOP:
-            message += `${data.acc}_${data.origin_acc}${mql_cluster_no},${data.symbol}&${data.open_price}&${data.vol}&${data.slippage}&${data.sl}&${data.tp}&${data.comment}&${data.magic}`
+            message += `${data.acc}_${data.origin_acc}${mql_cluster_no},${handler},${data.symbol}&${data.open_price}&${data.vol}&${data.slippage}&${data.sl}&${data.tp}&${data.comment}&${data.magic}`
             break
 
         case ACTION_HANDLER.OPEN_PENDING_ORDER:
