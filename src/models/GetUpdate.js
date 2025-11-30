@@ -138,15 +138,6 @@ const getUpdateSchema = new mongoose.Schema({
     origin_new_vol: {
         type: Number,
     },
-    origin_new_open_time: {
-        type: String,
-    },
-    origin_new_open_timestamp: {
-        type: String,
-    },
-    origin_new_open_time_utc: {
-        type: Date,
-    },
 
     symbol_title: {
         type: String,

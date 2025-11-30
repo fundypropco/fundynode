@@ -70,7 +70,6 @@ const create = async (data) => {
             origin_comment: data.origin_comment ?? '',
             origin_new_ticket: data.origin_new_ticket ?? 0,
             origin_new_vol: data.origin_new_vol ?? 0,
-            origin_new_open_time: data.origin_new_open_time ?? '',
         })
 
         return await getUpdate.save()
@@ -246,9 +245,10 @@ const preparePartialCloseData = async (account, copier, data, tradeMap) => {
     perparedData.origin_commission = data.closed_commission
     perparedData.origin_swap = data.closed_swap
     perparedData.origin_profit = data.closed_profit
-    perparedData.origin_new_open_time = formatDate(data.open_timestamp)
-    perparedData.origin_new_open_timestamp = data.open_timestamp
-    perparedData.origin_new_open_time_utc = data.open_timestamp
+    perparedData.origin_open_price = data.open_price
+    perparedData.origin_open_time = formatDate(data.open_timestamp)
+    perparedData.origin_open_timestamp = data.open_timestamp
+    perparedData.origin_open_time_utc = data.open_timestamp
     perparedData.origin_new_ticket = data.open_ticket
     perparedData.origin_new_vol = data.open_vol
 

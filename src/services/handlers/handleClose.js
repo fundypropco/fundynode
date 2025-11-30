@@ -156,6 +156,7 @@ function processMessage(msg) {
                 profit,
                 open_ticket,
                 open_vol,
+                open_price,
                 open_timestamp
             ]) => ({
                 closed_ticket,
@@ -167,6 +168,7 @@ function processMessage(msg) {
                 profit: Number(profit),
                 open_ticket,
                 open_vol: Number(open_vol),
+                open_price: Number(open_price),
                 open_timestamp: open_timestamp * 1000
             }))
             .find(pi => pi.closed_ticket == data.closed_ticket)
