@@ -140,7 +140,7 @@ function processMessage(msg) {
     data.swap = Number(info_parts[7])
     data.commission = Number(info_parts[8])
     data.profit = Number(info_parts[9])
-    data.magic = info_parts[10]
+    data.magic = Number(info_parts[10])
 
     if (partial_info != -1) {
         // partial

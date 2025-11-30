@@ -160,11 +160,11 @@ const prepareOrderData = async (account, copier, data) => {
     perparedData.tp = getWiderTp(data.symbol_b, perparedData.side, Number(data.open_price), Number(data.tp))
     perparedData.slippage = 50
     perparedData.description = data.description
-    perparedData.status = 'pending'
-    perparedData.keyid = data.keyid++
     perparedData.magic = account.acc
     perparedData.comment = data.comment
     perparedData.open_price = data.open_price
+    perparedData.status = 'pending'
+    perparedData.keyid = data.keyid++
 
     perparedData.origin_server = account.server
     perparedData.origin_acc = account.acc
@@ -230,6 +230,7 @@ const preparePartialCloseData = async (account, copier, data, tradeMap) => {
     perparedData.symbol = tradeMap?.symbol_dist ?? ''
     perparedData.symbol_title = tradeMap?.symbol_title ?? ''
     perparedData.vol = data.closed_vol
+    perparedData.side = tradeMap?.side ?? 'node'
     perparedData.status = tradeMap ? 'pending' : 'waiting'
     perparedData.keyid = data.keyid++
 
@@ -267,6 +268,7 @@ const prepareCloseData = async (account, copier, data, tradeMap) => {
     perparedData.symbol_title = tradeMap?.symbol_title ?? ''
     perparedData.vol = data.closed_vol
     perparedData.status = tradeMap ? 'pending' : 'waiting'
+    perparedData.side = tradeMap?.side ?? 'node'
     perparedData.keyid = data.keyid++
 
     perparedData.origin_server = account.server
@@ -274,7 +276,9 @@ const prepareCloseData = async (account, copier, data, tradeMap) => {
     perparedData.origin_ticket = data.closed_ticket
     perparedData.origin_symbol = tradeMap?.symbol_src ?? ''
     perparedData.origin_vol = data.closed_vol
-    perparedData.origin_close_time = data.closed_time
+    perparedData.origin_close_time = formatDate(data.closed_timestamp)
+    perparedData.origin_close_timestamp = data.closed_timestamp
+    perparedData.origin_close_time_utc = data.closed_timestamp
     perparedData.origin_close_price = data.closed_price
 
     perparedData.message = await makeMsgForHandler(perparedData.handler, perparedData)
@@ -333,6 +337,10 @@ const prepareOpenPendingOrderData = async (account, copier, data, tradeMap) => {
     perparedData.symbol = tradeMap.symbol_dist
     perparedData.symbol_title = tradeMap.symbol_title
     perparedData.vol = tradeMap.vol_dist
+    perparedData.side = tradeMap.side
+    perparedData.magic = account.acc
+    perparedData.comment = data.comment
+    perparedData.open_price = data.open_price
     perparedData.status = 'pending'
     perparedData.keyid = data.keyid++
 
@@ -340,7 +348,16 @@ const prepareOpenPendingOrderData = async (account, copier, data, tradeMap) => {
     perparedData.origin_acc = account.acc
     perparedData.origin_ticket = tradeMap.ticket_src
     perparedData.origin_symbol = tradeMap.symbol_src
-    perparedData.origin_vol = tradeMap.vol_src
+    perparedData.origin_vol = data.vol
+    perparedData.origin_sl = data.sl
+    perparedData.origin_tp = data.tp
+    perparedData.origin_open_price = data.open_price
+    perparedData.origin_open_time = formatDate(data.open_timestamp)
+    perparedData.origin_open_timestamp = data.open_timestamp
+    perparedData.origin_open_time_utc = data.open_timestamp
+    perparedData.origin_commission = data.commission
+    perparedData.origin_comment = data.comment
+    perparedData.origin_magic = data.magic
 
     perparedData.message = await makeMsgForHandler(perparedData.handler, perparedData)
 

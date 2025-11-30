@@ -1,7 +1,6 @@
 import RequestLog from "../../models/RequestLog.js"
 import GetUpdateService from '../GetUpdateService.js'
 import TradeMap from '../../models/TradeMap.js'
-import Account from "../../models/Account.js"
 import { formatDate } from "../../helpers/helper.js"
 
 export default async (req, res) => {
@@ -17,7 +16,7 @@ export default async (req, res) => {
     if (getUpdateDoc.status == 'success') {
 
         if (data.state == 'new_open') {
-            const oldTradeMap = await TradeMap.findOneAndUpdate(
+            const deletedTradeMap = await TradeMap.findOneAndUpdate(
                 {
                     acc_src: getUpdateDoc.origin_acc,
                     ticket_src: getUpdateDoc.origin_ticket,
@@ -27,39 +26,42 @@ export default async (req, res) => {
                 {
                     $set: {
                         status: 'deleted',
-                        close_time_dist: data.open_timestamp,
-                        close_time_utc_dist: formatDate(data.open_timestamp, 'YMDHIS')
+                        close_time_dist: formatDate(data.open_timestamp),
+                        close_timestamp_dist: data.open_timestamp,
+                        close_time_utc_dist: data.open_timestamp
                     }
                 }
             )
 
             const newTradeMap = new TradeMap({
-                acc_src: oldTradeMap.acc_src,
-                ticket_src: oldTradeMap.ticket_src,
-                server_src: oldTradeMap.server_src,
-                symbol_src: oldTradeMap.symbol_src,
-                vol_src: oldTradeMap.vol_src,
-                sl_src: oldTradeMap.sl_src,
-                tp_src: oldTradeMap.tp_src,
-                open_price_src: oldTradeMap.open_price_src,
-                open_time_src: oldTradeMap.open_time_src,
-                open_time_utc_src: oldTradeMap.open_time_utc_src,
+                acc_src: deletedTradeMap.acc_src,
+                ticket_src: deletedTradeMap.ticket_src,
+                server_src: deletedTradeMap.server_src,
+                symbol_src: deletedTradeMap.symbol_src,
+                vol_src: deletedTradeMap.vol_src,
+                sl_src: deletedTradeMap.sl_src,
+                tp_src: deletedTradeMap.tp_src,
+                open_price_src: deletedTradeMap.open_price_src,
+                open_time_src: deletedTradeMap.open_time_src,
+                open_timestamp_src: deletedTradeMap.open_timestamp_src,
+                open_time_utc_src: deletedTradeMap.open_time_utc_src,
 
                 acc_dist: data.acc,
                 ticket_dist: data.open_ticket,
-                server_dist: oldTradeMap.server_dist,
-                symbol_dist: oldTradeMap.symbol_dist,
-                vol_dist: oldTradeMap.vol_dist,
-                sl_dist: oldTradeMap.sl_dist,
-                tp_dist: oldTradeMap.tp_dist,
+                server_dist: deletedTradeMap.server_dist,
+                symbol_dist: deletedTradeMap.symbol_dist,
+                vol_dist: deletedTradeMap.vol_dist,
+                sl_dist: deletedTradeMap.sl_dist,
+                tp_dist: deletedTradeMap.tp_dist,
                 open_price_dist: data.open_price,
-                open_time_dist: formatDate(data.open_timestamp, 'YMDHIS'),
+                open_time_dist: formatDate(data.open_timestamp),
+                open_timestamp_dist: data.open_timestamp,
                 open_time_utc_dist: data.open_timestamp,
 
-                side: oldTradeMap.side,
-                tick_value: oldTradeMap.tick_value,
-                symbol_title: oldTradeMap.symbol_title,
-                symbol_weight: oldTradeMap.symbol_weight,
+                side: deletedTradeMap.side,
+                tick_value: deletedTradeMap.tick_value,
+                symbol_title: deletedTradeMap.symbol_title,
+                symbol_weight: deletedTradeMap.symbol_weight,
 
                 status: 'open'
             })
@@ -78,7 +80,8 @@ export default async (req, res) => {
                     $set: {
                         status: 'open',
                         open_price_dist: data.open_price,
-                        open_time_dist: formatDate(data.open_timestamp, 'YMDHIS'),
+                        open_time_dist: formatDate(data.open_timestamp),
+                        open_timestamp_dist: data.open_timestamp,
                         open_time_utc_dist: data.open_timestamp,
                     }
                 }
@@ -128,13 +131,13 @@ function processMessage(msg) {
 
     if (data.result_text.toLowerCase().includes('exist')) {
         data.state = 'already_open'
-        data.open_price = info_parts[2]
+        data.open_price = Number(info_parts[2])
         data.open_timestamp = info_parts[1] * 1000
     } else {
         data.state = 'new_open'
         data.deleted_ticket = info_parts[1]
         data.open_ticket = info_parts[3]
-        data.open_price = info_parts[4]
+        data.open_price = Number(info_parts[4])
         data.open_timestamp = info_parts[5] * 1000
     }
 
