@@ -46,7 +46,7 @@ export default async (req, res) => {
             server_src: getUpdateDoc.origin_server,
             acc_src: getUpdateDoc.origin_acc,
             ticket_src: getUpdateDoc.origin_new_ticket,
-            symbol_src: trade.symbol_src,
+            symbol_src: closedTradeMap.symbol_src,
             vol_src: getUpdateDoc.origin_new_vol,
             open_price_src: closedTradeMap.open_price_src,
             sl_src: closedTradeMap.sl_src,
@@ -60,7 +60,7 @@ export default async (req, res) => {
             ticket_dist: data.open_ticket,
             symbol_dist: closedTradeMap.symbol_dist,
             vol_dist: data.open_vol,
-            open_price_dist: data.open_price_dist,
+            open_price_dist: data.open_price,
             open_time_dist: formatDate(data.open_timestamp),
             open_timestamp_dist: data.open_timestamp,
             open_time_utc_dist: data.open_timestamp,
@@ -137,14 +137,12 @@ function processMessage(msg) {
         data.swap = Number(info_parts[6])
         data.commission = Number(info_parts[7])
         data.profit = Number(info_parts[8])
-
-        data.sl = Number(info_parts[0])
-        data.tp = Number(info_parts[0])
-        data.magic = info_parts[0]
-        data.comment = info_parts[0]
-        data.open_price = Number(info_parts[0])
-        data.open_timestamp = info_parts[0]
-
+        data.magic = Number(info_parts[9])
+        data.comment = info_parts[10]
+        data.sl = Number(info_parts[11])
+        data.tp = Number(info_parts[12])
+        data.open_price = Number(info_parts[13])
+        data.open_timestamp = info_parts[14] * 1000
     } else {
         data.status = 'error'
         data.result_code = info_parts[1]
