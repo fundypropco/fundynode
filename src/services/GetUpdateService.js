@@ -230,7 +230,7 @@ const preparePartialCloseData = async (account, copier, data, tradeMap) => {
     perparedData.symbol = tradeMap?.symbol_dist ?? ''
     perparedData.symbol_title = tradeMap?.symbol_title ?? ''
     perparedData.vol = data.closed_vol
-    perparedData.side = tradeMap?.side ?? 'node'
+    perparedData.side = tradeMap?.side ?? 'none'
     perparedData.status = tradeMap ? 'pending' : 'waiting'
     perparedData.keyid = data.keyid++
 
@@ -268,7 +268,7 @@ const prepareCloseData = async (account, copier, data, tradeMap) => {
     perparedData.symbol_title = tradeMap?.symbol_title ?? ''
     perparedData.vol = data.closed_vol
     perparedData.status = tradeMap ? 'pending' : 'waiting'
-    perparedData.side = tradeMap?.side ?? 'node'
+    perparedData.side = tradeMap?.side ?? 'none'
     perparedData.keyid = data.keyid++
 
     perparedData.origin_server = account.server
