@@ -174,7 +174,7 @@ function processMessage(msg) {
     data.sl = Number(info_parts[7])
     data.tp = Number(info_parts[8])
     data.commission = Number(info_parts[9])
-    data.magic = info_parts[10]
+    data.magic = Number(info_parts[10])
     data.comment = info_parts[11]
 
     if (partial_info != -1) {

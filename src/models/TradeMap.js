@@ -47,7 +47,7 @@ const tradeMapSchema = new mongoose.Schema({
         type: Date
     },
     magic_src: {
-        type: String
+        type: Number
     },
     comment_src: {
         type: String
@@ -110,7 +110,7 @@ const tradeMapSchema = new mongoose.Schema({
         type: Date
     },
     magic_dist: {
-        type: String,
+        type: Number,
     },
     comment_dist: {
         type: String

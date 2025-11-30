@@ -122,11 +122,11 @@ function processMessage(msg) {
         data.status = 'success'
         data.ticket = info_parts[1]
         data.open_timestamp = info_parts[2] * 1000
-        data.vol = info_parts[3]
-        data.open_price = info_parts[4]
-        data.sl = info_parts[5]
-        data.tp = info_parts[6]
-        data.magic = info_parts[7]
+        data.vol = Number(info_parts[3])
+        data.open_price = Number(info_parts[4])
+        data.sl = Number(info_parts[5])
+        data.tp = Number(info_parts[6])
+        data.magic = Number(info_parts[7])
         data.comment = info_parts[8]
     } else {
         data.status = 'error'

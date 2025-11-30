@@ -64,7 +64,7 @@ const getUpdateSchema = new mongoose.Schema({
         type: String
     },
     magic: {
-        type: String
+        type: Number
     },
 
     origin_server: {
@@ -120,7 +120,7 @@ const getUpdateSchema = new mongoose.Schema({
         type: String
     },
     origin_magic: {
-        type: String
+        type: Number
     },
     origin_commission: {
         type: Number
