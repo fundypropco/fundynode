@@ -133,7 +133,7 @@ function processMessage(msg) {
     const info_parts = info.split('&')
     data.closed_ticket = info_parts[1]
     data.closed_price = Number(info_parts[2])
-    data.closed_timestamp = info_parts[3]
+    data.closed_timestamp = info_parts[3] * 1000
     data.symbol = info_parts[4]
     data.side = getOrderSide(info_parts[5])
     data.closed_vol = Number(info_parts[6])
