@@ -21,10 +21,11 @@ async function getMqlClusterNo(handler, acc, origin_acc, max = 3) {
         ACTION_HANDLER.BUYSTOP,
         ACTION_HANDLER.SELLLIMIT,
         ACTION_HANDLER.SELLSTOP,
+        ACTION_HANDLER.OPEN_PENDING_ORDER,
+        ACTION_HANDLER.MODIFY,
         ACTION_HANDLER.CLOSE,
         ACTION_HANDLER.PARTIAL_CLOSE,
         ACTION_HANDLER.BULK_CLOSE,
-        ACTION_HANDLER.MODIFY,
     ]
 
     if (copyClustringHandlers.includes(handler)) {
