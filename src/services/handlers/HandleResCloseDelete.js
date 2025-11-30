@@ -52,7 +52,7 @@ export default async (req, res) => {
         // ثبت اطلاعات مالی در بالانس 
         const total_closed_profit = data.profit + data.swap + data.commission
         await Account.findOneAndUpdate(
-            { acc: closedTradeMap.acc_src, "copiers.acc": closedTradeMap.acc_dist },
+            { acc: closedTradeMap?.acc_src, "copiers.acc": closedTradeMap?.acc_dist },
             { $inc: { "copiers.$.profit_bl": total_closed_profit } }, //$[c]
             // { arrayFilters: [{ "c.acc": acc }] }
         )
