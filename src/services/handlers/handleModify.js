@@ -25,7 +25,7 @@ export default async (req, res) => {
 
             // #.
             // بدست آوردن تیکتهای متناظر با این سفارش روی اکانتهای دیگر 
-            const tradeMaps = await TradeMap.find({ acc_src: account.acc, ticket_src: modifyInfo.ticket })
+            const tradeMaps = await TradeMap.find({ acc_src: account.acc, ticket_src: modifyInfo.ticket, status: { $ne: 'deleted' } })
 
             // #.
             // بدست آوردن اکانتهای کپی کننده 

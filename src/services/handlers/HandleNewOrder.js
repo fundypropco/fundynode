@@ -108,7 +108,7 @@ async function processPartial(data) {
 
         // #
         // بدست آوردن تیکتهای متناظر با این سفارش روی اکانتهای دیگر 
-        const tradeMaps = await TradeMap.find({ acc_src: account.acc, ticket_src: partialInfo.closed_ticket })
+        const tradeMaps = await TradeMap.find({ acc_src: account.acc, ticket_src: partialInfo.closed_ticket, status: { $ne: 'deleted' } })
 
         // #
         // بدست آوردن اکانتهای کپی کننده 
@@ -134,7 +134,7 @@ async function processPartial(data) {
 }
 
 async function isDuplicatedOrder(account, copier, data) {
-    const tradeMap = await TradeMap.findOne({ acc_src: account.acc, ticket_src: data.ticket, acc_dist: copier.acc })
+    const tradeMap = await TradeMap.findOne({ acc_src: account.acc, ticket_src: data.ticket, acc_dist: copier.acc, status: { $ne: 'deleted' } })
 
     if (tradeMap && tradeMap.status === 'pending' && ['buy', 'sell'].includes(data.side)) {
         data.keyid = makeID()
