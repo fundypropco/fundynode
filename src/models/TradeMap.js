@@ -100,11 +100,9 @@ const tradeMapSchema = new mongoose.Schema({
     },
     close_time_dist: {
         type: String,
-        default: '',
     },
     close_timestamp_dist: {
         type: String,
-        default: '',
     },
     close_time_utc_dist: {
         type: Date

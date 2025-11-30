@@ -36,7 +36,7 @@ export default async (req, res) => {
                                 default: "$status"
                             }
                         },
-                        close_price_dist: data.closed_price ?? '',
+                        close_price_dist: data.closed_price ?? 0,
                         close_time_dist: formatDate(data.closed_timestamp),
                         close_timestamp_dist: data.closed_timestamp,
                         close_time_utc_dist: data.closed_timestamp,
