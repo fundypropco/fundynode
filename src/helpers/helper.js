@@ -80,19 +80,19 @@ export async function makeMsgForHandler(handler, data) {
             break
 
         case ACTION_HANDLER.CLOSE_ALL_ORIGIN:
-            message += `${data.acc},0`
+            message += `${data.acc},${handler},0`
             break
 
         case ACTION_HANDLER.CLOSE_ALL:
-            message += `${data.acc},${data.origin_acc}`
+            message += `${data.acc},${handler},${data.origin_acc}`
             break
 
         case ACTION_HANDLER.BULK_CLOSE:
-            message += `${data.acc}_${data.origin_acc}${mql_cluster_no},${data.tickets}`
+            message += `${data.acc}_${data.origin_acc}${mql_cluster_no},${handler},${data.tickets}`
             break
 
         case ACTION_HANDLER.PARTIAL_CLOSE:
-            message += `${data.acc}_${data.origin_acc}${mql_cluster_no},${data.ticket}&${data.vol}`
+            message += `${data.acc}_${data.origin_acc}${mql_cluster_no},${handler},${data.ticket}&${data.vol}`
             break
 
         case ACTION_HANDLER.BROKER_SYMBOLS:
@@ -105,7 +105,7 @@ export async function makeMsgForHandler(handler, data) {
             break;
 
         case ACTION_HANDLER.OPEN_TRADES_PROFIT:
-            message += `${data.acc}_${data.origin_acc}${mql_cluster_no},${data.tickets}`
+            message += `${data.acc}_${data.origin_acc}${mql_cluster_no},${handler},${data.tickets}`
             break;
     }
 
