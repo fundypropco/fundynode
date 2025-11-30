@@ -169,7 +169,7 @@ function processMessage(msg) {
                 open_vol: Number(open_vol),
                 open_timestamp: open_timestamp * 1000
             }))
-            .find(pi => pi.closed_ticket == data.ticket)
+            .find(pi => pi.closed_ticket == data.closed_ticket)
 
         data.is_partial = !!data.partial_item
     }
