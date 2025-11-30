@@ -47,7 +47,7 @@ async function processClose(data) {
 
         // #.
         // بدست آوردن تیکتهای متناظر با این سفارش روی اکانتهای دیگر 
-        const tradeMaps = await TradeMap.find({ acc_src: account.acc, ticket_src: data.closed_ticket })
+        const tradeMaps = await TradeMap.find({ acc_src: account.acc, ticket_src: data.closed_ticket, status: 'open' })
 
         // #.
         // بدست آوردن اکانتهای کپی کننده 
