@@ -137,10 +137,8 @@ async function isDuplicatedOrder(account, copier, data) {
     const tradeMap = await TradeMap.findOne({ acc_src: account.acc, ticket_src: data.ticket, acc_dist: copier.acc })
 
     if (tradeMap && tradeMap.status === 'pending' && ['buy', 'sell'].includes(data.side)) {
-        const orderData = {
-            keyid: makeID(),
-        }
-        const getUpdateData = await GetUpdateService.prepareOpenPendingOrderData(account, copier, orderData, tradeMap)
+        data.keyid = makeID()
+        const getUpdateData = await GetUpdateService.prepareOpenPendingOrderData(account, copier, data, tradeMap)
         await GetUpdateService.create(getUpdateData)
     }
 
