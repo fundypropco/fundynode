@@ -18,13 +18,22 @@ export default async (req, res) => {
     if (getUpdateDoc && getUpdateDoc.status == 'success') {
         // #.
         // بستن معامله کلوز شده در تیکت مپ 
-        // todo: 
-        // اطلاعات تایم و پرایس معامله کلوز شده گرفته شود 
         const closedTradeMap = await TradeMap.findOneAndUpdate(
             { acc_src: getUpdateDoc.origin_acc, ticket_src: getUpdateDoc.origin_ticket, acc_dist: data.acc },
             {
                 $set: {
                     status: 'closed',
+
+                    vol_src: getUpdateDoc.origin_vol,
+                    close_price_src: getUpdateDoc.closed_price,
+                    close_time_src: getUpdateDoc.origin_close_time,
+                    close_timestamp_src: getUpdateDoc.origin_close_timestamp,
+                    close_time_utc_src: getUpdateDoc.origin_close_time_utc,
+                    swap_src: getUpdateDoc.origin_swap,
+                    commission_src: getUpdateDoc.origin_commission,
+                    profit_src: getUpdateDoc.origin_profit,
+
+                    vol_dist: data.closed_vol,
                     close_price_dist: data.closed_price,
                     close_time_dist: formatDate(data.closed_timestamp),
                     close_timestamp_dist: data.closed_timestamp,
@@ -144,6 +153,7 @@ function processMessage(msg) {
         data.tp = Number(info_parts[12])
         data.open_price = Number(info_parts[13])
         data.open_timestamp = info_parts[14] * 1000
+        data.closed_vol = Number(info_parts[15])
     } else {
         data.status = 'error'
         data.result_code = info_parts[1]
