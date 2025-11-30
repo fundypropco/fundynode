@@ -117,10 +117,10 @@ const getUpdateSchema = new mongoose.Schema({
         type: Number
     },
     origin_comment: {
-        type: Number
+        type: String
     },
     origin_magic: {
-        type: Number
+        type: String
     },
     origin_commission: {
         type: Number
