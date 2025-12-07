@@ -76,7 +76,7 @@ function processMessage(msg) {
     // msg parts
     const msg_parts = msg.split(',')
     data.acc = msg_parts[0].split('_')[0]
-    data.timestamp = msg_parts[3]
+    data.timestamp = Number(msg_parts[3])
     data.date = formatDate(data.timestamp, 'YMD')
     const info = msg_parts[2]
 
