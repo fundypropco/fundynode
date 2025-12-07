@@ -137,6 +137,7 @@ export function formatDateUTC(timestamp, format = "YMDHIS") {
 }
 
 export function formatDate(timestamp, format = "YMDHIS", timezone = "Asia/Tehran") {
+    timestamp = Number(timestamp)
     const d = new Date(timestamp)
 
     const options = {
