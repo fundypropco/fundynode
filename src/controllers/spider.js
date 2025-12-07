@@ -10,6 +10,7 @@ import handleClose from '../services/handlers/handleClose.js'
 import handleResPartialClose from '../services/handlers/handleResPartialClose.js'
 import HandleResBrokerSymbols from '../services/handlers/HandleResBrokerSymbols.js'
 import HandleResClose from '../services/handlers/HandleResClose.js'
+import HandleResCloseOrigin from '../services/handlers/HandleResCloseOrigin.js'
 import HandleResBrokerSymbolData from '../services/handlers/HandleResBrokerSymbolData.js'
 import handleResBulkClose from '../services/handlers/handleResBulkClose.js'
 import HandleResCloseAllOrigin from '../services/handlers/HandleResCloseAllOrigin.js'
@@ -59,6 +60,9 @@ const sendMessage = asyncHandler(async (req, res) => {
 
         case "996":
             return await HandleResClose(req, res)
+
+        case "977":
+            return await HandleResCloseOrigin(req, res)
 
         case "978":
             return await handleResPartialClose(req, res)
