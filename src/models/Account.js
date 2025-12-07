@@ -21,8 +21,10 @@ const copierSchema = new mongoose.Schema({
     },
     profit_eq: {
         type: Number
+    },
+    open_trades: {
+        type: Number
     }
-
 }, { _id: false })
 
 const accountSchema = new mongoose.Schema({

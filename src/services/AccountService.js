@@ -54,7 +54,7 @@ const closeAll = async (account) => {
     let keyid = makeID()
     for (const copier of account.copiers) {
         const copier_order = {
-            handler: ACTION_HANDLER.CLOSE_ALL,
+            handler: ACTION_HANDLER.CLOSE_MAGIC,
             acc: copier.acc,
             server: copier.server,
             origin_acc: account.acc,

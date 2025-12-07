@@ -28,7 +28,6 @@ export default async (req, res) => {
                         status: 'deleted',
                         close_time_dist: formatDate(data.open_timestamp),
                         close_timestamp_dist: data.open_timestamp,
-                        close_time_utc_dist: data.open_timestamp
                     }
                 }
             )
@@ -44,7 +43,6 @@ export default async (req, res) => {
                 open_price_src: deletedTradeMap.open_price_src,
                 open_time_src: deletedTradeMap.open_time_src,
                 open_timestamp_src: deletedTradeMap.open_timestamp_src,
-                open_time_utc_src: deletedTradeMap.open_time_utc_src,
 
                 acc_dist: data.acc,
                 ticket_dist: data.open_ticket,
@@ -56,7 +54,6 @@ export default async (req, res) => {
                 open_price_dist: data.open_price,
                 open_time_dist: formatDate(data.open_timestamp),
                 open_timestamp_dist: data.open_timestamp,
-                open_time_utc_dist: data.open_timestamp,
 
                 side: deletedTradeMap.side,
                 tick_value: deletedTradeMap.tick_value,
@@ -82,7 +79,6 @@ export default async (req, res) => {
                         open_price_dist: data.open_price,
                         open_time_dist: formatDate(data.open_timestamp),
                         open_timestamp_dist: data.open_timestamp,
-                        open_time_utc_dist: data.open_timestamp,
                     }
                 }
             )
@@ -118,7 +114,7 @@ function processMessage(msg) {
     const msg_parts = msg.split(',')
     data.acc = msg_parts[0].split('_')[0]
     data.handler = 1000 - parseInt(msg_parts[1])
-    data.timestamp = msg_parts[3] * 1000
+    data.timestamp = msg_parts[3]
     data.keyid = msg_parts[4]
     const info = msg_parts[2]
 
@@ -132,13 +128,13 @@ function processMessage(msg) {
     if (data.result_text.toLowerCase().includes('exist')) {
         data.state = 'already_open'
         data.open_price = Number(info_parts[2])
-        data.open_timestamp = info_parts[1] * 1000
+        data.open_timestamp = info_parts[1]
     } else {
         data.state = 'new_open'
         data.deleted_ticket = info_parts[1]
         data.open_ticket = info_parts[3]
         data.open_price = Number(info_parts[4])
-        data.open_timestamp = info_parts[5] * 1000
+        data.open_timestamp = info_parts[5]
     }
 
     if (data.result_text.toLowerCase().includes("cant") || data.result_text.toLowerCase().includes("not")) {

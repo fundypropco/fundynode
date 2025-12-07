@@ -19,7 +19,7 @@ export default async (req, res) => {
         // #.
         // بستن معامله کلوز شده در تیکت مپ 
         const closedTradeMap = await TradeMap.findOneAndUpdate(
-            { acc_src: getUpdateDoc.origin_acc, ticket_src: getUpdateDoc.origin_ticket, acc_dist: data.acc },
+            { acc_src: getUpdateDoc.origin_acc, ticket_src: getUpdateDoc.origin_ticket, acc_dist: data.acc, status: 'open' },
             {
                 $set: {
                     status: 'closed',
@@ -28,7 +28,6 @@ export default async (req, res) => {
                     close_price_src: getUpdateDoc.closed_price,
                     close_time_src: getUpdateDoc.origin_close_time,
                     close_timestamp_src: getUpdateDoc.origin_close_timestamp,
-                    close_time_utc_src: getUpdateDoc.origin_close_time_utc,
                     swap_src: getUpdateDoc.origin_swap,
                     commission_src: getUpdateDoc.origin_commission,
                     profit_src: getUpdateDoc.origin_profit,
@@ -37,7 +36,6 @@ export default async (req, res) => {
                     close_price_dist: data.closed_price,
                     close_time_dist: formatDate(data.closed_timestamp),
                     close_timestamp_dist: data.closed_timestamp,
-                    close_time_utc_dist: data.closed_timestamp,
                     swap_dist: data.swap,
                     commission_dist: data.commission,
                     profit_dist: data.profit
@@ -63,7 +61,6 @@ export default async (req, res) => {
             tp_src: closedTradeMap.tp_src,
             open_time_src: getUpdateDoc.origin_open_time,
             open_timestamp_src: getUpdateDoc.origin_open_timestamp,
-            open_time_utc_src: getUpdateDoc.origin_open_time_utc,
 
             server_dist: getUpdateDoc.server,
             acc_dist: data.acc,
@@ -73,7 +70,6 @@ export default async (req, res) => {
             open_price_dist: data.open_price,
             open_time_dist: formatDate(data.open_timestamp),
             open_timestamp_dist: data.open_timestamp,
-            open_time_utc_dist: data.open_timestamp,
             sl_dist: data.sl,
             tp_dist: data.tp,
             magic_dist: data.magic,
@@ -89,13 +85,22 @@ export default async (req, res) => {
 
         // #.
         // ثبت اطلاعات مالی در بالانس 
-        const total_closed_profit = data.profit + data.swap + data.commission
-        await Account.findOneAndUpdate(
+        const total_closed_profit = Number((data.profit + data.swap + data.commission).toFixed(2))
+        const updatedAccount = await Account.findOneAndUpdate(
             { acc: closedTradeMap.acc_src, "copiers.acc": closedTradeMap.acc_dist },
             { $inc: { "copiers.$.profit_bl": total_closed_profit } }, //$[c]
             // { arrayFilters: [{ "c.acc": acc }] }
             { new: true }
         )
+        const updatedCopier = updatedAccount.copiers.find(c => c.acc == data.acc)
+
+        // #.
+        // بررسی دراودان حساب 
+        if (updatedAccount.initial + updatedCopier.profit_bl <= updatedAccount.drawdown) {
+            await AccountService.bulkClose(updatedAccount)
+            await new Promise(resolve => setTimeout(resolve, 3000))
+            await AccountService.closeAll(updatedAccount)
+        }
 
         // #.
         // ارسال دستورات در وضعیت انتظار و وابسته به این دیتا 
@@ -127,8 +132,7 @@ function processMessage(msg) {
     const msg_parts = msg.split(',')
     data.acc = msg_parts[0].split('_')[0]
     data.handler = 1000 - parseInt(msg_parts[1])
-    data.timestamp = msg_parts[3] * 1000
-    data.date = formatDateYMD(data.timestamp)
+    data.timestamp = msg_parts[3]
     let info = msg_parts[2]
     data.keyid = msg_parts[4]
 
@@ -142,7 +146,7 @@ function processMessage(msg) {
         data.closed_ticket = info_parts[1]
         data.open_ticket = info_parts[2]
         data.open_vol = Number(info_parts[3])
-        data.closed_timestamp = info_parts[4] * 1000
+        data.closed_timestamp = info_parts[4]
         data.closed_price = Number(info_parts[5])
         data.swap = Number(info_parts[6])
         data.commission = Number(info_parts[7])
@@ -152,7 +156,7 @@ function processMessage(msg) {
         data.sl = Number(info_parts[11])
         data.tp = Number(info_parts[12])
         data.open_price = Number(info_parts[13])
-        data.open_timestamp = info_parts[14] * 1000
+        data.open_timestamp = info_parts[14]
         data.closed_vol = Number(info_parts[15])
     } else {
         data.status = 'error'

@@ -1,7 +1,7 @@
 import Account from '../../models/Account.js'
 import RequestLog from "../../models/RequestLog.js"
 import GetUpdateService from "../GetUpdateService.js"
-import { formatDateYMD, makeID } from '../../helpers/helper.js'
+import { makeID } from '../../helpers/helper.js'
 import TradeMap from '../../models/TradeMap.js'
 
 export default async (req, res) => {
@@ -25,7 +25,7 @@ export default async (req, res) => {
 
             // #.
             // بدست آوردن تیکتهای متناظر با این سفارش روی اکانتهای دیگر 
-            const tradeMaps = await TradeMap.find({ acc_src: account.acc, ticket_src: modifyInfo.ticket, status: { $ne: 'deleted' } })
+            const tradeMaps = await TradeMap.find({ acc_src: account.acc, ticket_src: modifyInfo.ticket, status: { $in: ['open', 'pending'] } })
 
             // #.
             // بدست آوردن اکانتهای کپی کننده 
@@ -62,8 +62,7 @@ function processMessage(msg) {
     // msg parts
     const msg_parts = msg.split(',')
     data.acc = msg_parts[0].replace(/_.*/, '')
-    data.timestamp = msg_parts[3] * 1000
-    data.date = formatDateYMD(data.timestamp)
+    data.timestamp = msg_parts[3]
     let info = msg_parts[2]
 
     // msg info

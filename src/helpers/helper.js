@@ -83,7 +83,7 @@ export async function makeMsgForHandler(handler, data) {
             message += `${data.acc},${handler},0`
             break
 
-        case ACTION_HANDLER.CLOSE_ALL:
+        case ACTION_HANDLER.CLOSE_MAGIC:
             message += `${data.acc},${handler},${data.origin_acc}`
             break
 
@@ -102,11 +102,7 @@ export async function makeMsgForHandler(handler, data) {
         case ACTION_HANDLER.BROKER_SYMBOL_DATA:
             message = `${data.acc},${handler}`;
             message += `,${data.symbol}`
-            break;
-
-        case ACTION_HANDLER.OPEN_TRADES_PROFIT:
-            message += `${data.acc}_${data.origin_acc}${mql_cluster_no},${handler},${data.tickets}`
-            break;
+            break
     }
 
     message += `,${Math.floor(Date.now() / 1000)},${data.keyid}`

@@ -65,8 +65,7 @@ function processMessage(msg) {
     const msg_parts = msg.split(',')
     data.acc = msg_parts[0].split('_')[0]
     data.handler = 1000 - parseInt(msg_parts[1])
-    data.timestamp = msg_parts[3] * 1000
-    data.date = formatDateYMD(data.timestamp)
+    data.timestamp = msg_parts[3]
     data.keyid = msg_parts[4]
     const info = msg_parts[2]
 

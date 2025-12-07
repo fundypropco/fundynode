@@ -18,70 +18,100 @@ const accountReportSchema = new mongoose.Schema({
         type: Number
     },
     eq_initial_time: {
-        type: Date
+        type: String
+    },
+    eq_initial_timestamp: {
+        type: String
     },
 
     eq_high: {
         type: Number
     },
     eq_high_time: {
-        type: Date
+        type: String
+    },
+    eq_high_timestamp: {
+        type: String
     },
 
     total_eq_high: {
         type: Number
     },
     total_eq_high_time: {
-        type: Date
+        type: String
+    },
+    total_eq_high_timestamp: {
+        type: String
     },
 
     eq_low: {
         type: Number
     },
     eq_low_time: {
-        type: Date
+        type: String
+    },
+    eq_low_timestamp: {
+        type: String
     },
 
     total_eq_low: {
         type: Number
     },
     total_eq_low_time: {
-        type: Date
+        type: String
+    },
+    total_eq_low_timestamp: {
+        type: String
     },
 
     bl_initial: {
         type: Number
     },
     bl_initial_time: {
-        type: Date
+        type: String
+    },
+    bl_initial_timestamp: {
+        type: String
     },
 
     bl_high: {
         type: Number
     },
     bl_high_time: {
-        type: Date
+        type: String
+    },
+    bl_high_timestamp: {
+        type: String
     },
 
     total_bl_high: {
         type: Number
     },
     total_bl_high_time: {
-        type: Date
+        type: String
+    },
+    total_bl_high_timestamp: {
+        type: String
     },
 
     bl_low: {
         type: Number
     },
     bl_low_time: {
-        type: Date
+        type: String
+    },
+    bl_low_timestamp: {
+        type: String
     },
 
     total_bl_low: {
         type: Number
     },
     total_bl_low_time: {
-        type: Date
+        type: String
+    },
+    total_bl_low_timestamp: {
+        type: String
     }
 
 })

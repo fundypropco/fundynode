@@ -31,7 +31,6 @@ export default async (req, res) => {
             tp_src: getUpdateDoc.origin_tp,
             open_time_src: getUpdateDoc.origin_open_time,
             open_timestamp_src: getUpdateDoc.origin_open_timestamp,
-            open_time_utc_src: getUpdateDoc.origin_open_time_utc,
             magic_src: getUpdateDoc.origin_magic,
             comment_src: getUpdateDoc.origin_comment,
 
@@ -45,7 +44,6 @@ export default async (req, res) => {
             open_price_dist: data.open_price,
             open_time_dist: formatDate(data.open_timestamp),
             open_timestamp_dist: data.open_timestamp,
-            open_time_utc_dist: data.open_timestamp,
             magic_dist: data.magic,
             comment_dist: data.comment,
 
@@ -109,7 +107,7 @@ function processMessage(msg) {
     const msg_parts = msg.split(',')
     data.acc = msg_parts[0].split('_')[0]
     data.handler = 1000 - parseInt(msg_parts[1])
-    data.timestamp = msg_parts[3] * 1000
+    data.timestamp = msg_parts[3]
     data.keyid = msg_parts[4]
     const info = msg_parts[2]
 
@@ -121,7 +119,7 @@ function processMessage(msg) {
     if (data.result_text.toLowerCase().includes('ok')) {
         data.status = 'success'
         data.ticket = info_parts[1]
-        data.open_timestamp = info_parts[2] * 1000
+        data.open_timestamp = info_parts[2]
         data.vol = Number(info_parts[3])
         data.open_price = Number(info_parts[4])
         data.sl = Number(info_parts[5])

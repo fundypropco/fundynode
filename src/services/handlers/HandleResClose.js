@@ -17,12 +17,12 @@ export default async (req, res) => {
     // #.
     // بستن مپ معامله کلوز شده 
     if (getUpdateDoc && getUpdateDoc.status === 'success') {
-        const closedTradeMap = await TradeMap.findOneAndUpdate(
+        await TradeMap.updateMany(
             {
                 acc_src: getUpdateDoc.origin_acc,
                 ticket_src: getUpdateDoc.origin_ticket,
                 acc_dist: data.acc,
-                ticket_dist: data.ticket
+                ticket_dist: data.ticket,
             },
             [
                 {
@@ -39,7 +39,6 @@ export default async (req, res) => {
                         close_price_dist: data.closed_price ?? 0,
                         close_time_dist: formatDate(data.closed_timestamp),
                         close_timestamp_dist: data.closed_timestamp,
-                        close_time_utc_dist: data.closed_timestamp,
                         swap_dist: data.swap,
                         commission_dist: data.commission,
                         profit_dist: data.profit
@@ -50,12 +49,20 @@ export default async (req, res) => {
 
         // #.
         // ثبت اطلاعات مالی در بالانس 
-        const total_closed_profit = data.profit + data.swap + data.commission
-        await Account.findOneAndUpdate(
-            { acc: closedTradeMap?.acc_src, "copiers.acc": closedTradeMap?.acc_dist },
-            { $inc: { "copiers.$.profit_bl": total_closed_profit } }, //$[c]
-            // { arrayFilters: [{ "c.acc": acc }] }
+        const total_closed_profit = Number((data.profit + data.swap + data.commission).toFixed(2))
+        const updatedAccount = await Account.findOneAndUpdate(
+            { acc: getUpdateDoc.origin_acc, "copiers.acc": data.acc },
+            { $inc: { "copiers.$.profit_bl": total_closed_profit } },
+            { new: true }
         )
+        const updatedCopier = updatedAccount.copiers.find(c => c.acc == data.acc)
+        // #.
+        // بررسی دراودان حساب 
+        if (updatedAccount.initial + updatedCopier.profit_bl <= updatedAccount.drawdown) {
+            await AccountService.bulkClose(updatedAccount)
+            await new Promise(resolve => setTimeout(resolve, 3000))
+            await AccountService.closeAll(updatedAccount)
+        }
     }
 
 
@@ -86,7 +93,7 @@ function processMessage(msg) {
     const msg_parts = msg.split(',')
     data.acc = msg_parts[0].split('_')[0]
     data.handler = 1000 - parseInt(msg_parts[1])
-    data.timestamp = msg_parts[3] * 1000
+    data.timestamp = msg_parts[3]
     data.keyid = msg_parts[4]
     const info = msg_parts[2]
 
@@ -104,13 +111,13 @@ function processMessage(msg) {
         data.ticket = info_parts[1]
         if (data.result_text.toLowerCase().includes('close')) {
             data.closed_price = Number(info_parts[2])
-            data.closed_timestamp = info_parts[3] * 1000
+            data.closed_timestamp = info_parts[3]
             data.swap = Number(info_parts[4])
             data.commission = Number(info_parts[5])
             data.profit = Number(info_parts[6])
         }
         else if (data.result_text.toLowerCase().includes('delete')) {
-            data.closed_timestamp = info_parts[2] * 1000
+            data.closed_timestamp = info_parts[2]
         }
     } else {
         data.status = 'error'

@@ -47,7 +47,7 @@ async function processClose(data) {
 
         // #.
         // بدست آوردن تیکتهای متناظر با این سفارش روی اکانتهای دیگر 
-        const tradeMaps = await TradeMap.find({ acc_src: account.acc, ticket_src: data.closed_ticket, status: { $ne: 'deleted' } })
+        const tradeMaps = await TradeMap.find({ acc_src: account.acc, ticket_src: data.closed_ticket, status: { $in: ['open', 'pending'] } })
 
         // #.
         // بدست آوردن اکانتهای کپی کننده 
@@ -60,7 +60,6 @@ async function processClose(data) {
                 if (tradeMap) {
                     tradeMap.close_time_src = formatDate(data.closed_timestamp)
                     tradeMap.close_timestamp_src = data.closed_timestamp
-                    tradeMap.close_time_utc_src = data.closed_timestamp
                     tradeMap.close_price_src = data.closed_price
                     tradeMap.commission_src = data.commission
                     tradeMap.swap_src = data.swap
@@ -89,7 +88,7 @@ async function processPartial(data) {
 
         // #.
         // بدست آوردن تیکتهای متناظر با این سفارش روی اکانتهای دیگر 
-        const tradeMaps = await TradeMap.find({ acc_src: account.acc, ticket_src: partialInfo.closed_ticket, status: { $ne: 'deleted' } })
+        const tradeMaps = await TradeMap.find({ acc_src: account.acc, ticket_src: partialInfo.closed_ticket, status: 'open' })
 
         // #.
         // بدست آوردن اکانتهای کپی کننده 
@@ -102,7 +101,6 @@ async function processPartial(data) {
                 if (tradeMap) {
                     tradeMap.close_time_src = formatDate(partialInfo.closed_timestamp)
                     tradeMap.close_timestamp_src = partialInfo.closed_timestamp
-                    tradeMap.close_time_utc_src = partialInfo.closed_timestamp
                     tradeMap.close_price_src = partialInfo.closed_price
                     tradeMap.commission_src = partialInfo.commission
                     tradeMap.swap_src = partialInfo.swap
@@ -124,7 +122,7 @@ function processMessage(msg) {
     // msg parts
     const msg_parts = msg.split(',')
     data.acc = msg_parts[0].replace(/_.*/, '')
-    data.timestamp = msg_parts[3] * 1000
+    data.timestamp = msg_parts[3]
     let info = msg_parts[2]
     const partial_info = msg_parts[4]
     data.is_partial = false
@@ -133,7 +131,7 @@ function processMessage(msg) {
     const info_parts = info.split('&')
     data.closed_ticket = info_parts[1]
     data.closed_price = Number(info_parts[2])
-    data.closed_timestamp = info_parts[3] * 1000
+    data.closed_timestamp = info_parts[3]
     data.symbol = info_parts[4]
     data.side = getOrderSide(info_parts[5])
     data.closed_vol = Number(info_parts[6])
@@ -162,14 +160,14 @@ function processMessage(msg) {
                 closed_ticket,
                 closed_vol: Number(closed_vol),
                 closed_price: Number(closed_price),
-                closed_timestamp: closed_timestamp * 1000,
+                closed_timestamp: closed_timestamp,
                 swap: Number(swap),
                 commission: Number(commission),
                 profit: Number(profit),
                 open_ticket,
                 open_vol: Number(open_vol),
                 open_price: Number(open_price),
-                open_timestamp: open_timestamp * 1000
+                open_timestamp: open_timestamp
             }))
             .find(pi => pi.closed_ticket == data.closed_ticket)
 
