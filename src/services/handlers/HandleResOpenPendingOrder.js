@@ -13,7 +13,7 @@ export default async (req, res) => {
     // بروزرسانی وضعیت دستور در صف دستورات
     const getUpdateDoc = await GetUpdateService.updateStatus(data)
 
-    if (getUpdateDoc.status == 'success') {
+    if (getUpdateDoc && getUpdateDoc.status == 'success') {
 
         if (data.state == 'new_open') {
             const deletedTradeMap = await TradeMap.findOneAndUpdate(

@@ -1,5 +1,4 @@
 import RequestLog from "../../models/RequestLog.js"
-import { formatDateYMD } from '../../helpers/helper.js'
 import GetUpdateService from '../GetUpdateService.js'
 import TradeMap from "../../models/TradeMap.js"
 
@@ -13,7 +12,7 @@ export default async (req, res) => {
     // بروزرسانی وضعیت دستور در صف دستورات 
     const getUpdateDoc = await GetUpdateService.updateStatus(data)
 
-    if (getUpdateDoc.status === 'success') {
+    if (getUpdateDoc && getUpdateDoc.status === 'success') {
         // #.
         // بروزرسانی مپ معامله 
         await TradeMap.updateOne(

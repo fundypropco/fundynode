@@ -9,7 +9,7 @@ const seedBrokerSymbols = asyncHandler(async (req, res) => {
 
 const showTradeMap = asyncHandler(async (req, res) => {
     const acc_src = req.params.accSrc
-    const trades = await TradeMap.find({ acc_src })
+    const trades = await TradeMap.find({ acc_src }).sort('-created_at')
 
     const results = trades.map(trade => ({
         sender: {

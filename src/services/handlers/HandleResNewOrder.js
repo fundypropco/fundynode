@@ -15,7 +15,7 @@ export default async (req, res) => {
     // بروزرسانی وضعیت دستور در صف دستورات
     const getUpdateDoc = await GetUpdateService.updateStatus(data)
 
-    if (getUpdateDoc.status == 'success') {
+    if (getUpdateDoc && getUpdateDoc.status == 'success') {
         const symbol = await Symbol.findOne({ server: getUpdateDoc.server, symbol: getUpdateDoc.symbol })
 
         // #.

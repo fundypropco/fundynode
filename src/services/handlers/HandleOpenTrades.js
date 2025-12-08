@@ -1,4 +1,3 @@
-
 import { formatDate } from '../../helpers/helper.js'
 import Account from '../../models/Account.js'
 import AccountReport from '../../models/AccountReport.js'
@@ -9,8 +8,13 @@ export default async (req, res) => {
     const data = processMessage(req.body.message)
     const copierAcc = data.acc
 
-    await Promise.all(
-        Object.entries(data.profits).map(async ([traderAcc, profit]) => {
+    // const tasks = Object.entries(data.profits).map(async ([traderAcc, profit]) => {
+    // })
+    // await Promise.all(tasks)
+
+    const promises = []
+    for (let [traderAcc, profit] of Object.entries(data.profits)) {
+        const promise = (async () => {
             const updatedDoc = await Account.findOneAndUpdate(
                 { acc: traderAcc, "copiers.acc": copierAcc },
                 {
@@ -18,15 +22,16 @@ export default async (req, res) => {
                         "copiers.$.profit_eq": profit,
                         "copiers.$.open_trades": data.open_trades[traderAcc],
                     }
-                }, // $[c]
-                // توضیح اینکه با $ فقط اولین کپی کننده که شماره اکانتش مچ باشه آپدیت میشود که درست است 
-                // اگر بخواهیم چندین کپیر تکراری داشته باشیم از سینتکس دوم استفاده میکنیم 
-                // { arrayFilters: [{ "c.acc": acc }] }
+                },
                 { new: true }
             )
+            // $[c]
+            // توضیح اینکه با $ فقط اولین کپی کننده که شماره اکانتش مچ باشه آپدیت میشود که درست است 
+            // اگر بخواهیم چندین کپیر تکراری داشته باشیم از سینتکس دوم استفاده میکنیم 
+            // { arrayFilters: [{ "c.acc": acc }] }
 
             if (!updatedDoc) return
-            const copier = updatedDoc.copiers.find(c => c.acc === copierAcc)
+            const copier = updatedDoc.copiers.find(c => c.acc == copierAcc)
             if (!copier) return
 
             const eq = Number(((updatedDoc.initial || 0) + (copier.profit_bl || 0) + (copier.profit_eq || 0)).toFixed(2))
@@ -49,8 +54,10 @@ export default async (req, res) => {
                 await new Promise(resolve => setTimeout(resolve, 3000))
                 await AccountService.closeAll(updatedDoc)
             }
-        })
-    )
+        })()
+        promises.push(promise)
+    }
+    await Promise.all(promises)
 
     await Account.updateMany(
         { acc: { $nin: data.copier_acc_arr }, "copiers.acc": copierAcc },
@@ -70,7 +77,7 @@ export default async (req, res) => {
 
 function processMessage(msg) {
     // E.g. 
-    // acc,400,magic1 & tckt & lot & swap & commission & profit @ magic1 & tckt & lot & swap & commission & profit, timestamp, -2
+    // acc,400,magic1 & tckt & symbol & lot & swap & commission & profit @ magic1 & tckt & lot & swap & commission & profit, timestamp, -2
     const data = {}
 
     // msg parts
@@ -84,7 +91,7 @@ function processMessage(msg) {
     data.trades = info.trim().split("@").filter(Boolean)
         .map(part => part.split("&"))
         .map(([magic, ticket, symbol, type, lot, swap, commission, profit]) => ({
-            magic,
+            magic: Number(magic),
             ticket,
             symbol,
             type,
