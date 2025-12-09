@@ -1,9 +1,9 @@
 import symbolAliasSeeder from "./symbolAliasSeeder.js"
-import brokerSymbolSeeder from "./brokerSymbolSeeder.js"
+import brokerSymbolsSeeder from "./brokerSymbolsSeeder.js"
 
 const seed = async () => {
     await symbolAliasSeeder()
-    await brokerSymbolSeeder()
+    await brokerSymbolsSeeder()
 }
 
 export default seed

@@ -4,6 +4,7 @@ const symbolSchema = new mongoose.Schema({
     server: {
         type: String,
         required: true,
+        index: true
     },
     title: {
         //  نام نماد 

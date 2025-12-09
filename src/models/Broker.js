@@ -3,14 +3,19 @@ import mongoose from "mongoose"
 const accountSchema = new mongoose.Schema({
     title: {
         type: String,
-        required: true
     },
     server: {
         type: String,
         required: true,
         unique: true
     },
-});
+    acc: {
+        type: Number
+    },
+    diff_time: {
+        type: Number
+    }
+})
 
 const Broker = mongoose.model('Broker', accountSchema, 'brokers')
 

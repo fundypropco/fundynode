@@ -3,7 +3,7 @@ import GetUpdate from "../models/GetUpdate.js";
 import { ACTION_HANDLER } from '../helpers/constant.js'
 import { makeMsgForHandler, makeID } from '../helpers/helper.js'
 
-const brokerSymbolSeeder = async (serverName = 'all') => {
+const brokerSymbolsSeeder = async (serverName = 'all') => {
 
     const accServers = []
     if (serverName == 'all') {
@@ -19,7 +19,7 @@ const brokerSymbolSeeder = async (serverName = 'all') => {
             }
 
             for (const copier of account.copiers) {
-                if (!servers.has(copier.server)) {
+                if (!servers.has(copier.server) && copier.copy) {
                     servers.add(copier.server)
                     accServers.push({ acc: copier.acc, server: copier.server })
                 }
@@ -61,7 +61,8 @@ const brokerSymbolSeeder = async (serverName = 'all') => {
                         ]
                     }
                 }
-            }
+            },
+            { $limit: 1 }
         ]).collation({ locale: 'en', strength: 2 })
 
         if (result.length) {
@@ -90,4 +91,4 @@ const brokerSymbolSeeder = async (serverName = 'all') => {
     }
 }
 
-export default brokerSymbolSeeder
+export default brokerSymbolsSeeder

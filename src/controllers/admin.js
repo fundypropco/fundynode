@@ -1,9 +1,15 @@
 import asyncHandler from '../middlewares/asyncHandler.js'
-import brokerSymbolSeeder from '../seeders/brokerSymbolSeeder.js'
+import brokerSymbolsSeeder from '../seeders/brokerSymbolsSeeder.js'
+import brokerSymbolsDataSeeder from '../seeders/brokerSymbolsDataSeeder.js'
 import TradeMap from '../models/TradeMap.js'
 
 const seedBrokerSymbols = asyncHandler(async (req, res) => {
-    await brokerSymbolSeeder(req.params.server)
+    await brokerSymbolsSeeder(req.params.server)
+    res.send({ message: 'success' })
+})
+
+const seedBrokerSymbolsData = asyncHandler(async (req, res) => {
+    await brokerSymbolsDataSeeder(req.params.server)
     res.send({ message: 'success' })
 })
 
@@ -60,5 +66,6 @@ const showTradeMap = asyncHandler(async (req, res) => {
 
 export default {
     seedBrokerSymbols,
+    seedBrokerSymbolsData,
     showTradeMap
 }

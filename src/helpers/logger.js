@@ -37,4 +37,4 @@ const logger = pino({
     }
 }, pino.multistream(streams));
 
-export default logger;
+export default logger

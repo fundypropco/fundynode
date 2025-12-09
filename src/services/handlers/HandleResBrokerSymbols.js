@@ -65,23 +65,23 @@ export default async (req, res) => {
 
     // # 
     // درخواست برای ارسال اطلاعات نماد 
-    let keyid = makeID()
-    const promises = []
-    for (const symbol of tradableSymbols) {
-        const promise = (async () => {
-            const getUpdateData = {
-                server: serverName,
-                acc: data.acc,
-                handler: ACTION_HANDLER.BROKER_SYMBOL_DATA,
-                symbol: symbol,
-                keyid: keyid++,
-            }
-            getUpdateData.message = await makeMsgForHandler(getUpdateData.handler, getUpdateData)
-            return GetUpdateService.create(getUpdateData)
-        })()
-        promises.push(promise)
-    }
-    await Promise.all(promises)
+    // let keyid = makeID()
+    // const promises = []
+    // for (const symbol of tradableSymbols) {
+    //     const promise = (async () => {
+    //         const getUpdateData = {
+    //             server: serverName,
+    //             acc: data.acc,
+    //             handler: ACTION_HANDLER.BROKER_SYMBOL_DATA,
+    //             symbol: symbol,
+    //             keyid: keyid++,
+    //         }
+    //         getUpdateData.message = await makeMsgForHandler(getUpdateData.handler, getUpdateData)
+    //         return GetUpdateService.create(getUpdateData)
+    //     })()
+    //     promises.push(promise)
+    // }
+    // await Promise.all(promises)
 
     // #
     // لاگ گرفتن از رکوئست دریافتی 
