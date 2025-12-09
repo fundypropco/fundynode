@@ -25,7 +25,7 @@ export default async (req, res) => {
 
     const promises = []
     for (let [traderAcc, profit] of Object.entries(data.profits)) {
-        const promise = await (async () => {
+        const promise = (async () => {
             const updatedDoc = await Account.findOneAndUpdate(
                 { acc: traderAcc, "copiers.acc": copierAcc },
                 {
@@ -66,9 +66,9 @@ export default async (req, res) => {
                 await AccountService.closeAll(updatedDoc)
             }
         })()
-        //promises.push(promise)
+        promises.push(promise)
     }
-    //await Promise.all(promises)
+    await Promise.all(promises)
 
     res.send({
         status: 'success',
