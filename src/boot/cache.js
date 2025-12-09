@@ -14,7 +14,6 @@ export async function getBrokersDiff() {
     }))
 
     return brokersDiff
-
 }
 
 export async function setBrokersDiff() {

@@ -102,9 +102,9 @@ async function processPartial(data) {
                     tradeMap.close_time_src = formatDate(partialInfo.closed_timestamp)
                     tradeMap.close_timestamp_src = partialInfo.closed_timestamp
                     tradeMap.close_price_src = partialInfo.closed_price
-                    tradeMap.commission_src = partialInfo.commission
-                    tradeMap.swap_src = partialInfo.swap
-                    tradeMap.profit_src = partialInfo.profit
+                    tradeMap.commission_src = partialInfo.closed_commission
+                    tradeMap.swap_src = partialInfo.closed_swap
+                    tradeMap.profit_src = partialInfo.closed_profit
                     await tradeMap.save()
                 }
             }
@@ -149,9 +149,9 @@ function processMessage(msg) {
                 closed_vol,
                 closed_price,
                 closed_timestamp,
-                swap,
-                commission,
-                profit,
+                closed_swap,
+                closed_commission,
+                closed_profit,
                 open_ticket,
                 open_vol,
                 open_price,
@@ -161,9 +161,9 @@ function processMessage(msg) {
                 closed_vol: Number(closed_vol),
                 closed_price: Number(closed_price),
                 closed_timestamp: closed_timestamp,
-                swap: Number(swap),
-                commission: Number(commission),
-                profit: Number(profit),
+                closed_swap: Number(closed_swap),
+                closed_commission: Number(closed_commission),
+                closed_profit: Number(closed_profit),
                 open_ticket,
                 open_vol: Number(open_vol),
                 open_price: Number(open_price),
