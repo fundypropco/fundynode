@@ -12,6 +12,17 @@ export default async (req, res) => {
     // })
     // await Promise.all(tasks)
 
+    await Account.updateMany(
+        { acc: { $nin: data.copier_acc_arr }, "copiers.acc": copierAcc },
+        {
+            $set:
+            {
+                "copiers.$.profit_eq": 0,
+                "copiers.$.open_trades": 0,
+            }
+        }
+    )
+
     const promises = []
     for (let [traderAcc, profit] of Object.entries(data.profits)) {
         const promise = (async () => {
@@ -58,17 +69,6 @@ export default async (req, res) => {
         promises.push(promise)
     }
     await Promise.all(promises)
-
-    await Account.updateMany(
-        { acc: { $nin: data.copier_acc_arr }, "copiers.acc": copierAcc },
-        {
-            $set:
-            {
-                "copiers.$.profit_eq": 0,
-                "copiers.$.open_trades": 0,
-            }
-        }
-    )
 
     res.send({
         status: 'success',
