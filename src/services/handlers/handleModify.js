@@ -3,6 +3,7 @@ import RequestLog from "../../models/RequestLog.js"
 import GetUpdateService from "../GetUpdateService.js"
 import { makeID } from '../../helpers/helper.js'
 import TradeMap from '../../models/TradeMap.js'
+import logger from '../../helpers/logger.js'
 
 export default async (req, res) => {
 
