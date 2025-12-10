@@ -9,6 +9,7 @@ export default async (req, res) => {
     // #.
     // پردازش پیام ورودی 
     const data = processMessage(req.body.message)
+    logger.debug(data)
 
     // #.
     // پیدا کردن اکانت مربوط به عملیات دریافتی 
@@ -33,6 +34,7 @@ export default async (req, res) => {
                 if (copier.copy) {
                     const tradeMap = tradeMaps.find(t => t.acc_dist == copier.acc)
                     const getUpdateData = await GetUpdateService.prepareModifyData(account, copier, modifyInfo, tradeMap)
+                    logger.debug(getUpdateData)
                     await GetUpdateService.create(getUpdateData)
                 }
             }
