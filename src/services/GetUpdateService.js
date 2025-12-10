@@ -4,76 +4,76 @@ import { formatDate, getMqlError, getOrderSide, getWiderSl, getWiderTp, makeMsgF
 import { ACTION_HANDLER } from "../helpers/constant.js"
 
 const create = async (data) => {
-    const noDuplicatingHandlers = [
-        ACTION_HANDLER.CLOSE,
-        ACTION_HANDLER.MODIFY,
-        ACTION_HANDLER.PARTIAL_CLOSE,
-        ACTION_HANDLER.BULK_CLOSE,
-        ACTION_HANDLER.CLOSE_ORIGIN,
-    ]
-    let found = false
-    let found_result = null
+    // const noDuplicatingHandlers = [
+    //     ACTION_HANDLER.CLOSE,
+    //     ACTION_HANDLER.MODIFY,
+    //     ACTION_HANDLER.PARTIAL_CLOSE,
+    //     ACTION_HANDLER.BULK_CLOSE,
+    //     ACTION_HANDLER.CLOSE_ORIGIN,
+    // ]
+    // let found = false
+    // let found_result = null
 
-    if (noDuplicatingHandlers.includes(data.handler)) {
-        const results = await GetUpdate.find({ acc: data.acc, ticket: data.ticket, handler: data.handler, status: { $in: ['success', 'pending'] } })
-        // پیدا کردن بخش پیام و حذف شماره اکانت از اول آن چرا که ممکن است کلاستر حساب در سمت ام کیو ال باعث اشتباه محاسباتی شود
-        let main_msg = data.message.split(',')[2].replace(/^[^,]*,/, "")
-        for (const result of results) {
-            const result_main_msg = result.message.split(',')[2].replace(/^[^,]*,/, "")
-            if (result_main_msg == main_msg) {
-                found = true
-                found_result = result
-                break
-            }
-        }
-    }
+    // if (noDuplicatingHandlers.includes(data.handler)) {
+    //     const results = await GetUpdate.find({ acc: data.acc, ticket: data.ticket, handler: data.handler, status: { $in: ['success', 'pending'] } })
+    //     // پیدا کردن بخش پیام و حذف شماره اکانت از اول آن چرا که ممکن است کلاستر حساب در سمت ام کیو ال باعث اشتباه محاسباتی شود
+    //     let main_msg = data.message.split(',')[2].replace(/^[^,]*,/, "")
+    //     for (const result of results) {
+    //         const result_main_msg = result.message.split(',')[2].replace(/^[^,]*,/, "")
+    //         if (result_main_msg == main_msg) {
+    //             found = true
+    //             found_result = result
+    //             break
+    //         }
+    //     }
+    // }
 
-    if (!found) {
-        const getUpdate = new GetUpdate({
-            server: data.server ?? '',
-            acc: data.acc,
-            ticket: data.ticket ?? 0,
-            symbol: data.symbol ?? '',
-            vol: data.vol ?? 0,
-            sl: data.sl ?? 0,
-            tp: data.tp ?? 0,
-            magic: data.magic ?? 0,
-            comment: data.comment ?? '',
-            handler: data.handler,
-            message: data.message,
-            datetime: Date.now(),
-            keyid: data.keyid,
-            try_count: 0,
-            status: data.status ?? 'pending',
-            side: data.side ?? 'none',
-            description: data.description ?? [],
-            symbol_title: data.symbol_title ?? '',
-            origin_acc: data.origin_acc ?? 0,
-            origin_ticket: data.origin_ticket ?? 0,
-            origin_server: data.origin_server ?? '',
-            origin_symbol: data.origin_symbol ?? '',
-            origin_vol: data.origin_vol ?? 0,
-            origin_sl: data.origin_sl ?? 0,
-            origin_tp: data.origin_tp ?? 0,
-            origin_open_price: data.origin_open_price ?? 0,
-            origin_open_time: data.origin_open_time ?? '',
-            origin_open_timestamp: data.origin_open_timestamp ?? '',
-            origin_close_price: data.origin_close_price ?? 0,
-            origin_close_time: data.origin_close_time ?? '',
-            origin_close_timestamp: data.origin_close_timestamp ?? '',
-            origin_commission: data.origin_commission ?? '',
-            origin_swap: data.origin_swap ?? '',
-            origin_profit: data.origin_profit ?? '',
-            origin_magic: data.origin_magic ?? 0,
-            origin_comment: data.origin_comment ?? '',
-            origin_new_ticket: data.origin_new_ticket ?? 0,
-            origin_new_vol: data.origin_new_vol ?? 0,
-        })
+    //if (!found) {
+    const getUpdate = new GetUpdate({
+        server: data.server ?? '',
+        acc: data.acc,
+        ticket: data.ticket ?? 0,
+        symbol: data.symbol ?? '',
+        vol: data.vol ?? 0,
+        sl: data.sl ?? 0,
+        tp: data.tp ?? 0,
+        magic: data.magic ?? 0,
+        comment: data.comment ?? '',
+        handler: data.handler,
+        message: data.message,
+        datetime: Date.now(),
+        keyid: data.keyid,
+        try_count: 0,
+        status: data.status ?? 'pending',
+        side: data.side ?? 'none',
+        description: data.description ?? [],
+        symbol_title: data.symbol_title ?? '',
+        origin_acc: data.origin_acc ?? 0,
+        origin_ticket: data.origin_ticket ?? 0,
+        origin_server: data.origin_server ?? '',
+        origin_symbol: data.origin_symbol ?? '',
+        origin_vol: data.origin_vol ?? 0,
+        origin_sl: data.origin_sl ?? 0,
+        origin_tp: data.origin_tp ?? 0,
+        origin_open_price: data.origin_open_price ?? 0,
+        origin_open_time: data.origin_open_time ?? '',
+        origin_open_timestamp: data.origin_open_timestamp ?? '',
+        origin_close_price: data.origin_close_price ?? 0,
+        origin_close_time: data.origin_close_time ?? '',
+        origin_close_timestamp: data.origin_close_timestamp ?? '',
+        origin_commission: data.origin_commission ?? '',
+        origin_swap: data.origin_swap ?? '',
+        origin_profit: data.origin_profit ?? '',
+        origin_magic: data.origin_magic ?? 0,
+        origin_comment: data.origin_comment ?? '',
+        origin_new_ticket: data.origin_new_ticket ?? 0,
+        origin_new_vol: data.origin_new_vol ?? 0,
+    })
 
-        return await getUpdate.save()
-    } else {
-        return found_result
-    }
+    return await getUpdate.save()
+    // } else {
+    //     return found_result
+    // }
 }
 
 const updateStatus = async (data) => {
