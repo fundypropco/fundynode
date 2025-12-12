@@ -25,7 +25,7 @@ export default async (req, res) => {
 
     const promises = []
     for (let [traderAcc, profit] of Object.entries(data.profits)) {
-        const promise = await (async () => {
+        const promise = (async () => {
             const updatedDoc = await Account.findOneAndUpdate(
                 { acc: traderAcc, "copiers.acc": copierAcc },
                 {
@@ -49,26 +49,51 @@ export default async (req, res) => {
             const bl = Number(((updatedDoc.initial || 0) + (copier.profit_bl || 0)).toFixed(2))
 
             await updateAccountReport(traderAcc, copierAcc, data.timestamp, bl, eq)
+        })()
+        promises.push(promise)
+    }
+    await Promise.all(promises)
 
-            if (eq <= updatedDoc.drawdown) {
-                await AccountService.bulkClose(updatedDoc)
-                await Account.findOneAndUpdate(
-                    { acc: traderAcc, "copiers.acc": copierAcc },
-                    {
-                        $set:
-                        {
-                            copy: false,
-                            "copiers.$.copy": false
+    // #.
+    // پیدا کردن اکانت های شکست خورده 
+    const failedAccounts = await Account.find({
+        copy: true,
+        $expr: {
+            $gt: [
+                {
+                    $size: {
+                        $filter: {
+                            input: { $ifNull: ["$copiers", []] },
+                            as: "c",
+                            cond: {
+                                $lte: [
+                                    {
+                                        $add: [
+                                            { $ifNull: ["$initial", 0] },
+                                            { $ifNull: ["$$c.profit_bl", 0] },
+                                            { $ifNull: ["$$c.profit_eq", 0] }
+                                        ]
+                                    },
+                                    { $ifNull: ["$drawdown", 0] }
+                                ]
+                            }
                         }
                     }
-                )
-                await new Promise(resolve => setTimeout(resolve, 3000))
-                await AccountService.closeAll(updatedDoc)
-            }
-        })()
-        //promises.push(promise)
+                },
+                0
+            ]
+        }
+    })
+
+    // #. 
+    // بستن معاملات اکانتهای شکست خورده 
+    for (const failedAccount of failedAccounts) {
+        await AccountService.bulkClose(failedAccount)
+        failedAccount.copy = false
+        await failedAccount.save()
+        await new Promise(resolve => setTimeout(resolve, 3000))
+        await AccountService.closeAll(failedAccount)
     }
-    //await Promise.all(promises)
 
     res.send({
         status: 'success',
