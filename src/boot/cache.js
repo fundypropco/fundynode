@@ -6,7 +6,7 @@ let brokersData_expire = null
 export async function getBrokerData(server) {
     const now = Date.now()
 
-    if (brokersData[server] && now < brokersData_expire) {
+    if (brokersData && brokersData[server] && now < brokersData_expire) {
         return brokersData[server]
     }
 
