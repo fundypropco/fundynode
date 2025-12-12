@@ -1,6 +1,6 @@
 import GetUpdate from "../models/GetUpdate.js"
 import Symbol from "../models/Symbol.js"
-import { formatDateUTC, getMqlError, getWiderSl, getWiderTp, makeMsgForHandler } from "../helpers/helper.js"
+import { formatDate, formatDateUTC, getMqlError, getWiderSl, getWiderTp, makeMsgForHandler } from "../helpers/helper.js"
 import { ACTION_HANDLER } from "../helpers/constant.js"
 
 const create = async (data) => {
@@ -137,9 +137,15 @@ const getUnprocessed = async (acc) => {
         message: doc.message
     }))
 
+    const datetime = formatDate(Date.now())
+    const dateObj = new Date(datetime)
+    const timestamp = dateObj.getTime()
+
     return {
         ok: true,
-        result: finalResults
+        result: finalResults,
+        datetime,
+        timestamp
     }
 }
 
