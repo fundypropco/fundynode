@@ -63,8 +63,10 @@ export default async (req, res) => {
 
         // #.
         // بررسی دراودان حساب 
-        if (updatedAccount.initial + updatedCopier.profit_bl <= updatedAccount.drawdown) {
+        if (updatedAccount.copy && (updatedAccount.initial + updatedCopier.profit_bl <= updatedAccount.drawdown)) {
             await AccountService.bulkClose(updatedAccount)
+            updatedAccount.copy = false
+            await updatedAccount.save()
             await new Promise(resolve => setTimeout(resolve, 3000))
             await AccountService.closeAll(updatedAccount)
         }
