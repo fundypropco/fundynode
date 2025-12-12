@@ -90,13 +90,13 @@ function processMessage(msg) {
     // E.g. 
     // 1006135456 , 979 , OK & ticket & close_price & close_timestamp & swap & commision & profit & error , 1758983673 , id
     // 1006135456 , 987 , FAIL & ticket & error , 1758983673 , id
-    const data = {};
+    const data = {}
 
     // msg parts
     const msg_parts = msg.split(',')
     data.acc = msg_parts[0].split('_')[0]
     data.handler = 1000 - parseInt(msg_parts[1])
-    data.timestamp = msg_parts[3]
+    data.timestamp = Number(msg_parts[3])
     data.date = formatDateUTC(data.timestamp)
     let info = msg_parts[2].trim()
     data.keyid = msg_parts[4]
@@ -111,9 +111,9 @@ function processMessage(msg) {
             if (status === 'success') {
                 return {
                     status,
-                    ticket: item[1] || null,
+                    ticket: Number(item[1]),
                     closed_price: Number(item[2] || 0),
-                    closed_timestamp: item[3] || null,
+                    closed_timestamp: Number(item[3]),
                     swap: Number(item[4] || 0),
                     commission: Number(item[5] || 0),
                     profit: Number(item[6] || 0),
@@ -122,7 +122,7 @@ function processMessage(msg) {
             } else {
                 return {
                     status,
-                    ticket: item[1] || null,
+                    ticket: Number(item[1]),
                     error: item[2] || null
                 }
             }
