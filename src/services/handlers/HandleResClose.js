@@ -4,6 +4,7 @@ import GetUpdateService from '../GetUpdateService.js'
 import TradeMap from "../../models/TradeMap.js"
 import Account from "../../models/Account.js"
 import { getBrokerData } from "../../boot/cache.js"
+import AccountService from "../AccountService.js"
 
 export default async (req, res) => {
 
@@ -59,7 +60,7 @@ export default async (req, res) => {
             { new: true }
         )
         const updatedCopier = updatedAccount.copiers.find(c => c.acc == data.acc)
-        
+
         // #.
         // بررسی دراودان حساب 
         if (updatedAccount.initial + updatedCopier.profit_bl <= updatedAccount.drawdown) {
