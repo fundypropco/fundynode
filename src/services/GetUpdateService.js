@@ -139,12 +139,11 @@ const getUnprocessed = async (acc) => {
 
     const datetime = formatDate(Date.now())
     const dateObj = new Date(datetime)
-    const timestamp = dateObj.getTime()
+    const timestamp = Number(dateObj.getTime() / 1000)
 
     return {
         ok: true,
         result: finalResults,
-        datetime,
         timestamp
     }
 }
