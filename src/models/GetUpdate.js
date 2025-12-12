@@ -93,7 +93,7 @@ const getUpdateSchema = new mongoose.Schema({
         type: String,
     },
     origin_open_timestamp: {
-        type: String,
+        type: Number,
     },
     origin_close_price: {
         type: Number
@@ -102,7 +102,7 @@ const getUpdateSchema = new mongoose.Schema({
         type: String,
     },
     origin_close_timestamp: {
-        type: String,
+        type: Number,
     },
     origin_sl: {
         type: Number

@@ -3,6 +3,7 @@ import { formatDate } from '../../helpers/helper.js'
 import GetUpdateService from '../GetUpdateService.js'
 import TradeMap from "../../models/TradeMap.js"
 import Account from "../../models/Account.js"
+import { getBrokerData } from "../../boot/cache.js"
 
 export default async (req, res) => {
 
@@ -17,6 +18,8 @@ export default async (req, res) => {
     // #.
     // بستن مپ معامله کلوز شده 
     if (getUpdateDoc && getUpdateDoc.status === 'success') {
+        const brokerData = await getBrokerData(getUpdateDoc.server)
+        const diff_time = Number(brokerData.diff_time)
         await TradeMap.updateMany(
             {
                 acc_src: getUpdateDoc.origin_acc,
@@ -37,8 +40,8 @@ export default async (req, res) => {
                             }
                         },
                         close_price_dist: data.closed_price ?? 0,
-                        close_time_dist: formatDate(data.closed_timestamp),
-                        close_timestamp_dist: data.closed_timestamp,
+                        close_time_dist: formatDate(data.closed_timestamp + diff_time),
+                        close_timestamp_dist: data.closed_timestamp + diff_time,
                         swap_dist: data.swap,
                         commission_dist: data.commission,
                         profit_dist: data.profit
@@ -56,6 +59,7 @@ export default async (req, res) => {
             { new: true }
         )
         const updatedCopier = updatedAccount.copiers.find(c => c.acc == data.acc)
+        
         // #.
         // بررسی دراودان حساب 
         if (updatedAccount.initial + updatedCopier.profit_bl <= updatedAccount.drawdown) {
@@ -91,10 +95,10 @@ function processMessage(msg) {
 
     // msg parts
     const msg_parts = msg.split(',')
-    data.acc = msg_parts[0].split('_')[0]
+    data.acc = Number(msg_parts[0].split('_')[0])
     data.handler = 1000 - parseInt(msg_parts[1])
-    data.timestamp = msg_parts[3]
-    data.keyid = msg_parts[4]
+    data.timestamp = Number(msg_parts[3])
+    data.keyid = Number(msg_parts[4])
     const info = msg_parts[2]
 
     // msg info
@@ -111,13 +115,13 @@ function processMessage(msg) {
         data.ticket = info_parts[1]
         if (data.result_text.toLowerCase().includes('close')) {
             data.closed_price = Number(info_parts[2])
-            data.closed_timestamp = info_parts[3]
+            data.closed_timestamp = Number(info_parts[3])
             data.swap = Number(info_parts[4])
             data.commission = Number(info_parts[5])
             data.profit = Number(info_parts[6])
         }
         else if (data.result_text.toLowerCase().includes('delete')) {
-            data.closed_timestamp = info_parts[2]
+            data.closed_timestamp = Number(info_parts[2])
         }
     } else {
         data.status = 'error'

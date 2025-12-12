@@ -4,6 +4,7 @@ import TradeMap from '../../models/TradeMap.js'
 import Account from "../../models/Account.js"
 import Symbol from "../../models/Symbol.js"
 import { formatDate, getMqlError, makeID } from "../../helpers/helper.js"
+import { getBrokerData } from "../../boot/cache.js"
 
 export default async (req, res) => {
 
@@ -16,6 +17,8 @@ export default async (req, res) => {
     const getUpdateDoc = await GetUpdateService.updateStatus(data)
 
     if (getUpdateDoc && getUpdateDoc.status == 'success') {
+        const brokerData = await getBrokerData(getUpdateDoc.server)
+        const diff_time = Number(brokerData.diff_time)
         const symbol = await Symbol.findOne({ server: getUpdateDoc.server, symbol: getUpdateDoc.symbol })
 
         // #.
@@ -42,8 +45,8 @@ export default async (req, res) => {
             sl_dist: data.sl,
             tp_dist: data.tp,
             open_price_dist: data.open_price,
-            open_time_dist: formatDate(data.open_timestamp),
-            open_timestamp_dist: data.open_timestamp,
+            open_time_dist: formatDate(data.open_timestamp + diff_time),
+            open_timestamp_dist: data.open_timestamp + diff_time,
             magic_dist: data.magic,
             comment_dist: data.comment,
 
@@ -101,14 +104,14 @@ function processMessage(msg) {
     // E.g. 
     // 1006135456,999,OK OPEN BUY&324252360&0,1758983673,6
     // acc , 999 , OK OPEN BUY & ticket & result_code , timestamp , keyid
-    const data = {};
+    const data = {}
 
     // msg parts
     const msg_parts = msg.split(',')
-    data.acc = msg_parts[0].split('_')[0]
+    data.acc = Number(msg_parts[0].split('_')[0])
     data.handler = 1000 - parseInt(msg_parts[1])
-    data.timestamp = msg_parts[3]
-    data.keyid = msg_parts[4]
+    data.timestamp = Number(msg_parts[3])
+    data.keyid = Number(msg_parts[4])
     const info = msg_parts[2]
 
     // msg info
@@ -118,8 +121,8 @@ function processMessage(msg) {
 
     if (data.result_text.toLowerCase().includes('ok')) {
         data.status = 'success'
-        data.ticket = info_parts[1]
-        data.open_timestamp = info_parts[2]
+        data.ticket = Number(info_parts[1])
+        data.open_timestamp = Number(info_parts[2]) + data.diff_time
         data.vol = Number(info_parts[3])
         data.open_price = Number(info_parts[4])
         data.sl = Number(info_parts[5])

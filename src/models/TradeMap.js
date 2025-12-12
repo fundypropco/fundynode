@@ -24,7 +24,7 @@ const tradeMapSchema = new mongoose.Schema({
         type: String
     },
     open_timestamp_src: {
-        type: String
+        type: Number
     },
     sl_src: {
         type: Number
@@ -39,7 +39,7 @@ const tradeMapSchema = new mongoose.Schema({
         type: String,
     },
     close_timestamp_src: {
-        type: String,
+        type: Number,
     },
     magic_src: {
         type: Number
@@ -79,7 +79,7 @@ const tradeMapSchema = new mongoose.Schema({
         type: String,
     },
     open_timestamp_dist: {
-        type: String,
+        type: Number,
     },
     sl_dist: {
         type: Number
@@ -94,7 +94,7 @@ const tradeMapSchema = new mongoose.Schema({
         type: String,
     },
     close_timestamp_dist: {
-        type: String,
+        type: Number,
     },
     magic_dist: {
         type: Number,

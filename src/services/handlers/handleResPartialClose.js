@@ -4,6 +4,7 @@ import { formatDate, formatDateYMD } from '../../helpers/helper.js'
 import TradeMap from '../../models/TradeMap.js'
 import Symbol from "../../models/Symbol.js"
 import Account from "../../models/Account.js"
+import { getBrokerData } from "../../boot/cache.js"
 
 export default async (req, res) => {
 
@@ -16,10 +17,14 @@ export default async (req, res) => {
     const getUpdateDoc = await GetUpdateService.updateStatus(data)
 
     if (getUpdateDoc && getUpdateDoc.status == 'success') {
+        const symbol = await Symbol.findOne({ server: getUpdateDoc.server, symbol: getUpdateDoc.symbol })
+        const brokerData = await getBrokerData(getUpdateDoc.server)
+        const diff_time = Number(brokerData.diff_time)
+
         // #.
         // بستن معامله کلوز شده در تیکت مپ 
         const closedTradeMap = await TradeMap.findOneAndUpdate(
-            { acc_src: getUpdateDoc.origin_acc, ticket_src: getUpdateDoc.origin_ticket, acc_dist: data.acc, status: 'open' },
+            { acc_src: getUpdateDoc.origin_acc, ticket_src: getUpdateDoc.origin_ticket, acc_dist: data.acc, ticket_dist: data.closed_ticket, status: 'open' },
             {
                 $set: {
                     status: 'closed',
@@ -34,19 +39,15 @@ export default async (req, res) => {
 
                     vol_dist: data.closed_vol,
                     close_price_dist: data.closed_price,
-                    close_time_dist: formatDate(data.closed_timestamp),
-                    close_timestamp_dist: data.closed_timestamp,
+                    close_time_dist: formatDate(data.closed_timestamp + diff_time),
+                    close_timestamp_dist: data.closed_timestamp + diff_time,
                     swap_dist: data.swap,
                     commission_dist: data.commission,
                     profit_dist: data.profit
                 }
             },
-            {
-                new: true
-            }
+            { new: true }
         )
-
-        const symbol = await Symbol.findOne({ server: getUpdateDoc.server, symbol: getUpdateDoc.symbol })
 
         // #.
         // مپ کردن اکانت و تیکت های مرجع و کپی کننده باقیمانده 
@@ -68,8 +69,8 @@ export default async (req, res) => {
             symbol_dist: closedTradeMap.symbol_dist,
             vol_dist: data.open_vol,
             open_price_dist: data.open_price,
-            open_time_dist: formatDate(data.open_timestamp),
-            open_timestamp_dist: data.open_timestamp,
+            open_time_dist: formatDate(data.open_timestamp + diff_time),
+            open_timestamp_dist: data.open_timestamp + diff_time,
             sl_dist: data.sl,
             tp_dist: data.tp,
             magic_dist: data.magic,
@@ -88,8 +89,7 @@ export default async (req, res) => {
         const total_closed_profit = Number((data.profit + data.swap + data.commission).toFixed(2))
         const updatedAccount = await Account.findOneAndUpdate(
             { acc: closedTradeMap.acc_src, "copiers.acc": closedTradeMap.acc_dist },
-            { $inc: { "copiers.$.profit_bl": total_closed_profit } }, //$[c]
-            // { arrayFilters: [{ "c.acc": acc }] }
+            { $inc: { "copiers.$.profit_bl": total_closed_profit } },
             { new: true }
         )
         const updatedCopier = updatedAccount.copiers.find(c => c.acc == data.acc)
@@ -130,11 +130,11 @@ function processMessage(msg) {
 
     // msg parts
     const msg_parts = msg.split(',')
-    data.acc = msg_parts[0].split('_')[0]
+    data.acc = Number(msg_parts[0].split('_')[0])
     data.handler = 1000 - parseInt(msg_parts[1])
-    data.timestamp = msg_parts[3]
+    data.timestamp = Number(msg_parts[3])
     let info = msg_parts[2]
-    data.keyid = msg_parts[4]
+    data.keyid = Number(msg_parts[4])
 
     // msg info
     const info_parts = info.split('&')
@@ -143,10 +143,10 @@ function processMessage(msg) {
 
     if (data.result_text.toLowerCase().includes('ok')) {
         data.status = 'success'
-        data.closed_ticket = info_parts[1]
-        data.open_ticket = info_parts[2]
+        data.closed_ticket = Number(info_parts[1])
+        data.open_ticket = Number(info_parts[2])
         data.open_vol = Number(info_parts[3])
-        data.closed_timestamp = info_parts[4]
+        data.closed_timestamp = Number(info_parts[4])
         data.closed_price = Number(info_parts[5])
         data.swap = Number(info_parts[6])
         data.commission = Number(info_parts[7])

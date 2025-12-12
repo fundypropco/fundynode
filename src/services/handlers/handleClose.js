@@ -3,12 +3,13 @@ import RequestLog from "../../models/RequestLog.js"
 import GetUpdateService from "../GetUpdateService.js"
 import { formatDate, getOrderSide, makeID } from '../../helpers/helper.js'
 import TradeMap from '../../models/TradeMap.js'
+import { getBrokerData } from '../../boot/cache.js'
 
 export default async (req, res) => {
 
     // #.
     //پردازش پیام ورودی 
-    const data = processMessage(req.body.message)
+    const data = await processMessage(req.body.message)
 
     if (!data.is_partial) {
         // اگر کلوز کامل باشد 
@@ -36,7 +37,7 @@ async function processClose(data) {
 
     // #
     // پیدا کردن اکانت مربوط به عملیات دریافتی 
-    const account = await Account.findOne({ acc: data.acc });
+    const account = data.accountObj
 
     // #.
     // بررسی اینکه آیا قابلیت برای این اکانت فعال هست یا نه 
@@ -61,9 +62,9 @@ async function processClose(data) {
                     tradeMap.close_time_src = formatDate(data.closed_timestamp)
                     tradeMap.close_timestamp_src = data.closed_timestamp
                     tradeMap.close_price_src = data.closed_price
-                    tradeMap.commission_src = data.commission
-                    tradeMap.swap_src = data.swap
-                    tradeMap.profit_src = data.profit
+                    tradeMap.commission_src = data.closed_commission
+                    tradeMap.swap_src = data.closed_swap
+                    tradeMap.profit_src = data.closed_profit
                     await tradeMap.save()
                 }
             }
@@ -75,7 +76,7 @@ async function processPartial(data) {
 
     // #.
     // پیدا کردن اکانت مربوط به عملیات دریافتی 
-    const account = await Account.findOne({ acc: data.acc });
+    const account = data.accountObj
 
     // #.
     // بررسی اینکه آیا قابلیت برای این اکانت فعال هست یا نه 
@@ -84,7 +85,6 @@ async function processPartial(data) {
         let keyid = makeID()
         const partialInfo = data.partial_item
         partialInfo.keyid = keyid
-        partialInfo.closed_price = data.closed_price
 
         // #.
         // بدست آوردن تیکتهای متناظر با این سفارش روی اکانتهای دیگر 
@@ -112,32 +112,39 @@ async function processPartial(data) {
     }
 }
 
-function processMessage(msg) {
+async function processMessage(msg) {
     // E.g. 
     // 1006135456,501,NEW CLOSE&324253369&115608&2025-10-14 15:23:40&1@324253369&115608&2025-10-14 15:23:40&1,1758998127,-1
     // acc , 501 , NEW CLOSE & ticket & close-price & close-time & vol @ ticket & close-price & close-time & vol @ close-price & close-time & vol @ ticket & close-price & close-time & vol , timestamp, -1
     // partial → acc , 501 , NEW CLOSE_or_DELETE & ticket & close-price & close-time & vol @ ticket & close-price & close-time & vol , timestamp, CLOSED_TICKET @ CLOSED_VOL @ CLOSED_TIME @ OPEN_TICKET @ OPEN_VOL @ OPEN_TIME ; CLOSED_TICKET @ CLOSED_VOL @ CLOSED_TIME @ OPEN_TICKET @ OPEN_VOL @ OPEN_TIME
-    const data = {};
+    const data = {}
 
     // msg parts
     const msg_parts = msg.split(',')
-    data.acc = msg_parts[0].replace(/_.*/, '')
-    data.timestamp = msg_parts[3]
+    data.acc = Number(msg_parts[0].replace(/_.*/, ''))
+
+    //پیدا کردن اکانت مربوط به عملیات دریافتی و پارامترهای مربوط به سرور بروکر آن 
+    data.accountObj = await Account.findOne({ acc: data.acc }).lean()
+    data.brokerData = await getBrokerData(data.accountObj.server)
+    data.diff_time = Number(data.brokerData.diff_time)
+
+
+    data.timestamp = Number(msg_parts[3])
     let info = msg_parts[2]
     const partial_info = msg_parts[4]
     data.is_partial = false
 
     // msg info
     const info_parts = info.split('&')
-    data.closed_ticket = info_parts[1]
+    data.closed_ticket = Number(info_parts[1])
     data.closed_price = Number(info_parts[2])
-    data.closed_timestamp = info_parts[3]
+    data.closed_timestamp = Number(info_parts[3]) + data.diff_time
     data.symbol = info_parts[4]
     data.side = getOrderSide(info_parts[5])
     data.closed_vol = Number(info_parts[6])
-    data.swap = Number(info_parts[7])
-    data.commission = Number(info_parts[8])
-    data.profit = Number(info_parts[9])
+    data.closed_swap = Number(info_parts[7])
+    data.closed_commission = Number(info_parts[8])
+    data.closed_profit = Number(info_parts[9])
     data.magic = Number(info_parts[10])
 
     if (partial_info != -1) {
@@ -157,17 +164,17 @@ function processMessage(msg) {
                 open_price,
                 open_timestamp
             ]) => ({
-                closed_ticket,
+                closed_ticket: Number(closed_ticket),
                 closed_vol: Number(closed_vol),
                 closed_price: Number(closed_price),
-                closed_timestamp: closed_timestamp,
+                closed_timestamp: Number(closed_timestamp) + data.diff_time,
                 closed_swap: Number(closed_swap),
                 closed_commission: Number(closed_commission),
                 closed_profit: Number(closed_profit),
-                open_ticket,
+                open_ticket: Number(open_ticket),
                 open_vol: Number(open_vol),
                 open_price: Number(open_price),
-                open_timestamp: open_timestamp
+                open_timestamp: Number(open_timestamp) + data.diff_time,
             }))
             .find(pi => pi.closed_ticket == data.closed_ticket)
 

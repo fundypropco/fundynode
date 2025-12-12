@@ -13,6 +13,8 @@ export default async (req, res) => {
     // #.
     // بروزرسانی وضعیت دستور در صف دستورات
     const getUpdateDoc = await GetUpdateService.updateStatus(data)
+    const brokerData = await getBrokerData(getUpdateDoc?.server)
+    const diff_time = Number(brokerData?.diff_time || 0)
 
     // #
     // بررسی نتیجه بسته شدن تک تک تیکتها 
@@ -36,8 +38,8 @@ export default async (req, res) => {
                                 }
                             },
                             close_price_dist: item.closed_price ?? 0,
-                            close_time_dist: formatDate(item.closed_timestamp),
-                            close_timestamp_dist: item.closed_timestamp,
+                            close_time_dist: formatDate(item.closed_timestamp + diff_time),
+                            close_timestamp_dist: item.closed_timestamp + diff_time,
                             swap_dist: item.swap,
                             commission_dist: item.commission,
                             profit_dist: item.profit
@@ -46,12 +48,13 @@ export default async (req, res) => {
                 ]
             )
 
+            // #.
+            // ثبت اطلاعات مالی 
             const total_closed_profit = Number((item.profit + item.swap + item.commission).toFixed(2))
             await Account.updateOne(
                 { acc: getUpdateDoc.origin_acc, "copiers.acc": data.acc },
                 { $inc: { "copiers.$.profit_bl": total_closed_profit } }
             )
-
         } else {
             const order = {
                 handler: ACTION_HANDLER.CLOSE,

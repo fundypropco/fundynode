@@ -3,11 +3,12 @@ import RequestLog from "../../models/RequestLog.js"
 import GetUpdateService from "../GetUpdateService.js"
 import { isValidSymbols, makeID, getOrderSide, formatDate } from '../../helpers/helper.js'
 import TradeMap from '../../models/TradeMap.js'
+import { getBrokerData } from '../../boot/cache.js'
 
 export default async (req, res) => {
 
     //# پردازش پیام ورودی
-    const data = processMessage(req.body.message)
+    const data = await processMessage(req.body.message)
 
     if (!data.is_partial) {
         // اگر سفارش جدید باشد
@@ -34,7 +35,7 @@ async function processNewOrder(data) {
 
     // #
     // پیدا کردن اکانت مربوط به عملیات دریافتی 
-    const account = await Account.findOne({ acc: data.acc });
+    const account = data.accountObj
 
     //# بررسی اینکه آیا کپی ترید برای این اکانت فعال هست یا نه
     if (account.copy) {
@@ -97,7 +98,7 @@ async function processPartial(data) {
 
     // #
     //پیدا کردن اکانت مربوط به عملیات دریافتی 
-    const account = await Account.findOne({ acc: data.acc });
+    const account = data.accountObj
 
     // #
     //بررسی اینکه آیا قابلیت برای این اکانت فعال هست یا نه 
@@ -144,30 +145,36 @@ async function isDuplicatedOrder(account, copier, data) {
     return !!tradeMap
 }
 
-function processMessage(msg) {
+async function processMessage(msg) {
     //E.g. 
     // 1006135456,500,NEW ORDER&324253368&BTCUSD&BUY&0.01&109245.51000&2025.09.27 18:05:14&0.00000&0.00000&-1.31000&0&,1758998114,-1
     // acc , 500 , NEW ORDER & ticket & symbol & type & vol & open_price & open_time & sl & tp & commission & magic & comment , timestamp , -1
     // partial → acc , 500 , NEW ORDER & ticket & symbol & type & vol & open_price & open_time & sl & tp & commission & magic & comment , timestamp , CLOSED_TICKET @ CLOSED_VOL @ CLOSED_TIME @ OPEN_TICKET @ OPEN_VOL @ OPEN_TIME ; CLOSED_TICKET @ CLOSED_VOL @ CLOSED_TIME @ OPEN_TICKET @ OPEN_VOL @ OPEN_TIME
-    const data = {};
+    const data = {}
 
     // msg parts
     const msg_parts = msg.split(',')
-    data.acc = msg_parts[0].replace(/_.*/, '')
-    data.timestamp = msg_parts[3]
+    data.acc = Number(msg_parts[0].replace(/_.*/, ''))
+
+    //پیدا کردن اکانت مربوط به عملیات دریافتی و پارامترهای مربوط به سرور بروکر آن 
+    data.accountObj = await Account.findOne({ acc: data.acc }).lean()
+    data.brokerData = await getBrokerData(data.accountObj.server)
+    data.diff_time = Number(data.brokerData.diff_time)
+
+    data.timestamp = Number(msg_parts[3])
     const info = msg_parts[2]
     const partial_info = msg_parts[4]
     data.is_partial = false
 
     // msg info
     const info_parts = info.split('&')
-    data.ticket = info_parts[1]
+    data.ticket = Number(info_parts[1])
     data.symbol = info_parts[2]
     data.type = info_parts[3].replace(/[\s_]/g, "").toUpperCase()
     data.side = getOrderSide(data.type)
     data.vol = Number(info_parts[4])
     data.open_price = Number(info_parts[5])
-    data.open_timestamp = info_parts[6]
+    data.open_timestamp = Number(info_parts[6]) + data.diff_time
     data.sl = Number(info_parts[7])
     data.tp = Number(info_parts[8])
     data.commission = Number(info_parts[9])
@@ -191,17 +198,17 @@ function processMessage(msg) {
                 open_price,
                 open_timestamp
             ]) => ({
-                closed_ticket,
+                closed_ticket: Number(closed_ticket),
                 closed_vol: Number(closed_vol),
                 closed_price: Number(closed_price),
-                closed_timestamp: closed_timestamp,
+                closed_timestamp: Number(closed_timestamp) + data.diff_time,
                 closed_swap: Number(closed_swap),
                 closed_commission: Number(closed_commission),
                 closed_profit: Number(closed_profit),
-                open_ticket,
+                open_ticket: Number(open_ticket),
                 open_vol: Number(open_vol),
                 open_price: Number(open_price),
-                open_timestamp: open_timestamp
+                open_timestamp: Number(open_timestamp) + data.diff_time
             }))
             .find(pi => pi.open_ticket == data.ticket)
 

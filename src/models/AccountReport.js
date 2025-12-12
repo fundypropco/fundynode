@@ -21,7 +21,7 @@ const accountReportSchema = new mongoose.Schema({
         type: String
     },
     eq_initial_timestamp: {
-        type: String
+        type: Number
     },
 
     eq_high: {
@@ -31,7 +31,7 @@ const accountReportSchema = new mongoose.Schema({
         type: String
     },
     eq_high_timestamp: {
-        type: String
+        type: Number
     },
 
     total_eq_high: {
@@ -41,7 +41,7 @@ const accountReportSchema = new mongoose.Schema({
         type: String
     },
     total_eq_high_timestamp: {
-        type: String
+        type: Number
     },
 
     eq_low: {
@@ -51,7 +51,7 @@ const accountReportSchema = new mongoose.Schema({
         type: String
     },
     eq_low_timestamp: {
-        type: String
+        type: Number
     },
 
     total_eq_low: {
@@ -61,7 +61,7 @@ const accountReportSchema = new mongoose.Schema({
         type: String
     },
     total_eq_low_timestamp: {
-        type: String
+        type: Number
     },
 
     bl_initial: {
@@ -71,7 +71,7 @@ const accountReportSchema = new mongoose.Schema({
         type: String
     },
     bl_initial_timestamp: {
-        type: String
+        type: Number
     },
 
     bl_high: {
@@ -81,7 +81,7 @@ const accountReportSchema = new mongoose.Schema({
         type: String
     },
     bl_high_timestamp: {
-        type: String
+        type: Number
     },
 
     total_bl_high: {
@@ -91,7 +91,7 @@ const accountReportSchema = new mongoose.Schema({
         type: String
     },
     total_bl_high_timestamp: {
-        type: String
+        type: Number
     },
 
     bl_low: {
@@ -101,7 +101,7 @@ const accountReportSchema = new mongoose.Schema({
         type: String
     },
     bl_low_timestamp: {
-        type: String
+        type: Number
     },
 
     total_bl_low: {
@@ -111,7 +111,7 @@ const accountReportSchema = new mongoose.Schema({
         type: String
     },
     total_bl_low_timestamp: {
-        type: String
+        type: Number
     }
 
 })

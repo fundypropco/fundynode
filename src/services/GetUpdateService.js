@@ -273,6 +273,9 @@ const prepareCloseData = async (account, copier, data, tradeMap) => {
     perparedData.origin_close_time = formatDate(data.closed_timestamp)
     perparedData.origin_close_timestamp = data.closed_timestamp
     perparedData.origin_close_price = data.closed_price
+    perparedData.origin_commission = data.closed_commission
+    perparedData.origin_swap = data.closed_swap
+    perparedData.origin_profit = data.closed_profit
 
     perparedData.message = await makeMsgForHandler(perparedData.handler, perparedData)
 

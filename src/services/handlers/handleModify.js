@@ -3,18 +3,16 @@ import RequestLog from "../../models/RequestLog.js"
 import GetUpdateService from "../GetUpdateService.js"
 import { makeID } from '../../helpers/helper.js'
 import TradeMap from '../../models/TradeMap.js'
-import logger from '../../helpers/logger.js'
 
 export default async (req, res) => {
 
     // #.
     // پردازش پیام ورودی 
     const data = processMessage(req.body.message)
-    logger.error(data)
 
     // #.
     // پیدا کردن اکانت مربوط به عملیات دریافتی 
-    const account = await Account.findOne({ acc: data.acc });
+    const account = await Account.findOne({ acc: data.acc })
 
     // #.
     // بررسی اینکه آیا قابلیت برای این اکانت فعال هست یا نه 
@@ -35,7 +33,6 @@ export default async (req, res) => {
                 if (copier.copy) {
                     const tradeMap = tradeMaps.find(t => t.acc_dist == copier.acc)
                     const getUpdateData = await GetUpdateService.prepareModifyData(account, copier, modifyInfo, tradeMap)
-                    logger.error(getUpdateData)
                     await GetUpdateService.create(getUpdateData)
                 }
             }
@@ -60,12 +57,12 @@ function processMessage(msg) {
     // E.g. 
     // 1006135456,502,NEW MODIFY&324253391&103420.04&0.00@102455&324253391&103420.04&0.00&102460,1758998794,-1
     // acc , 502 , NEW MODIFY & ticket & sl & tp & entry @ ticket & sl & tp & entry , timestamp , -1
-    const data = {};
+    const data = {}
 
     // msg parts
     const msg_parts = msg.split(',')
-    data.acc = msg_parts[0].replace(/_.*/, '')
-    data.timestamp = msg_parts[3]
+    data.acc = Number(msg_parts[0].replace(/_.*/, ''))
+    data.timestamp = Number(msg_parts[3])
     let info = msg_parts[2]
 
     // msg info
@@ -73,7 +70,12 @@ function processMessage(msg) {
     info = info.replace(/^[^&]*&/, "")
     data.items = info.split("@")
         .map(part => part.split("&"))
-        .map(([ticket, sl, tp, open_price]) => ({ ticket, sl, tp, open_price }))
+        .map(([ticket, sl, tp, open_price]) => ({
+            ticket: Number(ticket),
+            sl: Number(sl),
+            tp: Number(tp),
+            open_price: Number(open_price)
+        }))
 
     return data
 }

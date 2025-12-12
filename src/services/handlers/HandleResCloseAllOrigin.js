@@ -2,6 +2,7 @@ import RequestLog from "../../models/RequestLog.js"
 import { formatDate, formatDateYMD } from '../../helpers/helper.js'
 import GetUpdateService from '../GetUpdateService.js'
 import TradeMap from "../../models/TradeMap.js"
+import { getBrokerData } from "../../boot/cache.js"
 
 export default async (req, res) => {
 
@@ -12,6 +13,8 @@ export default async (req, res) => {
     // #.
     // بروزرسانی وضعیت دستور در صف دستورات 
     const getUpdateDoc = await GetUpdateService.updateStatus(data)
+    const brokerData = await getBrokerData(getUpdateDoc?.server)
+    const diff_time = Number(brokerData?.diff_time || 0)
 
     // #.
     // ثبت اطلاعات مالی اکانت ترید 
@@ -22,8 +25,8 @@ export default async (req, res) => {
                 {
                     $set: {
                         close_price_src: item.closed_price ?? 0,
-                        close_time_src: formatDate(item.closed_timestamp),
-                        close_timestamp_src: item.closed_timestamp,
+                        close_time_src: formatDate(item.closed_timestamp + diff_time),
+                        close_timestamp_src: item.closed_timestamp + diff_time,
                         swap_src: item.swap,
                         commission_src: item.commission,
                         profit_src: item.profit
@@ -57,10 +60,10 @@ function processMessage(msg) {
 
     // msg parts
     const msg_parts = msg.split(',')
-    data.acc = msg_parts[0].split('_')[0]
+    data.acc = Number(msg_parts[0].split('_')[0])
     data.handler = 1000 - parseInt(msg_parts[1])
-    data.timestamp = msg_parts[3]
-    data.keyid = msg_parts[4]
+    data.timestamp = Number(msg_parts[3])
+    data.keyid = Number(msg_parts[4])
     data.status = 'success'
     const info = msg_parts[2].toLowerCase()
 
@@ -71,7 +74,14 @@ function processMessage(msg) {
             .map(part => part.trim())
             .filter(part => part.length > 0)
             .map(part => part.split("&").map(x => x.trim()))
-            .map(([ticket, closed_price, closed_timestamp, swap, commission, profit]) => ({ ticket, closed_price, closed_timestamp, swap, commission, profit }))
+            .map(([ticket, closed_price, closed_timestamp, swap, commission, profit]) => ({
+                ticket: Number(ticket),
+                closed_price: Number(closed_price),
+                closed_timestamp: Number(closed_timestamp),
+                swap: Number(swap),
+                commission: Number(commission),
+                profit: Number(profit)
+            }))
     }
 
     return data
