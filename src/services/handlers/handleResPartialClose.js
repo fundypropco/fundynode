@@ -156,7 +156,7 @@ function processMessage(msg) {
         data.sl = Number(info_parts[11])
         data.tp = Number(info_parts[12])
         data.open_price = Number(info_parts[13])
-        data.open_timestamp = info_parts[14]
+        data.open_timestamp = Number(info_parts[14])
         data.closed_vol = Number(info_parts[15])
     } else {
         data.status = 'error'
