@@ -1,4 +1,4 @@
-import Broker from "../models/Broker"
+import Broker from "../models/Broker.js"
 
 let brokersData = null
 let brokersData_expire = null
