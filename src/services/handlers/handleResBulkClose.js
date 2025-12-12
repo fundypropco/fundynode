@@ -3,6 +3,7 @@ import GetUpdateService from "../GetUpdateService.js"
 import { formatDateUTC, makeID, makeMsgForHandler } from '../../helpers/helper.js'
 import { ACTION_HANDLER } from "../../helpers/constant.js"
 import TradeMap from "../../models/TradeMap.js"
+import { getBrokerData } from "../../boot/cache.js"
 
 export default async (req, res) => {
 
