@@ -120,6 +120,7 @@ export function formatDateYMD(timestamp) {
 }
 
 export function formatDateUTC(timestamp, format = "YMDHIS") {
+    timestamp = Number(timestamp)
     const d = new Date(timestamp)
     const y = d.getUTCFullYear()
     const m = d.getUTCMonth() + 1
