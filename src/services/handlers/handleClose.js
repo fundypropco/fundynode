@@ -1,7 +1,7 @@
 import Account from '../../models/Account.js'
 import RequestLog from "../../models/RequestLog.js"
 import GetUpdateService from "../GetUpdateService.js"
-import { formatDate, getOrderSide, makeID } from '../../helpers/helper.js'
+import { formatDateUTC, getOrderSide, makeID } from '../../helpers/helper.js'
 import TradeMap from '../../models/TradeMap.js'
 import { getBrokerData } from '../../boot/cache.js'
 
@@ -59,7 +59,7 @@ async function processClose(data) {
                 await GetUpdateService.create(getUpdateData)
 
                 if (tradeMap) {
-                    tradeMap.close_time_src = formatDate(data.closed_timestamp)
+                    tradeMap.close_time_src = formatDateUTC(data.closed_timestamp)
                     tradeMap.close_timestamp_src = data.closed_timestamp
                     tradeMap.close_price_src = data.closed_price
                     tradeMap.commission_src = data.closed_commission
@@ -99,7 +99,7 @@ async function processPartial(data) {
                 await GetUpdateService.create(getUpdateData)
 
                 if (tradeMap) {
-                    tradeMap.close_time_src = formatDate(partialInfo.closed_timestamp)
+                    tradeMap.close_time_src = formatDateUTC(partialInfo.closed_timestamp)
                     tradeMap.close_timestamp_src = partialInfo.closed_timestamp
                     tradeMap.close_price_src = partialInfo.closed_price
                     tradeMap.commission_src = partialInfo.closed_commission

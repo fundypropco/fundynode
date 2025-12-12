@@ -3,7 +3,7 @@ import GetUpdateService from '../GetUpdateService.js'
 import TradeMap from '../../models/TradeMap.js'
 import Account from "../../models/Account.js"
 import Symbol from "../../models/Symbol.js"
-import { formatDate, getMqlError, makeID } from "../../helpers/helper.js"
+import { formatDateUTC, getMqlError, makeID } from "../../helpers/helper.js"
 import { getBrokerData } from "../../boot/cache.js"
 
 export default async (req, res) => {
@@ -45,7 +45,7 @@ export default async (req, res) => {
             sl_dist: data.sl,
             tp_dist: data.tp,
             open_price_dist: data.open_price,
-            open_time_dist: formatDate(data.open_timestamp + diff_time),
+            open_time_dist: formatDateUTC(data.open_timestamp + diff_time),
             open_timestamp_dist: data.open_timestamp + diff_time,
             magic_dist: data.magic,
             comment_dist: data.comment,
@@ -122,7 +122,7 @@ function processMessage(msg) {
     if (data.result_text.toLowerCase().includes('ok')) {
         data.status = 'success'
         data.ticket = Number(info_parts[1])
-        data.open_timestamp = Number(info_parts[2]) + data.diff_time
+        data.open_timestamp = Number(info_parts[2])
         data.vol = Number(info_parts[3])
         data.open_price = Number(info_parts[4])
         data.sl = Number(info_parts[5])

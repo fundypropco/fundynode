@@ -1,6 +1,6 @@
 import RequestLog from "../../models/RequestLog.js"
 import GetUpdateService from "../GetUpdateService.js"
-import { formatDate, formatDateYMD } from '../../helpers/helper.js'
+import { formatDateUTC } from '../../helpers/helper.js'
 import TradeMap from '../../models/TradeMap.js'
 import Symbol from "../../models/Symbol.js"
 import Account from "../../models/Account.js"
@@ -39,7 +39,7 @@ export default async (req, res) => {
 
                     vol_dist: data.closed_vol,
                     close_price_dist: data.closed_price,
-                    close_time_dist: formatDate(data.closed_timestamp + diff_time),
+                    close_time_dist: formatDateUTC(data.closed_timestamp + diff_time),
                     close_timestamp_dist: data.closed_timestamp + diff_time,
                     swap_dist: data.swap,
                     commission_dist: data.commission,
@@ -69,7 +69,7 @@ export default async (req, res) => {
             symbol_dist: closedTradeMap.symbol_dist,
             vol_dist: data.open_vol,
             open_price_dist: data.open_price,
-            open_time_dist: formatDate(data.open_timestamp + diff_time),
+            open_time_dist: formatDateUTC(data.open_timestamp + diff_time),
             open_timestamp_dist: data.open_timestamp + diff_time,
             sl_dist: data.sl,
             tp_dist: data.tp,

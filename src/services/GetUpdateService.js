@@ -1,6 +1,6 @@
 import GetUpdate from "../models/GetUpdate.js"
 import Symbol from "../models/Symbol.js"
-import { formatDate, getMqlError, getOrderSide, getWiderSl, getWiderTp, makeMsgForHandler } from "../helpers/helper.js"
+import { formatDateUTC, getMqlError, getWiderSl, getWiderTp, makeMsgForHandler } from "../helpers/helper.js"
 import { ACTION_HANDLER } from "../helpers/constant.js"
 
 const create = async (data) => {
@@ -171,7 +171,7 @@ const prepareOrderData = async (account, copier, data) => {
     perparedData.origin_sl = data.sl
     perparedData.origin_tp = data.tp
     perparedData.origin_open_price = data.open_price
-    perparedData.origin_open_time = formatDate(data.open_timestamp)
+    perparedData.origin_open_time = formatDateUTC(data.open_timestamp)
     perparedData.origin_open_timestamp = data.open_timestamp
     perparedData.origin_commission = data.commission
     perparedData.origin_comment = data.comment
@@ -204,7 +204,7 @@ const prepareCloseOriginData = async (account, data) => {
     perparedData.origin_sl = data.sl ?? ''
     perparedData.origin_tp = data.tp ?? ''
     perparedData.origin_open_price = data.open_price ?? ''
-    perparedData.origin_open_time = data.open_timestamp ? formatDate(data.open_timestamp) : ''
+    perparedData.origin_open_time = data.open_timestamp ? formatDateUTC(data.open_timestamp) : ''
     perparedData.origin_open_timestamp = data.open_timestamp ?? ''
     perparedData.origin_commission = data.commission ?? ''
     perparedData.origin_comment = data.comment ?? ''
@@ -235,13 +235,13 @@ const preparePartialCloseData = async (account, copier, data, tradeMap) => {
     perparedData.origin_symbol = tradeMap?.symbol_src ?? ''
     perparedData.origin_vol = data.closed_vol
     perparedData.origin_close_price = data.closed_price
-    perparedData.origin_close_time = formatDate(data.closed_timestamp)
+    perparedData.origin_close_time = formatDateUTC(data.closed_timestamp)
     perparedData.origin_close_timestamp = data.closed_timestamp
     perparedData.origin_commission = data.closed_commission
     perparedData.origin_swap = data.closed_swap
     perparedData.origin_profit = data.closed_profit
     perparedData.origin_open_price = data.open_price
-    perparedData.origin_open_time = formatDate(data.open_timestamp)
+    perparedData.origin_open_time = formatDateUTC(data.open_timestamp)
     perparedData.origin_open_timestamp = data.open_timestamp
     perparedData.origin_new_ticket = data.open_ticket
     perparedData.origin_new_vol = data.open_vol
@@ -270,7 +270,7 @@ const prepareCloseData = async (account, copier, data, tradeMap) => {
     perparedData.origin_ticket = data.closed_ticket
     perparedData.origin_symbol = tradeMap?.symbol_src ?? ''
     perparedData.origin_vol = data.closed_vol
-    perparedData.origin_close_time = formatDate(data.closed_timestamp)
+    perparedData.origin_close_time = formatDateUTC(data.closed_timestamp)
     perparedData.origin_close_timestamp = data.closed_timestamp
     perparedData.origin_close_price = data.closed_price
     perparedData.origin_commission = data.closed_commission
@@ -348,7 +348,7 @@ const prepareOpenPendingOrderData = async (account, copier, data, tradeMap) => {
     perparedData.origin_sl = data.sl
     perparedData.origin_tp = data.tp
     perparedData.origin_open_price = data.open_price
-    perparedData.origin_open_time = formatDate(data.open_timestamp)
+    perparedData.origin_open_time = formatDateUTC(data.open_timestamp)
     perparedData.origin_open_timestamp = data.open_timestamp
     perparedData.origin_commission = data.commission
     perparedData.origin_comment = data.comment

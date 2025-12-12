@@ -1,5 +1,5 @@
 import RequestLog from "../../models/RequestLog.js"
-import { formatDate } from '../../helpers/helper.js'
+import { formatDateUTC } from '../../helpers/helper.js'
 import GetUpdateService from '../GetUpdateService.js'
 import TradeMap from "../../models/TradeMap.js"
 import Account from "../../models/Account.js"
@@ -40,7 +40,7 @@ export default async (req, res) => {
                             }
                         },
                         close_price_dist: data.closed_price ?? 0,
-                        close_time_dist: formatDate(data.closed_timestamp + diff_time),
+                        close_time_dist: formatDateUTC(data.closed_timestamp + diff_time),
                         close_timestamp_dist: data.closed_timestamp + diff_time,
                         swap_dist: data.swap,
                         commission_dist: data.commission,

@@ -1,7 +1,7 @@
 import RequestLog from "../../models/RequestLog.js"
 import GetUpdateService from '../GetUpdateService.js'
 import TradeMap from '../../models/TradeMap.js'
-import { formatDate } from "../../helpers/helper.js"
+import { formatDateUTC } from "../../helpers/helper.js"
 
 export default async (req, res) => {
 
@@ -26,7 +26,7 @@ export default async (req, res) => {
                 {
                     $set: {
                         status: 'deleted',
-                        close_time_dist: formatDate(data.open_timestamp),
+                        close_time_dist: formatDateUTC(data.open_timestamp),
                         close_timestamp_dist: data.open_timestamp,
                     }
                 }
@@ -52,7 +52,7 @@ export default async (req, res) => {
                 sl_dist: deletedTradeMap.sl_dist,
                 tp_dist: deletedTradeMap.tp_dist,
                 open_price_dist: data.open_price,
-                open_time_dist: formatDate(data.open_timestamp),
+                open_time_dist: formatDateUTC(data.open_timestamp),
                 open_timestamp_dist: data.open_timestamp,
 
                 side: deletedTradeMap.side,
@@ -77,7 +77,7 @@ export default async (req, res) => {
                     $set: {
                         status: 'open',
                         open_price_dist: data.open_price,
-                        open_time_dist: formatDate(data.open_timestamp),
+                        open_time_dist: formatDateUTC(data.open_timestamp),
                         open_timestamp_dist: data.open_timestamp,
                     }
                 }

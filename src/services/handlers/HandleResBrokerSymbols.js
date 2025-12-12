@@ -1,9 +1,8 @@
 import RequestLog from "../../models/RequestLog.js"
-import { makeMsgForHandler, normalizeSymbol, makeID } from '../../helpers/helper.js'
+import { normalizeSymbol } from '../../helpers/helper.js'
 import GetUpdateService from '../GetUpdateService.js'
 import SymbolAlias from "../../models/SymbolAlias.js"
 import Symbol from "../../models/Symbol.js"
-import { ACTION_HANDLER } from "../../helpers/constant.js"
 
 export default async (req, res) => {
 

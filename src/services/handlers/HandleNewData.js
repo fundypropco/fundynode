@@ -1,5 +1,5 @@
 
-import { formatDateYMD } from '../../helpers/helper.js'
+import { formatDateUTC } from '../../helpers/helper.js'
 import Account from '../../models/Account.js'
 import AccountReport from '../../models/AccountReport.js'
 import AccountService from '../AccountService.js'
@@ -26,7 +26,7 @@ function processMessage(msg) {
     const msg_parts = msg.split(',')
     data.acc = msg_parts[0].replace(/_.*/, '')
     data.timestamp = msg_parts[3]
-    data.date = formatDateYMD(data.timestamp)
+    data.date = formatDateUTC(data.timestamp)
     const info = msg_parts[2]
 
     // msg info

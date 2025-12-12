@@ -1,6 +1,6 @@
 import RequestLog from "../../models/RequestLog.js"
 import GetUpdateService from "../GetUpdateService.js"
-import { formatDate, makeID, makeMsgForHandler } from '../../helpers/helper.js'
+import { formatDateUTC, makeID, makeMsgForHandler } from '../../helpers/helper.js'
 import { ACTION_HANDLER } from "../../helpers/constant.js"
 import TradeMap from "../../models/TradeMap.js"
 
@@ -38,7 +38,7 @@ export default async (req, res) => {
                                 }
                             },
                             close_price_dist: item.closed_price ?? 0,
-                            close_time_dist: formatDate(item.closed_timestamp + diff_time),
+                            close_time_dist: formatDateUTC(item.closed_timestamp + diff_time),
                             close_timestamp_dist: item.closed_timestamp + diff_time,
                             swap_dist: item.swap,
                             commission_dist: item.commission,
@@ -95,7 +95,7 @@ function processMessage(msg) {
     data.acc = msg_parts[0].split('_')[0]
     data.handler = 1000 - parseInt(msg_parts[1])
     data.timestamp = msg_parts[3]
-    data.date = formatDate(data.timestamp)
+    data.date = formatDateUTC(data.timestamp)
     let info = msg_parts[2].trim()
     data.keyid = msg_parts[4]
 

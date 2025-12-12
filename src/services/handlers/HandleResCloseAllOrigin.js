@@ -1,5 +1,5 @@
 import RequestLog from "../../models/RequestLog.js"
-import { formatDate, formatDateYMD } from '../../helpers/helper.js'
+import { formatDateUTC } from '../../helpers/helper.js'
 import GetUpdateService from '../GetUpdateService.js'
 import TradeMap from "../../models/TradeMap.js"
 import { getBrokerData } from "../../boot/cache.js"
@@ -25,7 +25,7 @@ export default async (req, res) => {
                 {
                     $set: {
                         close_price_src: item.closed_price ?? 0,
-                        close_time_src: formatDate(item.closed_timestamp + diff_time),
+                        close_time_src: formatDateUTC(item.closed_timestamp + diff_time),
                         close_timestamp_src: item.closed_timestamp + diff_time,
                         swap_src: item.swap,
                         commission_src: item.commission,

@@ -1,4 +1,4 @@
-import { formatDate } from '../../helpers/helper.js'
+import { formatDateUTC } from '../../helpers/helper.js'
 import Account from '../../models/Account.js'
 import AccountReport from '../../models/AccountReport.js'
 import AccountService from '../AccountService.js'
@@ -84,7 +84,7 @@ function processMessage(msg) {
     const msg_parts = msg.split(',')
     data.acc = msg_parts[0].split('_')[0]
     data.timestamp = msg_parts[3]
-    data.date = formatDate(data.timestamp, 'YMD')
+    data.date = formatDateUTC(data.timestamp, 'YMD')
     const info = msg_parts[2]
 
     // msg info
@@ -119,13 +119,13 @@ function processMessage(msg) {
 
 async function updateAccountReport(traderAcc, copierAcc, timestamp, bl, eq) {
 
-    const date = formatDate(timestamp, 'YMD')
-    const datetime = formatDate(timestamp)
+    const date = formatDateUTC(timestamp, 'YMD')
+    const datetime = formatDateUTC(timestamp)
 
     let accountReport = await AccountReport.findOne({ acc_src: traderAcc, acc_dist: copierAcc, date: date })
 
     if (!accountReport) {
-        const prevDate = formatDate(timestamp - (24 * 60 * 60 * 1000), 'YMD')
+        const prevDate = formatDateUTC(timestamp - (24 * 60 * 60 * 1000), 'YMD')
         const lastAccountReport = await AccountReport.findOne({ acc_src: traderAcc, acc_dist: copierAcc, date: prevDate })
 
         accountReport = new AccountReport({
