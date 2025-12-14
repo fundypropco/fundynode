@@ -195,6 +195,7 @@ const prepareCloseOriginData = async (account, data) => {
     perparedData.acc = account.acc
     perparedData.ticket = data.ticket
     perparedData.side = data.side ?? ''
+    perparedData.vol = data.vol ?? ''
     perparedData.symbol = data.symbol ?? ''
     perparedData.symbol_title = data.symbol_title ?? ''
     perparedData.description = data.description ?? []

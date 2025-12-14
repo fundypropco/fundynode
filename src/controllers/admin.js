@@ -44,6 +44,7 @@ const showTradeMap = asyncHandler(async (req, res) => {
         symbol: trade.symbol_title,
         status: trade.status,
         side: trade.side,
+        closed_by: trade.closed_by,
         mother: {
             acc: trade.acc_dist,
             ticket: trade.ticket_dist,

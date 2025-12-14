@@ -3,6 +3,7 @@ import { formatDateUTC } from '../../helpers/helper.js'
 import GetUpdateService from '../GetUpdateService.js'
 import TradeMap from "../../models/TradeMap.js"
 import { getBrokerData } from "../../boot/cache.js"
+import Symbol from "../../models/Symbol.js"
 
 export default async (req, res) => {
 
@@ -15,10 +16,13 @@ export default async (req, res) => {
     const getUpdateDoc = await GetUpdateService.updateStatus(data)
     const brokerData = await getBrokerData(getUpdateDoc?.server)
     const diff_time = Number(brokerData?.diff_time || 0)
+    const symbols = await Symbol.find({ server: getUpdateDoc.server })
 
     // #.
     // ثبت اطلاعات مالی اکانت ترید 
     for (const item of data.items) {
+        const symbol = symbols.find(s => s.symbol === item.symbol)
+        const commission_src = Math.round(symbol.commission_max * (item.vol / symbol.vol_min) * 100) / 100
         await TradeMap.updateMany(
             { acc_src: data.acc, ticket_src: item.ticket },
             [
@@ -28,7 +32,7 @@ export default async (req, res) => {
                         close_time_src: formatDateUTC(item.closed_timestamp + diff_time),
                         close_timestamp_src: item.closed_timestamp + diff_time,
                         swap_src: item.swap,
-                        commission_src: item.commission,
+                        commission_src: commission_src,
                         profit_src: item.profit
                     }
                 }
@@ -74,13 +78,15 @@ function processMessage(msg) {
             .map(part => part.trim())
             .filter(part => part.length > 0)
             .map(part => part.split("&").map(x => x.trim()))
-            .map(([ticket, closed_price, closed_timestamp, swap, commission, profit]) => ({
+            .map(([ticket, closed_price, closed_timestamp, swap, commission, profit, vol, symbol]) => ({
                 ticket: Number(ticket),
                 closed_price: Number(closed_price),
                 closed_timestamp: Number(closed_timestamp),
                 swap: Number(swap),
                 commission: Number(commission),
-                profit: Number(profit)
+                profit: Number(profit),
+                vol: Number(vol),
+                symbol: symbol
             }))
     }
 

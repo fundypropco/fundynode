@@ -19,6 +19,7 @@ export default async (req, res) => {
 
     if (getUpdateDoc && getUpdateDoc.status == 'success') {
         const symbol = await Symbol.findOne({ server: getUpdateDoc.server, symbol: getUpdateDoc.symbol })
+        const commission_dist = Math.round(symbol.commission_max * (getUpdateDoc.vol / symbol.vol_min) * 100) / 100
         const brokerData = await getBrokerData(getUpdateDoc.server)
         const diff_time = Number(brokerData.diff_time)
 
@@ -30,21 +31,15 @@ export default async (req, res) => {
                 $set: {
                     status: 'closed',
 
-                    vol_src: getUpdateDoc.origin_vol,
-                    close_price_src: getUpdateDoc.closed_price,
-                    close_time_src: getUpdateDoc.origin_close_time,
-                    close_timestamp_src: getUpdateDoc.origin_close_timestamp,
-                    swap_src: getUpdateDoc.origin_swap,
-                    commission_src: getUpdateDoc.origin_commission,
-                    profit_src: getUpdateDoc.origin_profit,
-
                     vol_dist: data.closed_vol,
                     close_price_dist: data.closed_price,
                     close_time_dist: formatDateUTC(data.closed_timestamp + diff_time),
                     close_timestamp_dist: data.closed_timestamp + diff_time,
                     swap_dist: data.swap,
-                    commission_dist: data.commission,
-                    profit_dist: data.profit
+                    commission_dist: commission_dist,
+                    profit_dist: data.profit,
+
+                    closing_type: 'partial'
                 }
             },
             { new: true }

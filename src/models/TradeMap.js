@@ -134,7 +134,11 @@ const tradeMapSchema = new mongoose.Schema({
         type: String,
         enum: ['buy', 'buy_limit', 'buy_stop', 'sell', 'sell_limit', 'sell_stop'],
     },
-
+    closing_type: {
+        type: String,
+        enum: ['single', 'partial', 'bulk', 'all', 'none'],
+        default: 'none'
+    },
     created_at: {
         type: Date,
         default: Date.now

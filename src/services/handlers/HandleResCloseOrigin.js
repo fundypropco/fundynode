@@ -19,6 +19,10 @@ export default async (req, res) => {
     if (getUpdateDoc && getUpdateDoc.status === 'success') {
         const brokerData = await getBrokerData(getUpdateDoc.server)
         const diff_time = Number(brokerData.diff_time)
+
+        const symbol = await Symbol.findOne({ server: getUpdateDoc.server, symbol: data.symbol })
+        const commission_src = Math.round(symbol.commission_max * (data.vol / symbol.vol_min) * 100) / 100
+
         await TradeMap.updateMany(
             {
                 acc_src: data.acc,
@@ -31,7 +35,7 @@ export default async (req, res) => {
                         close_time_src: formatDateUTC(data.closed_timestamp + diff_time),
                         close_timestamp_src: data.closed_timestamp + diff_time,
                         swap_src: data.swap,
-                        commission_src: data.commission,
+                        commission_src: commission_src,
                         profit_src: data.profit
                     }
                 }
@@ -57,10 +61,7 @@ export default async (req, res) => {
 
 function processMessage(msg) {
     // E.g. 
-    // 1006135456,996,OK CLOSE&324252647&0,1758987838,7
-    // acc , 996 , OK/FAIL CLOSE & ticket & result_code , timestamp , keyid
-    // acc , 991 , OK/FAIL DELETE & ticket & result_code , timestamp , keyid
-    const data = {};
+    const data = {}
 
     // msg parts
     const msg_parts = msg.split(',')
@@ -88,6 +89,9 @@ function processMessage(msg) {
             data.swap = Number(info_parts[4])
             data.commission = Number(info_parts[5])
             data.profit = Number(info_parts[6])
+            data.error = info_parts[7]
+            data.vol = Number(info_parts[8])
+            data.symbol = info_parts[9]
         }
         else if (data.result_text.toLowerCase().includes('delete')) {
             data.closed_timestamp = Number(info_parts[2])

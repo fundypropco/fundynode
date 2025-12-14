@@ -5,6 +5,7 @@ import { ACTION_HANDLER } from "../../helpers/constant.js"
 import TradeMap from "../../models/TradeMap.js"
 import { getBrokerData } from "../../boot/cache.js"
 import Account from "../../models/Account.js"
+import { symbol } from "joi"
 
 export default async (req, res) => {
 
@@ -17,6 +18,7 @@ export default async (req, res) => {
     const getUpdateDoc = await GetUpdateService.updateStatus(data)
     const brokerData = await getBrokerData(getUpdateDoc?.server)
     const diff_time = Number(brokerData?.diff_time || 0)
+    const symbols = await Symbol.find({ server: getUpdateDoc.server })
 
     // #
     // بررسی نتیجه بسته شدن تک تک تیکتها 
@@ -25,6 +27,8 @@ export default async (req, res) => {
     for (const item of data.items) {
         let keyid = makeID()
         if (item.status === 'success') {
+            const symbol = symbols.find(s => s.symbol === item.symbol)
+            const commission_dist = Math.round(symbol.commission_max * (item.vol / symbol.vol_min) * 100) / 100
             await TradeMap.updateMany(
                 { acc_dist: data.acc, ticket_dist: item.ticket },
                 [
@@ -43,8 +47,9 @@ export default async (req, res) => {
                             close_time_dist: formatDateUTC(item.closed_timestamp + diff_time),
                             close_timestamp_dist: item.closed_timestamp + diff_time,
                             swap_dist: item.swap,
-                            commission_dist: item.commission,
-                            profit_dist: item.profit
+                            commission_dist: commission_dist,
+                            profit_dist: item.profit,
+                            closing_type: 'bulk'
                         }
                     }
                 ]
@@ -65,6 +70,8 @@ export default async (req, res) => {
                 origin_acc: getUpdateDoc.origin_acc,
                 origin_server: getUpdateDoc.origin_server,
                 ticket: item.ticket,
+                symbol: item.symbol,
+                vol: item.vol,
                 keyid: keyid++
             }
             order.message = await makeMsgForHandler(order.handler, order)
@@ -117,7 +124,9 @@ function processMessage(msg) {
                     swap: Number(item[4] || 0),
                     commission: Number(item[5] || 0),
                     profit: Number(item[6] || 0),
-                    error: item[7] || null
+                    error: item[7] || null,
+                    vol: Number(item[8]),
+                    symbol: item[9]
                 }
             } else {
                 return {

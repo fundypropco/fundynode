@@ -21,6 +21,10 @@ export default async (req, res) => {
     if (getUpdateDoc && getUpdateDoc.status === 'success') {
         const brokerData = await getBrokerData(getUpdateDoc.server)
         const diff_time = Number(brokerData.diff_time)
+
+        const symbol = await Symbol.findOne({ server: getUpdateDoc.server, symbol: data.symbol })
+        const commission_dist = Math.round(symbol.commission_max * (data.vol / symbol.vol_min) * 100) / 100
+
         await TradeMap.updateMany(
             {
                 acc_src: getUpdateDoc.origin_acc,
@@ -44,8 +48,9 @@ export default async (req, res) => {
                         close_time_dist: formatDateUTC(data.closed_timestamp + diff_time),
                         close_timestamp_dist: data.closed_timestamp + diff_time,
                         swap_dist: data.swap,
-                        commission_dist: data.commission,
-                        profit_dist: data.profit
+                        commission_dist: commission_dist,
+                        profit_dist: data.profit,
+                        closing_type: 'single',
                     }
                 }
             ]
@@ -122,6 +127,9 @@ function processMessage(msg) {
             data.swap = Number(info_parts[4])
             data.commission = Number(info_parts[5])
             data.profit = Number(info_parts[6])
+            data.error = info_parts[7]
+            data.vol = Number(info_parts[8])
+            data.symbol = info_parts[9]
         }
         else if (data.result_text.toLowerCase().includes('delete')) {
             data.closed_timestamp = Number(info_parts[2])

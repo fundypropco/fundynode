@@ -4,6 +4,7 @@ import GetUpdateService from "../GetUpdateService.js"
 import { isValidSymbols, makeID, getOrderSide, formatDateUTC } from '../../helpers/helper.js'
 import TradeMap from '../../models/TradeMap.js'
 import { getBrokerData } from '../../boot/cache.js'
+import Symbol from '../../models/Symbol.js'
 
 export default async (req, res) => {
 
@@ -111,6 +112,11 @@ async function processPartial(data) {
         // بدست آوردن تیکتهای متناظر با این سفارش روی اکانتهای دیگر 
         const tradeMaps = await TradeMap.find({ acc_src: account.acc, ticket_src: partialInfo.closed_ticket, status: 'open' })
 
+        // # 
+        // محاسبه دقیق میزان کمیسیون حساب مرجع
+        const symbol = await Symbol.findOne({ server: account.server, symbol: data.symbol })
+        const commission_src = Math.round(symbol.commission_max * (partialInfo.closed_vol / symbol.vol_min) * 100) / 100
+
         // #
         // بدست آوردن اکانتهای کپی کننده 
         for (const copier of account.copiers) {
@@ -120,10 +126,11 @@ async function processPartial(data) {
                 await GetUpdateService.create(getUpdateData)
 
                 if (tradeMap) {
+                    tradeMap.vol_src = partialInfo.closed_vol
                     tradeMap.close_time_src = formatDateUTC(partialInfo.closed_timestamp)
                     tradeMap.close_timestamp_src = partialInfo.closed_timestamp
                     tradeMap.close_price_src = partialInfo.closed_price
-                    tradeMap.commission_src = partialInfo.closed_commission
+                    tradeMap.commission_src = commission_src
                     tradeMap.swap_src = partialInfo.closed_swap
                     tradeMap.profit_src = partialInfo.closed_profit
                     await tradeMap.save()

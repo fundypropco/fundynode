@@ -17,6 +17,7 @@ import HandleResCloseAllOrigin from '../services/handlers/HandleResCloseAllOrigi
 import HandleResCloseMagic from '../services/handlers/HandleResCloseMagic.js'
 import HandleOpenTrades from '../services/handlers/HandleOpenTrades.js'
 import HandleResOpenPendingOrder from '../services/handlers/HandleResOpenPendingOrder.js'
+import HandleSampleTrade from '../services/handlers/handleSampleTrade.js'
 
 const getUpdates = asyncHandler(async (req, res) => {
     const result = await GetUpdateService.getUnprocessed(req.params.acc)
@@ -31,6 +32,9 @@ const sendMessage = asyncHandler(async (req, res) => {
 
         case "400":
             return await HandleOpenTrades(req, res)
+
+        case "401":
+            return await HandleSampleTrade(req, res)
 
         case "500":
             return await handleNewOrder(req, res)

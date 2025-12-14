@@ -3,6 +3,7 @@ import { formatDateUTC } from '../../helpers/helper.js'
 import GetUpdateService from '../GetUpdateService.js'
 import TradeMap from "../../models/TradeMap.js"
 import { getBrokerData } from "../../boot/cache.js"
+import Symbol from "../../models/Symbol.js"
 
 export default async (req, res) => {
 
@@ -13,6 +14,7 @@ export default async (req, res) => {
     // #.
     // بروزرسانی وضعیت دستور در صف دستورات 
     const getUpdateDoc = await GetUpdateService.updateStatus(data)
+    const symbols = await Symbol.find({ server: getUpdateDoc.server })
 
     //#
     // بستن مپ معامله کلوز شده 
@@ -20,6 +22,8 @@ export default async (req, res) => {
         const brokerData = await getBrokerData(getUpdateDoc.server)
         const diff_time = Number(brokerData.diff_time)
         for (const item of data.items) {
+            const symbol = symbols.find(s => s.symbol === item.symbol)
+            const commission_dist = Math.round(symbol.commission_max * (item.vol / symbol.vol_min) * 100) / 100
             await TradeMap.updateMany(
                 { acc_dist: data.acc, ticket_dist: item.ticket, status: { $in: ['open', 'pending'] } },
                 [
@@ -38,8 +42,9 @@ export default async (req, res) => {
                             close_time_dist: formatDateUTC(item.closed_timestamp + diff_time),
                             close_timestamp_dist: item.closed_timestamp + diff_time,
                             swap_dist: item.swap,
-                            commission_dist: item.commission,
-                            profit_dist: item.profit
+                            commission_dist: commission_dist,
+                            profit_dist: item.profit,
+                            closing_type: 'all'
                         }
                     }
                 ]
@@ -98,7 +103,9 @@ function processMessage(msg) {
                 closed_timestamp: Number(closed_timestamp),
                 swap: Number(swap),
                 commission: Number(commission),
-                profit: Number(profit)
+                profit: Number(profit),
+                vol: Number(vol),
+                symbol: symbol
             }))
     }
 

@@ -16,23 +16,63 @@ const symbolSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-    tick_size: Number,
-    contract_size: Number,
-    tick_value: Number,
-    vol_step: Number,
-    vol_min: Number,
-    vol_max: Number,
-    digits: Number,
-    point: Number,
+    tick_size: {
+        type: Number,
+        default: 0,
+    },
+    contract_size: {
+        type: Number,
+        default: 0,
+    },
+    tick_value: {
+        type: Number,
+        default: 0,
+    },
+    vol_step: {
+        type: Number,
+        default: 0,
+    },
+    vol_min: {
+        type: Number,
+        default: 0,
+    },
+    vol_max: {
+        type: Number,
+        default: 0,
+    },
+    digits: {
+        type: Number,
+        default: 0,
+    },
+    point: {
+        type: Number,
+        default: 0,
+    },
     weight: {
         type: Number,
         default: 1,
         index: true
     },
+    spread_min: {
+        type: Number,
+        default: 0,
+    },
+    spread_max: {
+        type: Number,
+        default: 0,
+    },
+    commission_min: {
+        type: Number,
+        default: 0,
+    },
+    commission_max: {
+        type: Number,
+        default: 0,
+    },
 })
 
-symbolSchema.index({ server: 1, title: 1 })
-symbolSchema.index({ server: 1, symbol: 1 })
+symbolSchema.index({ server: 1, title: 1 }, { unique: true })
+symbolSchema.index({ server: 1, symbol: 1 }, { unique: true })
 
 const Symbol = mongoose.model('Symbol', symbolSchema, 'symbols')
 
