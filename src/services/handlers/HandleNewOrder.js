@@ -70,26 +70,36 @@ async function processNewOrder(data) {
                     localData.symbol_b = validatedSymbolData.symbol_b
                     localData.description = validatedSymbolData.description
 
-                    // #
-                    // بدست آوردن پارامتر های سفارش کپی 
-                    const getUpdateData = await GetUpdateService.prepareOrderData(account, copier, localData)
+                    // #.
+                    // امکان پذیر بودن سفارش
+                    const isPossible = isOrderPossible(account, copier, localData)
 
-                    // #
-                    // ثبت دستور اجرای سفارش
-                    await GetUpdateService.create(getUpdateData)
+                    if (isPossible.status) {
+                        // #
+                        // بدست آوردن پارامتر های سفارش کپی 
+                        const getUpdateData = await GetUpdateService.prepareOrderData(account, copier, localData)
+
+                        // #
+                        // ثبت دستور اجرای سفارش
+                        await GetUpdateService.create(getUpdateData)
+                        return
+                    } else {
+                        localData.description = isPossible.description
+                    }
                 }
-                else {
-                    // اگر نمادهای معاملاتی نامعتبر باشند
 
-                    // #
-                    // بستن معامله در اکانت ترید 
-                    const getUpdateData = await GetUpdateService.prepareCloseOriginData(account, localData)
+                // #. 
+                // if order is not possible
+                // اگر نمادهای معاملاتی نامعتبر باشند یا موجودی کاربر برای انجام سفارش کافی نباشد
 
-                    // #
-                    // ثبت دستور اجرا 
-                    await GetUpdateService.create(getUpdateData)
+                // #
+                // بستن معامله در اکانت ترید 
+                const getUpdateData = await GetUpdateService.prepareCloseOriginData(account, localData)
 
-                }
+                // #
+                // ثبت دستور اجرا 
+                await GetUpdateService.create(getUpdateData)
+
             } // copier copy is enabled
         }// for
     } // account copy is enabled
@@ -150,6 +160,21 @@ async function isDuplicatedOrder(account, copier, data) {
     }
 
     return !!tradeMap
+}
+
+function isOrderPossible(account, copier, data) {
+    const result = {}
+    const freeEq = account.initial + copier.profit_bl + profit_eq - account.drawdown
+    const commission = data.symbol_b.commission_max * (data.vol / data.symbol_b.vol_min)
+    const spread = data.symbol_b.tick_value * (data.symbol_b.spread_max / data.symbol_b.point)
+    const minEq = 2 * (commission + spread)
+    if (freeEq > minEq) {
+        result.status = true
+    } else {
+        result.status = false
+        result.description = [`free equity is not enough / ${freeEq} <= ${minEq}`]
+    }
+    return result
 }
 
 async function processMessage(msg) {

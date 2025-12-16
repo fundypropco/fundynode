@@ -563,42 +563,6 @@ export function getWiderTp(symbolObj, side, en, tp) {
     return ntp
 }
 
-export async function prepareGetUpdateOrderData(account, copier, data) {
-    const perparedData = {}
-
-    perparedData.handler = ACTION_HANDLER[data.type]
-    perparedData.server = copier.server
-    perparedData.acc = copier.acc
-    perparedData.ticket = ''
-    perparedData.symbol = data.symbol_b.symbol
-    perparedData.symbol_title = data.symbol_a.title
-    perparedData.side = getOrderSide(data.side)
-    perparedData.vol = data.vol
-    perparedData.sl = getWiderSl(data.symbol_b, perparedData.side, Number(data.open_price), Number(data.sl))
-    perparedData.tp = getWiderTp(data.symbol_b, perparedData.side, Number(data.open_price), Number(data.tp))
-    perparedData.slippage = 50
-    perparedData.description = data.description
-    perparedData.status = 'pending'
-    perparedData.keyid++
-
-    perparedData.origin_server = account.server
-    perparedData.origin_acc = account.acc
-    perparedData.origin_ticket = data.ticket
-    perparedData.origin_symbol = data.symbol_a.symbol
-    perparedData.origin_vol = data.vol
-    perparedData.origin_sl = data.sl
-    perparedData.origin_tp = data.tp
-    perparedData.origin_open_price = data.open_price
-    perparedData.origin_open_time = formatDate(data.open_time)
-    perparedData.origin_commission = ''
-    perparedData.origin_comment = ''
-    perparedData.origin_magic = ''
-
-    perparedData.message = await makeMsgForHandler(data.handler, data)
-
-    return perparedData
-}
-
 export function getOrderVol(accountObj, copierObj, originSymbol, originVol) {
     let finalVol = originVol
     if (copierObj.vol == 'exact') {
@@ -612,7 +576,7 @@ export function getOrderVol(accountObj, copierObj, originSymbol, originVol) {
 
 export async function isValidSymbols(accountObj, copierObj, data) {
     const result = {}
-    result.description = [];
+    result.description = []
     result.is_valid_symbols = false
     result.symbol_a = await Symbol.findOne({ server: accountObj.server, symbol: data.symbol })
     if (!result.symbol_a) {
