@@ -14,7 +14,7 @@ export default async (req, res) => {
     const broker = await Broker.findOneAndUpdate({ server: data.server }, {
         $set: {
             title: data.name,
-            diff_time: data.diff
+            diff_time: Math.round(data.diff / 1800) * 1800 * 1000
         },
         $setOnInsert: {
             server: data.server
@@ -51,11 +51,11 @@ export default async (req, res) => {
                     title: symbolTitle
                 },
                 $min: {
-                    commission_max: data.commission,
+                    commission_max: Math.round((data.commission / 2) * 1000) / 1000,
                     spread_min: data.spread
                 },
                 $max: {
-                    commission_min: data.commission,
+                    commission_min: Math.round((data.commission / 2) * 1000) / 1000,
                     spread_max: data.spread
                 }
             },
