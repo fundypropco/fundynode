@@ -164,7 +164,7 @@ async function isDuplicatedOrder(account, copier, data) {
 
 function isOrderPossible(account, copier, data) {
     const result = {}
-    const freeEq = account.initial + copier.profit_bl + profit_eq - account.drawdown
+    const freeEq = account.initial + copier.profit_bl + copier.profit_eq - account.drawdown
     const commission = data.symbol_b.commission_max * (data.vol / data.symbol_b.vol_min)
     const spread = data.symbol_b.tick_value * (data.symbol_b.spread_max / data.symbol_b.point)
     const minEq = 2 * (commission + spread)
