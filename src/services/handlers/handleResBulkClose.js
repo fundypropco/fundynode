@@ -5,7 +5,7 @@ import { ACTION_HANDLER } from "../../helpers/constant.js"
 import TradeMap from "../../models/TradeMap.js"
 import { getBrokerData } from "../../boot/cache.js"
 import Account from "../../models/Account.js"
-import { symbol } from "joi"
+import Symbol from "../../models/Symbol.js"
 
 export default async (req, res) => {
 
