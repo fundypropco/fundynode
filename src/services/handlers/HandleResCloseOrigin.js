@@ -3,6 +3,7 @@ import { formatDateUTC } from '../../helpers/helper.js'
 import GetUpdateService from '../GetUpdateService.js'
 import TradeMap from "../../models/TradeMap.js"
 import { getBrokerData } from "../../boot/cache.js"
+import Symbol from "../../models/Symbol.js"
 
 export default async (req, res) => {
 
