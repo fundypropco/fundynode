@@ -4,6 +4,7 @@ import { formatDateUTC } from '../../helpers/helper.js'
 import TradeMap from '../../models/TradeMap.js'
 import { getBrokerData } from "../../boot/cache.js"
 import AccountService from "../AccountService.js"
+import Symbol from "../../models/Symbol.js"
 
 export default async (req, res) => {
 
@@ -17,7 +18,8 @@ export default async (req, res) => {
 
     if (getUpdateDoc && getUpdateDoc.status == 'success') {
         // #.
-        // دریافت اطلاعات بروکر
+        // دریافت اطلاعات بروکر و نماد
+        const symbol = await Symbol.findOne({ server: getUpdateDoc.server, symbol: getUpdateDoc.symbol })
         const brokerData = await getBrokerData(getUpdateDoc.server)
         const diff_time = Number(brokerData.diff_time)
 
