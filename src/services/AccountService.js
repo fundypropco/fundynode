@@ -2,6 +2,7 @@ import { ACTION_HANDLER } from "../helpers/constant.js"
 import { makeID, makeMsgForHandler } from "../helpers/helper.js"
 import TradeMap from "../models/TradeMap.js"
 import GetUpdateService from "./GetUpdateService.js"
+import Account from "../models/Account.js"
 
 const bulkClose = async (account) => {
     // تمام تریدهای مربوط به اکانت تریدر 
