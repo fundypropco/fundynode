@@ -76,7 +76,7 @@ async function processClose(data) {
                     openTradeMap.profit_src = data.closed_profit
                     if (commission_src) {
                         if (tradeMaps.length === 1) {
-                            openTradeMap.commission_src = commission_src
+                            openTradeMap.commission_src = data.closed_commission
                         } else if (tradeMaps.length > 1) {
                             openTradeMap.commission_src += commission_src
                         }

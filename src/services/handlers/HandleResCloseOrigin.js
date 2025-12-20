@@ -56,7 +56,7 @@ export default async (req, res) => {
             latestTradeMap.swap_src = data.swap
             if (commission_src) {
                 if (tradeMaps.length === 1) {
-                    latestTradeMap.commission_src = commission_src
+                    latestTradeMap.commission_src = data.commission
                 } else if (tradeMaps.length > 1) {
                     latestTradeMap.commission_src += commission_src
                 }

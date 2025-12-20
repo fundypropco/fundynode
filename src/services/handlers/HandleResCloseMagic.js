@@ -52,7 +52,7 @@ export default async (req, res) => {
                 openTradeMap.closing_type = 'magic'
                 if (commission_dist) {
                     if (tradeMaps.length === 1) {
-                        openTradeMap.commission_dist = commission_dist
+                        openTradeMap.commission_dist = item.commission
                     } else if (tradeMaps.length > 1) {
                         openTradeMap.commission_dist += commission_dist
                     }
