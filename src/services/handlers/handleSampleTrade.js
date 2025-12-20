@@ -51,11 +51,11 @@ export default async (req, res) => {
                     title: symbolTitle
                 },
                 $min: {
-                    commission_max: Math.round((data.commission / 2) * 1000) / 1000,
+                    commission_max: Math.round(data.commission) / 100,
                     spread_min: data.spread
                 },
                 $max: {
-                    commission_min: Math.round((data.commission / 2) * 1000) / 1000,
+                    commission_min: Math.round(data.commission) / 100,
                     spread_max: data.spread
                 }
             },

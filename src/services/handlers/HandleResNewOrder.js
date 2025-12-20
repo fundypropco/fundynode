@@ -5,6 +5,7 @@ import Account from "../../models/Account.js"
 import Symbol from "../../models/Symbol.js"
 import { formatDateUTC, getMqlError, makeID } from "../../helpers/helper.js"
 import { getBrokerData } from "../../boot/cache.js"
+import AccountService from "../AccountService.js"
 
 export default async (req, res) => {
 
@@ -17,6 +18,8 @@ export default async (req, res) => {
     const getUpdateDoc = await GetUpdateService.updateStatus(data)
 
     if (getUpdateDoc && getUpdateDoc.status == 'success') {
+        // #.
+        // دریافت اطلاعات بروکر و نماد
         const brokerData = await getBrokerData(getUpdateDoc.server)
         const diff_time = Number(brokerData.diff_time)
         const symbol = await Symbol.findOne({ server: getUpdateDoc.server, symbol: getUpdateDoc.symbol })
@@ -36,6 +39,7 @@ export default async (req, res) => {
             open_timestamp_src: getUpdateDoc.origin_open_timestamp,
             magic_src: getUpdateDoc.origin_magic,
             comment_src: getUpdateDoc.origin_comment,
+            commission_src: getUpdateDoc.origin_commission,
 
             acc_dist: data.acc,
             ticket_dist: data.ticket,
@@ -49,6 +53,7 @@ export default async (req, res) => {
             open_timestamp_dist: data.open_timestamp + diff_time,
             magic_dist: data.magic,
             comment_dist: data.comment,
+            commission_dist: data.commission,
 
             symbol_title: getUpdateDoc.symbol_title,
             side: getUpdateDoc.side,
@@ -61,6 +66,10 @@ export default async (req, res) => {
             symbol_weight: symbol.weight
         })
         await tradeMap.save()
+
+        // #.
+        // ثبت اطلاعات مالی در بالانس و بررسی دراودان 
+        await AccountService.updateProfitBl(getUpdateDoc.origin_acc, data.acc, data.commission)
 
         // #.
         // ارسال دستورات در وضعیت انتظار و وابسته به این دیتا 
@@ -129,6 +138,8 @@ function processMessage(msg) {
         data.tp = Number(info_parts[6])
         data.magic = Number(info_parts[7])
         data.comment = info_parts[8]
+        data.error = info_parts[9]
+        data.commission = Math.round(Number(info_parts[10]) * 100) / 100
     } else {
         data.status = 'error'
         data.result_code = info_parts[2]

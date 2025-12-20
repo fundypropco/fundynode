@@ -132,6 +132,9 @@ const getUpdateSchema = new mongoose.Schema({
     origin_new_vol: {
         type: Number,
     },
+    origin_new_commission: {
+        type: Number,
+    },
 
     symbol_title: {
         type: String,

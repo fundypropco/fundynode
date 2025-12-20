@@ -1,5 +1,6 @@
 import Account from "../models/Account.js";
 import GetUpdate from "../models/GetUpdate.js";
+import Broker from "../models/Broker.js";
 import { ACTION_HANDLER } from '../helpers/constant.js'
 import { makeMsgForHandler, makeID } from '../helpers/helper.js'
 
@@ -7,26 +8,16 @@ const brokerSymbolsSeeder = async (serverName = 'all') => {
 
     const accServers = []
     if (serverName == 'all') {
-        // پیدا کردن حسابهای معاملاتی با وضعیت کپی فعال
-        const accounts = await Account.find({ copy: true })
-
+        const brokers = await Broker.find()
         const servers = new Set()
-
-        for (const account of accounts) {
-            if (!servers.has(account.server)) {
-                servers.add(account.server)
-                accServers.push({ acc: account.acc, server: account.server })
-            }
-
-            for (const copier of account.copiers) {
-                if (!servers.has(copier.server) && copier.copy) {
-                    servers.add(copier.server)
-                    accServers.push({ acc: copier.acc, server: copier.server })
-                }
+        for (const broker of brokers) {
+            if (!servers.has(broker.server)) {
+                servers.add(broker.server)
+                accServers.push({ acc: broker.acc, server: broker.server })
             }
         }
-    } else {
-        const result = await Account.aggregate([
+    } else if (serverName == 'old') {
+        const [result] = await Account.aggregate([
             {
                 $match: {
                     copy: true,
@@ -65,9 +56,12 @@ const brokerSymbolsSeeder = async (serverName = 'all') => {
             { $limit: 1 }
         ]).collation({ locale: 'en', strength: 2 })
 
-        if (result.length) {
-            accServers.push({ acc: result[0].acc, server: serverName })
+        if (result) {
+            accServers.push({ acc: result.acc, server: serverName })
         }
+    } else {
+        const broker = await Broker.findOne({ server: serverName })
+        accServers.push({ acc: broker.acc, server: serverName })
     }
 
     let keyid = makeID()

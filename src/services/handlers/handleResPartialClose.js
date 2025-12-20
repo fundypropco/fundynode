@@ -2,8 +2,6 @@ import RequestLog from "../../models/RequestLog.js"
 import GetUpdateService from "../GetUpdateService.js"
 import { formatDateUTC } from '../../helpers/helper.js'
 import TradeMap from '../../models/TradeMap.js'
-import Symbol from "../../models/Symbol.js"
-import Account from "../../models/Account.js"
 import { getBrokerData } from "../../boot/cache.js"
 import AccountService from "../AccountService.js"
 
@@ -18,36 +16,50 @@ export default async (req, res) => {
     const getUpdateDoc = await GetUpdateService.updateStatus(data)
 
     if (getUpdateDoc && getUpdateDoc.status == 'success') {
-        const symbol = await Symbol.findOne({ server: getUpdateDoc.server, symbol: getUpdateDoc.symbol })
-        const commission_dist = Math.round(symbol.commission_max * (getUpdateDoc.vol / symbol.vol_min) * 100) / 100
+        // #.
+        // دریافت اطلاعات بروکر
         const brokerData = await getBrokerData(getUpdateDoc.server)
         const diff_time = Number(brokerData.diff_time)
 
+        // #. 
+        // پیدا کردن تریدهای مرتبط با این ترید
+        // اگر روی متاتریدر 5 پارشیال شده باشد چند رکورد با تیکت یکسان داریم و کمیسیون تجمیعی است
+        const tradeMaps = await TradeMap.find({
+            acc_src: getUpdateDoc.origin_acc,
+            ticket_src: getUpdateDoc.origin_ticket,
+            acc_dist: data.acc,
+            ticket_dist: data.closed_ticket
+        })
+
         // #.
-        // بستن معامله کلوز شده در تیکت مپ 
-        const closedTradeMap = await TradeMap.findOneAndUpdate(
-            { acc_src: getUpdateDoc.origin_acc, ticket_src: getUpdateDoc.origin_ticket, acc_dist: data.acc, ticket_dist: data.closed_ticket, status: 'open' },
-            {
-                $set: {
-                    status: 'closed',
+        // محاسبه کمیسیون های تجمیعی لحاظ شده برای این معامله تا کنون
+        const sumCommissions = tradeMaps.reduce((s, t) => s + (t.commission_dist ?? 0), 0)
 
-                    vol_dist: data.closed_vol,
-                    close_price_dist: data.closed_price,
-                    close_time_dist: formatDateUTC(data.closed_timestamp + diff_time),
-                    close_timestamp_dist: data.closed_timestamp + diff_time,
-                    swap_dist: data.swap,
-                    commission_dist: commission_dist,
-                    profit_dist: data.profit,
+        // #.
+        // اگر مقدار کمیسیون گزارش شده از کمیسیون های تجمیعی بیشتر باشد
+        let new_commission_dist = 0
+        if (data.commission < sumCommissions) {
+            new_commission_dist = Math.round((data.commission - sumCommissions) * 100) / 100
+        }
 
-                    closing_type: 'partial'
-                }
-            },
-            { new: true }
-        )
+        // #. 
+        // پیدا کردن معامله باز جهت ثبت اطلاعات و تغییر وضعیت به بسته شده
+        const openTradeMap = tradeMaps.find(t => t.status === 'open')
+        if (openTradeMap) {
+            openTradeMap.vol_dist = data.closed_vol
+            openTradeMap.close_price_dist = data.closed_price
+            openTradeMap.close_time_dist = formatDateUTC(data.closed_timestamp + diff_time)
+            openTradeMap.close_timestamp_dist = data.closed_timestamp + diff_time
+            openTradeMap.profit_dist = data.profit
+            openTradeMap.swap_dist = data.swap
+            openTradeMap.status = 'closed'
+            openTradeMap.closing_type = 'partial'
+            await openTradeMap.save()
+        }
 
         // #.
         // مپ کردن اکانت و تیکت های مرجع و کپی کننده باقیمانده 
-        const tradeMap = new TradeMap({
+        const newOpenTradeMap = new TradeMap({
             server_src: getUpdateDoc.origin_server,
             acc_src: getUpdateDoc.origin_acc,
             ticket_src: getUpdateDoc.origin_new_ticket,
@@ -58,6 +70,7 @@ export default async (req, res) => {
             tp_src: closedTradeMap.tp_src,
             open_time_src: getUpdateDoc.origin_open_time,
             open_timestamp_src: getUpdateDoc.origin_open_timestamp,
+            commission_src: getUpdateDoc.origin_new_commission,
 
             server_dist: getUpdateDoc.server,
             acc_dist: data.acc,
@@ -71,6 +84,7 @@ export default async (req, res) => {
             tp_dist: data.tp,
             magic_dist: data.magic,
             comment_dist: data.comment,
+            commission_dist: new_commission_dist,
 
             symbol_title: closedTradeMap.symbol_title,
             symbol_weight: closedTradeMap.symbol_weight,
@@ -78,25 +92,12 @@ export default async (req, res) => {
             status: 'open',
             tick_value: Number((symbol.tick_value * data.open_vol).toFixed(2)),
         })
-        await tradeMap.save()
+        await newOpenTradeMap.save()
 
         // #.
-        // ثبت اطلاعات مالی در بالانس 
-        const total_closed_profit = Number((data.profit + data.swap + data.commission).toFixed(2))
-        const updatedAccount = await Account.findOneAndUpdate(
-            { acc: closedTradeMap.acc_src, "copiers.acc": closedTradeMap.acc_dist },
-            { $inc: { "copiers.$.profit_bl": total_closed_profit } },
-            { new: true }
-        )
-        const updatedCopier = updatedAccount.copiers.find(c => c.acc == data.acc)
-
-        // #.
-        // بررسی دراودان حساب 
-        if (updatedAccount.initial + updatedCopier.profit_bl <= updatedAccount.drawdown) {
-            await AccountService.bulkClose(updatedAccount)
-            await new Promise(resolve => setTimeout(resolve, 3000))
-            await AccountService.closeAll(updatedAccount)
-        }
+        // ثبت اطلاعات مالی در بالانس و بررسی دراودان 
+        const profit_bl = Math.round((data.profit + data.swap + new_commission_dist) * 100) / 100
+        await AccountService.updateProfitBl(getUpdateDoc.origin_acc, data.acc, profit_bl)
 
         // #.
         // ارسال دستورات در وضعیت انتظار و وابسته به این دیتا 

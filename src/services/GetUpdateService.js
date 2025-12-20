@@ -68,6 +68,7 @@ const create = async (data) => {
         origin_comment: data.origin_comment ?? '',
         origin_new_ticket: data.origin_new_ticket ?? 0,
         origin_new_vol: data.origin_new_vol ?? 0,
+        origin_new_commission: data.origin_new_commission ?? 0,
     })
 
     return await getUpdate.save()
@@ -158,8 +159,8 @@ const prepareOrderData = async (account, copier, data) => {
     perparedData.symbol_title = data.symbol_a.title
     perparedData.side = data.side
     perparedData.vol = data.vol
-    perparedData.sl = getWiderSl(data.symbol_b, perparedData.side, Number(data.open_price), Number(data.sl))
-    perparedData.tp = getWiderTp(data.symbol_b, perparedData.side, Number(data.open_price), Number(data.tp))
+    perparedData.sl = getWiderSl(data.symbol_b, perparedData.side, Number(data.sl))
+    perparedData.tp = getWiderTp(data.symbol_b, perparedData.side, Number(data.tp))
     perparedData.slippage = 50
     perparedData.description = data.description
     perparedData.magic = account.acc
@@ -251,6 +252,7 @@ const preparePartialCloseData = async (account, copier, data, tradeMap) => {
     perparedData.origin_open_timestamp = data.open_timestamp
     perparedData.origin_new_ticket = data.open_ticket
     perparedData.origin_new_vol = data.open_vol
+    perparedData.origin_new_commission = data.origin_new_commission
 
     perparedData.message = await makeMsgForHandler(perparedData.handler, perparedData)
 
@@ -311,8 +313,8 @@ const prepareModifyData = async (account, copier, data, tradeMap) => {
     perparedData.symbol = tradeMap?.symbol_dist ?? ''
     perparedData.symbol_title = tradeMap?.symbol_title ?? ''
     perparedData.status = tradeMap ? 'pending' : 'waiting'
-    perparedData.sl = Number(data.sl) && symbol && side ? getWiderSl(symbol, side, Number(data.open_price), Number(data.sl)) : data.sl
-    perparedData.tp = Number(data.tp) && symbol && side ? getWiderTp(symbol, side, Number(data.open_price), Number(data.tp)) : data.tp
+    perparedData.sl = Number(data.sl) && symbol && side ? getWiderSl(symbol, side, Number(data.sl)) : data.sl
+    perparedData.tp = Number(data.tp) && symbol && side ? getWiderTp(symbol, side, Number(data.tp)) : data.tp
     perparedData.side = tradeMap?.side ?? 'none'
     perparedData.keyid = data.keyid++
 

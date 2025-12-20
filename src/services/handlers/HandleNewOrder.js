@@ -4,7 +4,6 @@ import GetUpdateService from "../GetUpdateService.js"
 import { isValidSymbols, makeID, getOrderSide, formatDateUTC } from '../../helpers/helper.js'
 import TradeMap from '../../models/TradeMap.js'
 import { getBrokerData } from '../../boot/cache.js'
-import Symbol from '../../models/Symbol.js'
 
 export default async (req, res) => {
 
@@ -81,8 +80,7 @@ async function processNewOrder(data) {
 
                         // #
                         // ثبت دستور اجرای سفارش
-                        await GetUpdateService.create(getUpdateData)
-                        return
+                        return await GetUpdateService.create(getUpdateData)
                     } else {
                         localData.description = isPossible.description
                     }
@@ -120,30 +118,35 @@ async function processPartial(data) {
 
         // #
         // بدست آوردن تیکتهای متناظر با این سفارش روی اکانتهای دیگر 
-        const tradeMaps = await TradeMap.find({ acc_src: account.acc, ticket_src: partialInfo.closed_ticket, status: 'open' })
-
-        // # 
-        // محاسبه دقیق میزان کمیسیون حساب مرجع
-        const symbol = await Symbol.findOne({ server: account.server, symbol: data.symbol })
-        const commission_src = Math.round(symbol.commission_max * (partialInfo.closed_vol / symbol.vol_min) * 100) / 100
+        const tradeMaps = await TradeMap.find({ acc_src: account.acc, ticket_src: partialInfo.closed_ticket })
 
         // #
         // بدست آوردن اکانتهای کپی کننده 
         for (const copier of account.copiers) {
             if (copier.copy) {
-                const tradeMap = tradeMaps.find(t => t.acc_dist == copier.acc)
-                const getUpdateData = await GetUpdateService.preparePartialCloseData(account, copier, partialInfo, tradeMap)
+                const openTradeMap = tradeMaps.find(t => t.acc_dist == copier.acc && t.status == 'open')
+                const sumCommissions = tradeMaps.reduce((s, t) => {
+                    if (t.acc_dist === copier.acc) {
+                        return s + (t.commission_src ?? 0)
+                    }
+                    return s
+                }, 0)
+                let newCommission = 0
+                if (data.closed_commission < sumCommissions) {
+                    newCommission = Math.round((data.closed_commission - sumCommissions) * 100) / 100
+                }
+                partialInfo.origin_new_commission = newCommission
+                const getUpdateData = await GetUpdateService.preparePartialCloseData(account, copier, partialInfo, openTradeMap)
                 await GetUpdateService.create(getUpdateData)
 
-                if (tradeMap) {
-                    tradeMap.vol_src = partialInfo.closed_vol
-                    tradeMap.close_time_src = formatDateUTC(partialInfo.closed_timestamp)
-                    tradeMap.close_timestamp_src = partialInfo.closed_timestamp
-                    tradeMap.close_price_src = partialInfo.closed_price
-                    tradeMap.commission_src = commission_src
-                    tradeMap.swap_src = partialInfo.closed_swap
-                    tradeMap.profit_src = partialInfo.closed_profit
-                    await tradeMap.save()
+                if (openTradeMap) {
+                    openTradeMap.vol_src = partialInfo.closed_vol
+                    openTradeMap.close_time_src = formatDateUTC(partialInfo.closed_timestamp)
+                    openTradeMap.close_timestamp_src = partialInfo.closed_timestamp
+                    openTradeMap.close_price_src = partialInfo.closed_price
+                    openTradeMap.swap_src = partialInfo.closed_swap
+                    openTradeMap.profit_src = partialInfo.closed_profit
+                    await openTradeMap.save()
                 }
             }
         }

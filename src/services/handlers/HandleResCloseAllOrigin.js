@@ -3,7 +3,6 @@ import { formatDateUTC } from '../../helpers/helper.js'
 import GetUpdateService from '../GetUpdateService.js'
 import TradeMap from "../../models/TradeMap.js"
 import { getBrokerData } from "../../boot/cache.js"
-import Symbol from "../../models/Symbol.js"
 
 export default async (req, res) => {
 
@@ -16,28 +15,52 @@ export default async (req, res) => {
     const getUpdateDoc = await GetUpdateService.updateStatus(data)
     const brokerData = await getBrokerData(getUpdateDoc?.server)
     const diff_time = Number(brokerData?.diff_time || 0)
-    const symbols = await Symbol.find({ server: getUpdateDoc.server })
 
     // #.
     // ثبت اطلاعات مالی اکانت ترید 
     for (const item of data.items) {
-        const symbol = symbols.find(s => s.symbol === item.symbol)
-        const commission_src = Math.round(symbol.commission_max * (item.vol / symbol.vol_min) * 100) / 100
-        await TradeMap.updateMany(
-            { acc_src: data.acc, ticket_src: item.ticket },
-            [
-                {
-                    $set: {
-                        close_price_src: item.closed_price ?? 0,
-                        close_time_src: formatDateUTC(item.closed_timestamp + diff_time),
-                        close_timestamp_src: item.closed_timestamp + diff_time,
-                        swap_src: item.swap,
-                        commission_src: commission_src,
-                        profit_src: item.profit
-                    }
+
+        // #. 
+        // پیدا کردن تریدهای مرتبط با این ترید
+        // اگر روی متاتریدر 5 پارشیال شده باشد چند رکورد با تیکت یکسان داریم و کمیسیون تجمیعی است
+        const tradeMaps = await TradeMap.find({
+            acc_src: data.acc,
+            ticket_src: item.ticket,
+        }).sort({ created_at: -1 })
+
+        // #.
+        // بدست آوردن آخرین ترید از مجموعه
+        const latestTradeMap = tradeMaps[0]
+
+        // #.
+        // محاسبه کمیسیون های تجمیعی لحاظ شده برای این معامله تا کنون
+        const sumCommissions = tradeMaps.reduce((s, t) => s + (t.commission_dist ?? 0), 0)
+
+        // #.
+        // اگر مقدار کمیسیون گزارش شده از کمیسیون های تجمیعی بیشتر باشد
+        // بیشتر بودن در کمیسیون به معادل منفی تر بودن هست
+        let commission_src = 0
+        if (item.commission < sumCommissions) {
+            commission_src = Math.round((item.commission - sumCommissions) * 100) / 100
+        }
+
+        // #. 
+        // پیدا کردن معامله جهت ثبت اطلاعات و تغییر وضعیت به بسته شده
+        if (latestTradeMap) {
+            latestTradeMap.close_price_src = item.closed_price
+            latestTradeMap.close_time_src = formatDateUTC(item.closed_timestamp + diff_time)
+            latestTradeMap.close_timestamp_src = item.closed_timestamp + diff_time
+            latestTradeMap.profit_src = item.profit
+            latestTradeMap.swap_src = item.swap
+            if (commission_src) {
+                if (tradeMaps.length === 1) {
+                    latestTradeMap.commission_src = commission_src
+                } else if (tradeMaps.length > 1) {
+                    latestTradeMap.commission_src += commission_src
                 }
-            ]
-        )
+            }
+            await latestTradeMap.save()
+        }
     }
 
     // #.

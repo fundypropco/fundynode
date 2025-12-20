@@ -136,7 +136,7 @@ const tradeMapSchema = new mongoose.Schema({
     },
     closing_type: {
         type: String,
-        enum: ['single', 'partial', 'bulk', 'all', 'none'],
+        enum: ['single', 'partial', 'bulk', 'magic', 'all', 'none'],
         default: 'none'
     },
     created_at: {

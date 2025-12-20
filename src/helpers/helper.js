@@ -515,7 +515,7 @@ export async function getCopyTradeParams(account, copier, order) {
     return data
 }
 
-export function getWiderSl(symbolObj, side, en, sl) {
+export function getWiderSl(symbolObj, side, sl) {
     const diff_in_points = 50
     let nsl = sl
     if (sl) {
@@ -539,7 +539,7 @@ export function getWiderSl(symbolObj, side, en, sl) {
     return nsl
 }
 
-export function getWiderTp(symbolObj, side, en, tp) {
+export function getWiderTp(symbolObj, side, tp) {
     const diff_in_points = 50
     let ntp = tp
     if (tp) {

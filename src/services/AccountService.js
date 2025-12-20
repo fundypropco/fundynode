@@ -77,7 +77,37 @@ const closeAll = async (account) => {
     await GetUpdateService.create(order)
 }
 
+const failIfDrawdown = async (account, copier) => {
+    if (account.copy && (account.initial + copier.profit_bl <= account.drawdown)) {
+        await bulkClose(account)
+        account.copy = false
+        await account.save()
+        await new Promise(resolve => setTimeout(resolve, 3000))
+        await closeAll(account)
+    }
+}
+
+const updateProfitBl = async (traderAcc, copierAcc, profitBl, checkDrawdownFlag = true) => {
+    const updatedAccount = await Account.findOneAndUpdate(
+        { acc: traderAcc, "copiers.acc": copierAcc },
+        { $inc: { "copiers.$.profit_bl": profitBl } },
+        { new: true }
+    )
+    const updatedCopier = updatedAccount.copiers.find(c => c.acc == copierAcc)
+
+    if (checkDrawdownFlag) {
+        await failIfDrawdown(updatedAccount, updatedCopier)
+    }
+
+    return {
+        account: updatedAccount,
+        copier: updatedCopier
+    }
+}
+
 export default {
     closeAll,
-    bulkClose
+    bulkClose,
+    failIfDrawdown,
+    updateProfitBl
 }

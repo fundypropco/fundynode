@@ -88,11 +88,13 @@ export default async (req, res) => {
     // #. 
     // بستن معاملات اکانتهای شکست خورده 
     for (const failedAccount of failedAccounts) {
-        await AccountService.bulkClose(failedAccount)
-        failedAccount.copy = false
-        await failedAccount.save()
-        await new Promise(resolve => setTimeout(resolve, 3000))
-        await AccountService.closeAll(failedAccount)
+        if (failedAccount.copy) {
+            await AccountService.bulkClose(failedAccount)
+            failedAccount.copy = false
+            await failedAccount.save()
+            await new Promise(resolve => setTimeout(resolve, 3000))
+            await AccountService.closeAll(failedAccount)
+        }
     }
 
     res.send({
@@ -133,7 +135,7 @@ function processMessage(msg) {
             data.profits[trade.magic] = 0
             data.open_trades[trade.magic] = 0
         }
-        data.profits[trade.magic] += trade.profit + trade.swap + trade.commission
+        data.profits[trade.magic] += trade.profit + trade.swap
         data.open_trades[trade.magic]++
     }
 
