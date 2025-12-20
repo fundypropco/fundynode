@@ -57,6 +57,9 @@ export default async (req, res) => {
                 $max: {
                     commission_min: Math.round(data.commission) / 100,
                     spread_max: data.spread
+                },
+                $set: {
+                    spread_last: data.spread
                 }
             },
             {

@@ -53,11 +53,27 @@ const symbolSchema = new mongoose.Schema({
         default: 1,
         index: true
     },
+    margin: {
+        type: Number,
+        default: 0
+    },
     spread_min: {
         type: Number,
         default: 0,
     },
     spread_max: {
+        type: Number,
+        default: 0,
+    },
+    spread_avg_5: {
+        type: Number,
+        default: 0,
+    },
+    spread_avg_50: {
+        type: Number,
+        default: 0,
+    },
+    spread_last: {
         type: Number,
         default: 0,
     },
