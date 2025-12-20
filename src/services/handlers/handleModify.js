@@ -25,13 +25,13 @@ export default async (req, res) => {
 
             // #.
             // بدست آوردن تیکتهای متناظر با این سفارش روی اکانتهای دیگر 
-            const tradeMaps = await TradeMap.find({ acc_src: account.acc, ticket_src: modifyInfo.ticket, status: { $in: ['open', 'pending'] } })
+            const tradeMaps = await TradeMap.find({ acc_src: account.acc, ticket_src: modifyInfo.ticket })
 
             // #.
             // بدست آوردن اکانتهای کپی کننده 
             for (const copier of account.copiers) {
                 if (copier.copy) {
-                    const tradeMap = tradeMaps.find(t => t.acc_dist == copier.acc)
+                    const tradeMap = tradeMaps.find(t => t.acc_dist == copier.acc && t.status === 'open')
                     const getUpdateData = await GetUpdateService.prepareModifyData(account, copier, modifyInfo, tradeMap)
                     await GetUpdateService.create(getUpdateData)
                 }

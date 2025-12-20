@@ -20,7 +20,8 @@ export default async (req, res) => {
                 acc_src: getUpdateDoc.origin_acc,
                 ticket_src: getUpdateDoc.origin_ticket,
                 acc_dist: data.acc,
-                ticket_dist: data.ticket
+                ticket_dist: data.ticket,
+                status: 'open'
             },
             {
                 $set: {
