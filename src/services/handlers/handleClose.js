@@ -48,24 +48,40 @@ async function processClose(data) {
 
         // #.
         // بدست آوردن تیکتهای متناظر با این سفارش روی اکانتهای دیگر 
-        const tradeMaps = await TradeMap.find({ acc_src: account.acc, ticket_src: data.closed_ticket, status: { $in: ['open', 'pending'] } })
+        const tradeMaps = await TradeMap.find({ acc_src: account.acc, ticket_src: data.closed_ticket })
 
         // #.
         // بدست آوردن اکانتهای کپی کننده 
         for (const copier of account.copiers) {
             if (copier.copy) {
-                const tradeMap = tradeMaps.find(t => t.acc_dist == copier.acc)
-                const getUpdateData = await GetUpdateService.prepareCloseData(account, copier, data, tradeMap)
+                const openTradeMap = tradeMaps.find(t => t.acc_dist == copier.acc && t.status == 'open')
+                const sumCommissions = tradeMaps.reduce((s, t) => {
+                    if (t.acc_dist === copier.acc) {
+                        return s + (t.commission_src ?? 0)
+                    }
+                    return s
+                }, 0)
+                let commission_src = 0
+                if (data.closed_commission < sumCommissions) {
+                    commission_src = Math.round((data.closed_commission - sumCommissions) * 100) / 100
+                }
+                const getUpdateData = await GetUpdateService.prepareCloseData(account, copier, data, openTradeMap)
                 await GetUpdateService.create(getUpdateData)
 
-                if (tradeMap) {
-                    tradeMap.close_time_src = formatDateUTC(data.closed_timestamp)
-                    tradeMap.close_timestamp_src = data.closed_timestamp
-                    tradeMap.close_price_src = data.closed_price
-                    tradeMap.commission_src = data.closed_commission
-                    tradeMap.swap_src = data.closed_swap
-                    tradeMap.profit_src = data.closed_profit
-                    await tradeMap.save()
+                if (openTradeMap) {
+                    openTradeMap.close_price_src = data.closed_price
+                    openTradeMap.close_time_src = formatDateUTC(data.closed_timestamp)
+                    openTradeMap.close_timestamp_src = data.closed_timestamp
+                    openTradeMap.swap_src = data.closed_swap
+                    openTradeMap.profit_src = data.closed_profit
+                    if (commission_src) {
+                        if (tradeMaps.length === 1) {
+                            openTradeMap.commission_src = commission_src
+                        } else if (tradeMaps.length > 1) {
+                            openTradeMap.commission_src += commission_src
+                        }
+                    }
+                    await openTradeMap.save()
                 }
             }
         }
