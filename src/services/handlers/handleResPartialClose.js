@@ -27,8 +27,6 @@ export default async (req, res) => {
         // پیدا کردن تریدهای مرتبط با این ترید
         // اگر روی متاتریدر 5 پارشیال شده باشد چند رکورد با تیکت یکسان داریم و کمیسیون تجمیعی است
         const tradeMaps = await TradeMap.find({
-            acc_src: getUpdateDoc.origin_acc,
-            ticket_src: getUpdateDoc.origin_ticket,
             acc_dist: data.acc,
             ticket_dist: data.closed_ticket
         })
