@@ -139,7 +139,7 @@ const tradeMapSchema = new mongoose.Schema({
         enum: ['single', 'partial', 'bulk', 'magic', 'all', 'none'],
         default: 'none'
     },
-    partal_code: {
+    partial_code: {
         type: Number,
         default: 0
     },
