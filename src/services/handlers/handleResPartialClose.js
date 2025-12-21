@@ -58,45 +58,45 @@ export default async (req, res) => {
             openTradeMap.closing_type = 'partial'
             openTradeMap.partial_code = Date.now()
             await openTradeMap.save()
+
+            // #.
+            // مپ کردن اکانت و تیکت های مرجع و کپی کننده باقیمانده 
+            const newOpenTradeMap = new TradeMap({
+                server_src: getUpdateDoc.origin_server,
+                acc_src: getUpdateDoc.origin_acc,
+                ticket_src: getUpdateDoc.origin_new_ticket,
+                symbol_src: openTradeMap.symbol_src,
+                vol_src: getUpdateDoc.origin_new_vol,
+                open_price_src: getUpdateDoc.origin_open_price,
+                sl_src: openTradeMap.sl_src,
+                tp_src: openTradeMap.tp_src,
+                open_time_src: getUpdateDoc.origin_open_time,
+                open_timestamp_src: getUpdateDoc.origin_open_timestamp,
+                commission_src: getUpdateDoc.origin_new_commission,
+
+                server_dist: getUpdateDoc.server,
+                acc_dist: data.acc,
+                ticket_dist: data.open_ticket,
+                symbol_dist: openTradeMap.symbol_dist,
+                vol_dist: data.open_vol,
+                open_price_dist: data.open_price,
+                open_time_dist: formatDateUTC(data.open_timestamp + diff_time),
+                open_timestamp_dist: data.open_timestamp + diff_time,
+                sl_dist: data.sl,
+                tp_dist: data.tp,
+                magic_dist: data.magic,
+                comment_dist: data.comment,
+                commission_dist: new_commission_dist,
+
+                symbol_title: openTradeMap.symbol_title,
+                symbol_weight: openTradeMap.symbol_weight,
+                side: openTradeMap.side,
+                status: 'open',
+                tick_value: Number((symbol.tick_value * data.open_vol).toFixed(2)),
+                partial_code: openTradeMap.partial_code,
+            })
+            await newOpenTradeMap.save()
         }
-
-        // #.
-        // مپ کردن اکانت و تیکت های مرجع و کپی کننده باقیمانده 
-        const newOpenTradeMap = new TradeMap({
-            server_src: getUpdateDoc.origin_server,
-            acc_src: getUpdateDoc.origin_acc,
-            ticket_src: getUpdateDoc.origin_new_ticket,
-            symbol_src: openTradeMap.symbol_src,
-            vol_src: getUpdateDoc.origin_new_vol,
-            open_price_src: getUpdateDoc.origin_open_price,
-            sl_src: openTradeMap.sl_src,
-            tp_src: openTradeMap.tp_src,
-            open_time_src: getUpdateDoc.origin_open_time,
-            open_timestamp_src: getUpdateDoc.origin_open_timestamp,
-            commission_src: getUpdateDoc.origin_new_commission,
-
-            server_dist: getUpdateDoc.server,
-            acc_dist: data.acc,
-            ticket_dist: data.open_ticket,
-            symbol_dist: openTradeMap.symbol_dist,
-            vol_dist: data.open_vol,
-            open_price_dist: data.open_price,
-            open_time_dist: formatDateUTC(data.open_timestamp + diff_time),
-            open_timestamp_dist: data.open_timestamp + diff_time,
-            sl_dist: data.sl,
-            tp_dist: data.tp,
-            magic_dist: data.magic,
-            comment_dist: data.comment,
-            commission_dist: new_commission_dist,
-
-            symbol_title: openTradeMap.symbol_title,
-            symbol_weight: openTradeMap.symbol_weight,
-            side: openTradeMap.side,
-            status: 'open',
-            tick_value: Number((symbol.tick_value * data.open_vol).toFixed(2)),
-            partial_code: openTradeMap.partial_code,
-        })
-        await newOpenTradeMap.save()
 
         // #.
         // ثبت اطلاعات مالی در بالانس و بررسی دراودان 
