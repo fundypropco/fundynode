@@ -20,6 +20,9 @@ const accountReportSchema = new mongoose.Schema({
     equity: {
         type: Number
     },
+    open_trades: {
+        type: Number
+    },
 
     eq_initial: {
         type: Number

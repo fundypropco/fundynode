@@ -48,7 +48,7 @@ export default async (req, res) => {
             const eq = Number(((updatedDoc.initial || 0) + (copier.profit_bl || 0) + (copier.profit_eq || 0)).toFixed(2))
             const bl = Number(((updatedDoc.initial || 0) + (copier.profit_bl || 0)).toFixed(2))
 
-            await updateAccountReport(traderAcc, copierAcc, data.timestamp, bl, eq)
+            await updateAccountReport(traderAcc, copierAcc, data.timestamp, bl, eq, data.open_trades[traderAcc])
         })()
         promises.push(promise)
     }
@@ -144,7 +144,7 @@ function processMessage(msg) {
     return data
 }
 
-async function updateAccountReport(traderAcc, copierAcc, timestamp, bl, eq) {
+async function updateAccountReport(traderAcc, copierAcc, timestamp, bl, eq, open_trades) {
 
     const date = formatDateUTC(timestamp, 'YMD')
     const datetime = formatDateUTC(timestamp)
@@ -253,6 +253,7 @@ async function updateAccountReport(traderAcc, copierAcc, timestamp, bl, eq) {
 
     accountReport.balance = bl
     accountReport.equity = eq
+    accountReport.open_trades = open_trades
     accountReport.updated_at = timestamp
 
     await accountReport.save()
