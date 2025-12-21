@@ -94,7 +94,7 @@ export default async (req, res) => {
             side: openTradeMap.side,
             status: 'open',
             tick_value: Number((symbol.tick_value * data.open_vol).toFixed(2)),
-            partial_code: openTradeMap.partal_code,
+            partial_code: openTradeMap.partial_code,
         })
         await newOpenTradeMap.save()
 
