@@ -124,7 +124,12 @@ const accountReportSchema = new mongoose.Schema({
         type: Number
     },
 
-    updated_at: {
+    updated_time: {
+        type: Number,
+        default: Date.now
+    },
+
+    updated_timestamp: {
         type: Number,
         default: Date.now
     }

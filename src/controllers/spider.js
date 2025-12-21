@@ -28,7 +28,7 @@ const sendMessage = asyncHandler(async (req, res) => {
 
     const handlerNo = getHandlerOfMsg(req.body.message)
     const timestamp = getTimeOfMsg(req.body.message)
-    const dateObj = new Date(datetime)
+    const dateObj = new Date(timestamp)
     const dateObjTimestamp = Number(dateObj.getTime())
     if (timestamp < (dateObjTimestamp - 60_000)) {
         return res.send({

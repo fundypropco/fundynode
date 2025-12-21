@@ -254,7 +254,8 @@ async function updateAccountReport(traderAcc, copierAcc, timestamp, bl, eq, open
     accountReport.balance = bl
     accountReport.equity = eq
     accountReport.open_trades = open_trades
-    accountReport.updated_at = timestamp
+    accountReport.updated_time = formatDateUTC(timestamp)
+    accountReport.updated_timestamp = timestamp
 
     await accountReport.save()
 }
