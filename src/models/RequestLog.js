@@ -9,7 +9,7 @@ const requestLogSchema = new mongoose.Schema({
         type: String
     },
     datetime: {
-        type: Date
+        type: Number
     }
 });
 

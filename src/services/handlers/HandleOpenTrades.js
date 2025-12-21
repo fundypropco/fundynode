@@ -199,7 +199,6 @@ async function updateAccountReport(traderAcc, copierAcc, timestamp, bl, eq) {
             total_bl_low: lastAccountReport?.total_bl_low ?? bl,
             total_bl_low_time: lastAccountReport?.total_bl_low_time ?? datetime,
             total_bl_low_timestamp: lastAccountReport?.total_bl_low_timestamp ?? timestamp,
-
         })
     }
 
@@ -250,6 +249,11 @@ async function updateAccountReport(traderAcc, copierAcc, timestamp, bl, eq) {
         accountReport.total_eq_low_time = datetime
         accountReport.total_eq_low_timestamp = timestamp
     }
+
+
+    accountReport.balance = bl
+    accountReport.equity = eq
+    accountReport.updated_at = timestamp
 
     await accountReport.save()
 }

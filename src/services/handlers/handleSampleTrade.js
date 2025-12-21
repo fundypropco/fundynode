@@ -59,7 +59,9 @@ export default async (req, res) => {
                     spread_max: data.spread
                 },
                 $set: {
-                    spread_last: data.spread
+                    spread_last: data.spread,
+                    spread_avg_5: data.spread_avg_5,
+                    spread_avg_50: data.spread_avg_50
                 }
             },
             {
@@ -109,6 +111,8 @@ function processMessage(msg) {
     data.bid = Number(info_parts[14])
     data.ask = Number(info_parts[15])
     data.diff = Number(info_parts[16])
+    data.spread_avg_5 = Number(info_parts[17])
+    data.spread_avg_50 = Number(info_parts[18])
 
     return data
 }

@@ -51,7 +51,7 @@ const accountSchema = new mongoose.Schema({
         default: []
     },
     created_at: {
-        type: Date,
+        type: Number,
         default: Date.now
     }
 })

@@ -520,7 +520,7 @@ export function getWiderSl(symbolObj, side, sl) {
     let nsl = sl
     if (sl) {
         if (['buy', 'buy_limit', 'buy_stop'].includes(side)) {
-            if (symbolObj.spread_max) {
+            if (2 * symbolObj?.spread_max > diff_in_points * symbolObj.point) {
                 nsl -= symbolObj.spread_max * 2
             } else {
                 nsl -= diff_in_points * symbolObj.point
@@ -528,7 +528,7 @@ export function getWiderSl(symbolObj, side, sl) {
             nsl = Number(nsl.toFixed(symbolObj.digits))
         }
         else if (['sell', 'sell_limit', 'sell_stop'].includes(side)) {
-            if (symbolObj.spread_max) {
+            if (2 * symbolObj?.spread_max > diff_in_points * symbolObj.point) {
                 nsl += symbolObj.spread_max * 2
             } else {
                 nsl += diff_in_points * symbolObj.point
@@ -544,7 +544,7 @@ export function getWiderTp(symbolObj, side, tp) {
     let ntp = tp
     if (tp) {
         if (['buy', 'buy_limit', 'buy_stop'].includes(side)) {
-            if (symbolObj.spread_max) {
+            if (2 * symbolObj?.spread_max > diff_in_points * symbolObj.point) {
                 ntp += symbolObj.spread_max * 2
             } else {
                 ntp += diff_in_points * symbolObj.point
@@ -552,7 +552,7 @@ export function getWiderTp(symbolObj, side, tp) {
             ntp = Number(ntp.toFixed(symbolObj.digits))
         }
         else if (['sell', 'sell_limit', 'sell_stop'].includes(side)) {
-            if (symbolObj.spread_max) {
+            if (2 * symbolObj?.spread_max > diff_in_points * symbolObj.point) {
                 ntp -= symbolObj.spread_max * 2
             } else {
                 ntp -= diff_in_points * symbolObj.point

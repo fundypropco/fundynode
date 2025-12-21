@@ -14,6 +14,13 @@ const accountReportSchema = new mongoose.Schema({
         required: true,
     },
 
+    balance: {
+        type: Number
+    },
+    equity: {
+        type: Number
+    },
+
     eq_initial: {
         type: Number
     },
@@ -112,6 +119,11 @@ const accountReportSchema = new mongoose.Schema({
     },
     total_bl_low_timestamp: {
         type: Number
+    },
+
+    updated_at: {
+        type: Number,
+        default: Date.now
     }
 
 })

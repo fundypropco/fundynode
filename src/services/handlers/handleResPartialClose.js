@@ -56,6 +56,7 @@ export default async (req, res) => {
             openTradeMap.swap_dist = data.swap
             openTradeMap.status = 'closed'
             openTradeMap.closing_type = 'partial'
+            openTradeMap.partial_code = Date.now()
             await openTradeMap.save()
         }
 
@@ -93,6 +94,7 @@ export default async (req, res) => {
             side: openTradeMap.side,
             status: 'open',
             tick_value: Number((symbol.tick_value * data.open_vol).toFixed(2)),
+            partial_code: openTradeMap.partal_code,
         })
         await newOpenTradeMap.save()
 

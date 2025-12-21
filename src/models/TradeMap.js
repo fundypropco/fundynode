@@ -139,8 +139,12 @@ const tradeMapSchema = new mongoose.Schema({
         enum: ['single', 'partial', 'bulk', 'magic', 'all', 'none'],
         default: 'none'
     },
+    partal_code: {
+        type: Number,
+        default: 0
+    },
     created_at: {
-        type: Date,
+        type: Number,
         default: Date.now
     }
 });
