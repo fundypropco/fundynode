@@ -6,8 +6,16 @@ export function getHandlerOfMsg(msg) {
     if (!msg || typeof msg !== 'string') {
         throw new Error('Wrong Message Format !!!')
     }
-    const parts = msg.split(',');
-    return parts[1];
+    const parts = msg.split(',')
+    return Number(parts[1])
+}
+
+export function getTimeOfMsg(msg) {
+    if (!msg || typeof msg !== 'string') {
+        throw new Error('Wrong Message Format !!!')
+    }
+    const parts = msg.split(',')
+    return Number(parts[3])
 }
 
 async function getMqlClusterNo(handler, acc, origin_acc, max = 3) {
