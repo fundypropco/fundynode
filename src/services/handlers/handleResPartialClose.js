@@ -56,7 +56,9 @@ export default async (req, res) => {
             openTradeMap.swap_dist = data.swap
             openTradeMap.status = 'closed'
             openTradeMap.closing_type = 'partial'
-            openTradeMap.partial_code = Date.now()
+            if (!openTradeMap.partial_code) {
+                openTradeMap.partial_code = Date.now()
+            }
             await openTradeMap.save()
 
             // #.
