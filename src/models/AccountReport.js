@@ -3,15 +3,18 @@ import mongoose from "mongoose"
 const accountReportSchema = new mongoose.Schema({
     date: {
         type: String,
-        required: true
+        required: true,
+        index: true,
     },
     acc_src: {
         type: Number,
         required: true,
+        index: true,
     },
     acc_dist: {
         type: Number,
         required: true,
+        index: true,
     },
 
     balance: {
@@ -134,7 +137,7 @@ const accountReportSchema = new mongoose.Schema({
 
 })
 
-accountReportSchema.index({ acc_src: 1, acc_dist: 1, date: 1 })
+accountReportSchema.index({ acc_src: 1, acc_dist: 1, date: 1 }, { unique: true })
 
 const AccountReport = mongoose.model('AccountReport', accountReportSchema, 'account_reports')
 

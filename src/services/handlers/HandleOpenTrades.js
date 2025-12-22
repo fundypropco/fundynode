@@ -12,7 +12,7 @@ export default async (req, res) => {
     // })
     // await Promise.all(tasks)
 
-    await Account.updateMany(
+    const updateNoneOrderAccountsResult = await Account.updateMany(
         { acc: { $nin: data.copier_acc_arr }, "copiers.acc": copierAcc },
         {
             $set:
@@ -22,6 +22,58 @@ export default async (req, res) => {
             }
         }
     )
+
+    if (updateNoneOrderAccountsResult.modifiedCount > 0) {
+        await Account.aggregate([
+            {
+                $match: {
+                    acc: { $nin: data.copier_acc_arr },
+                    "copiers.acc": copierAcc
+                }
+            },
+            {
+                $project: {
+                    acc: 1,
+                    initial: 1,
+                    copier: {
+                        $first: {
+                            $filter: {
+                                input: "$copiers",
+                                as: "c",
+                                cond: { $eq: ["$$c.acc", copierAcc] }
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                $addFields: {
+                    acc_src: "$acc",
+                    acc_dist: copierAcc,
+                    date: data.date,
+                    amount: { $add: ["$initial", "$copier.profit_bl", "$copier.profit_eq"] }
+                }
+            },
+            {
+                $merge: {
+                    into: "account_report",
+                    on: ["acc_src", "acc_dist", "date"],
+                    whenMatched: [
+                        {
+                            $set: {
+                                open_trades: 0,
+                                equity: "$amount",
+                                balance: "$amount",
+                                updated_time: data.datetime,
+                                updated_timestamp: data.timestamp,
+                            }
+                        }
+                    ],
+                    whenNotMatched: "discard"
+                }
+            }
+        ])
+    }
 
     const promises = []
     for (let [traderAcc, profit] of Object.entries(data.profits)) {
@@ -110,8 +162,9 @@ function processMessage(msg) {
     // msg parts
     const msg_parts = msg.split(',')
     data.acc = msg_parts[0].split('_')[0]
-    data.timestamp = msg_parts[3]
+    data.timestamp = Number(msg_parts[3])
     data.date = formatDateUTC(data.timestamp, 'YMD')
+    data.datetime = formatDateUTC(data.timestamp)
     const info = msg_parts[2]
 
     // msg info
