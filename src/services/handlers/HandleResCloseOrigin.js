@@ -94,7 +94,7 @@ function processMessage(msg) {
     const info = msg_parts[2]
 
     // msg info
-    const info_parts = info.split('&')
+    const info_parts = info.split('_&_')
     data.result_text = info_parts[0]
     data.result_code = 0
     data.profit = 0

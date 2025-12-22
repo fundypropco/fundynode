@@ -30,7 +30,7 @@ function processMessage(msg) {
     const info = msg_parts[2]
 
     // msg info
-    const info_parts = info.split('&')
+    const info_parts = info.split('_&_')
     data.bl = parseFloat(info_parts[1])
     data.eq = parseFloat(info_parts[2])
     data.profit = parseFloat(info_parts[3])

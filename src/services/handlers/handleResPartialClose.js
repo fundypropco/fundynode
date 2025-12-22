@@ -138,7 +138,7 @@ function processMessage(msg) {
     data.keyid = Number(msg_parts[4])
 
     // msg info
-    const info_parts = info.split('&')
+    const info_parts = info.split('_&_')
     data.result_text = info_parts[0]
     data.result_code = 0
 

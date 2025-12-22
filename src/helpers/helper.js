@@ -61,14 +61,14 @@ export async function makeMsgForHandler(handler, data) {
     switch (handler) {
         case ACTION_HANDLER.BUY:
         case ACTION_HANDLER.SELL:
-            message += `${data.acc}_${data.origin_acc}${mql_cluster_no},${handler},${data.symbol}&${data.vol}&${data.slippage}&${data.sl}&${data.tp}&${data.comment}&${data.magic}`
+            message += `${data.acc}_${data.origin_acc}${mql_cluster_no},${handler},${data.symbol}_&_${data.vol}_&_${data.slippage}_&_${data.sl}_&_${data.tp}_&_${data.comment}_&_${data.magic}`
             break;
 
         case ACTION_HANDLER.BUYLIMIT:
         case ACTION_HANDLER.BUYSTOP:
         case ACTION_HANDLER.SELLLIMIT:
         case ACTION_HANDLER.SELLSTOP:
-            message += `${data.acc}_${data.origin_acc}${mql_cluster_no},${handler},${data.symbol}&${data.open_price}&${data.vol}&${data.slippage}&${data.sl}&${data.tp}&${data.comment}&${data.magic}`
+            message += `${data.acc}_${data.origin_acc}${mql_cluster_no},${handler},${data.symbol}_&_${data.open_price}_&_${data.vol}_&_${data.slippage}_&_${data.sl}_&_${data.tp}_&_${data.comment}_&_${data.magic}`
             break
 
         case ACTION_HANDLER.OPEN_PENDING_ORDER:
@@ -76,7 +76,7 @@ export async function makeMsgForHandler(handler, data) {
             break
 
         case ACTION_HANDLER.MODIFY:
-            message += `${data.acc}_${data.origin_acc}${mql_cluster_no},${handler},${data.ticket}&${data.origin_open_price}&${data.sl}&${data.tp}`
+            message += `${data.acc}_${data.origin_acc}${mql_cluster_no},${handler},${data.ticket}_&_${data.origin_open_price}_&_${data.sl}_&_${data.tp}`
             break
 
         case ACTION_HANDLER.CLOSE:
@@ -100,7 +100,7 @@ export async function makeMsgForHandler(handler, data) {
             break
 
         case ACTION_HANDLER.PARTIAL_CLOSE:
-            message += `${data.acc}_${data.origin_acc}${mql_cluster_no},${handler},${data.ticket}&${data.vol}`
+            message += `${data.acc}_${data.origin_acc}${mql_cluster_no},${handler},${data.ticket}_&_${data.vol}`
             break
 
         case ACTION_HANDLER.BROKER_SYMBOLS:

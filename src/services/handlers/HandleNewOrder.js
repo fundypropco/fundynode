@@ -203,7 +203,7 @@ async function processMessage(msg) {
     data.is_partial = false
 
     // msg info
-    const info_parts = info.split('&')
+    const info_parts = info.split('_&_')
     data.ticket = Number(info_parts[1])
     data.symbol = info_parts[2]
     data.type = info_parts[3].replace(/[\s_]/g, "").toUpperCase()
@@ -219,8 +219,8 @@ async function processMessage(msg) {
 
     if (partial_info != -1) {
         // partial
-        data.partial_item = partial_info.trim().split("@").filter(Boolean)
-            .map(side => side.split("&"))
+        data.partial_item = partial_info.trim().split("_@_").filter(Boolean)
+            .map(side => side.split("_&_"))
             .map(([
                 closed_ticket,
                 closed_vol,

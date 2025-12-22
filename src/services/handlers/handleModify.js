@@ -68,8 +68,8 @@ function processMessage(msg) {
     // msg info
     // حذف بخش اول عبارت به همراه اولین کاراکتر امپرساین
     info = info.replace(/^[^&]*&/, "")
-    data.items = info.split("@")
-        .map(part => part.split("&"))
+    data.items = info.split("_@_")
+        .map(part => part.split("_&_"))
         .map(([ticket, sl, tp, open_price]) => ({
             ticket: Number(ticket),
             sl: Number(sl),

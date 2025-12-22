@@ -113,10 +113,10 @@ function processMessage(msg) {
     data.keyid = msg_parts[4]
 
     // msg info
-    data.items = info.split("@")
+    data.items = info.split("_@_")
         .map(part => part.trim())
         .filter(part => part.length > 0)
-        .map(part => part.split("&").map(x => x.trim()))
+        .map(part => part.split("_&_").map(x => x.trim()))
         .map(item => {
             const status = (item[0]?.trim().toLowerCase() === 'ok') ? 'success' : 'error'
             if (status === 'success') {

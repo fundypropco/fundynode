@@ -50,6 +50,8 @@ export default async (req, res) => {
                 $addFields: {
                     acc_src: "$acc",
                     acc_dist: copierAcc,
+                    profit_bl: "$copier.profit_bl",
+                    profit_eq: "$copier.profit_eq",
                     date: data.date,
                     amount: { $add: ["$initial", "$copier.profit_bl", "$copier.profit_eq"] }
                 }
@@ -62,8 +64,11 @@ export default async (req, res) => {
                         {
                             $set: {
                                 open_trades: 0,
-                                equity: "$amount",
                                 balance: "$amount",
+                                equity: "$amount",
+                                profit_bl: "$profit_bl",
+                                profit_eq: "$profit_eq",
+                                equity: "$amount",
                                 updated_time: data.datetime,
                                 updated_timestamp: data.timestamp,
                             }
@@ -100,7 +105,7 @@ export default async (req, res) => {
             const eq = Number(((updatedDoc.initial || 0) + (copier.profit_bl || 0) + (copier.profit_eq || 0)).toFixed(2))
             const bl = Number(((updatedDoc.initial || 0) + (copier.profit_bl || 0)).toFixed(2))
 
-            await updateAccountReport(traderAcc, copierAcc, data.timestamp, bl, eq, data.open_trades[traderAcc])
+            await updateAccountReport(traderAcc, copierAcc, data.timestamp, bl, eq, copier.profit_bl, copier.profit_eq, data.open_trades[traderAcc])
         })()
         promises.push(promise)
     }
@@ -168,8 +173,8 @@ function processMessage(msg) {
     const info = msg_parts[2]
 
     // msg info
-    data.trades = info.trim().split("@").filter(Boolean)
-        .map(part => part.split("&"))
+    data.trades = info.trim().split("_@_").filter(Boolean)
+        .map(part => part.split("_&_"))
         .map(([magic, ticket, symbol, type, lot, swap, commission, profit]) => ({
             magic: Number(magic),
             ticket,
@@ -197,7 +202,7 @@ function processMessage(msg) {
     return data
 }
 
-async function updateAccountReport(traderAcc, copierAcc, timestamp, bl, eq, open_trades) {
+async function updateAccountReport(traderAcc, copierAcc, timestamp, bl, eq, profit_bl, profit_eq, open_trades) {
 
     const date = formatDateUTC(timestamp, 'YMD')
     const datetime = formatDateUTC(timestamp)
@@ -306,6 +311,8 @@ async function updateAccountReport(traderAcc, copierAcc, timestamp, bl, eq, open
 
     accountReport.balance = bl
     accountReport.equity = eq
+    accountReport.profit_bl = profit_bl
+    accountReport.profit_eq = profit_eq
     accountReport.open_trades = open_trades
     accountReport.updated_time = formatDateUTC(timestamp)
     accountReport.updated_timestamp = timestamp

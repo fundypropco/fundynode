@@ -30,14 +30,14 @@ const getUpdates = asyncHandler(async (req, res) => {
 })
 
 const setPermissions = asyncHandler(async (req, res) => {
-    if (!req.body || !req.body.message || !req.body.message.includes('&')) {
+    if (!req.body || !req.body.message || !req.body.message.includes('_&_')) {
         return res.send({
             status: 'error',
             message: 'Wrong structure!!!'
         })
     }
 
-    const acc = req.body.message.split('&')[0]
+    const acc = req.body.message.split('_&_')[0]
 
     const result = await TelegramPermission.findOneAndUpdate({ acc }, { $set: { rule: req.body.message } }, { upsert: true, new: true })
 

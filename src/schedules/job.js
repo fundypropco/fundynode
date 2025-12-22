@@ -28,7 +28,7 @@ export async function getOpenTradesProfit() {
                 tickets: {
                     $joinStrings: {
                         input: "$ticket_dist_concat",
-                        delimiter: "&"
+                        delimiter: "_&_"
                     }
                 }
             }

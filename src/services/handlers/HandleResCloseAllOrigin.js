@@ -97,10 +97,10 @@ function processMessage(msg) {
     // msg info
     data.items = []
     if (!info.includes("no open trades")) {
-        data.items = info.split("@")
+        data.items = info.split("_@_")
             .map(part => part.trim())
             .filter(part => part.length > 0)
-            .map(part => part.split("&").map(x => x.trim()))
+            .map(part => part.split("_&_").map(x => x.trim()))
             .map(([ticket, closed_price, closed_timestamp, swap, commission, profit, vol, symbol]) => ({
                 ticket: Number(ticket),
                 closed_price: Number(closed_price),

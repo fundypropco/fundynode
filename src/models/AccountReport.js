@@ -26,7 +26,12 @@ const accountReportSchema = new mongoose.Schema({
     open_trades: {
         type: Number
     },
-
+    profit_bl: {
+        type: Number
+    },
+    profit_eq: {
+        type: Number
+    },
     eq_initial: {
         type: Number
     },

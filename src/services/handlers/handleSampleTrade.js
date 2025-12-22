@@ -93,7 +93,7 @@ function processMessage(msg) {
     let info = msg_parts[2]
 
     // msg info
-    const info_parts = info.split('&')
+    const info_parts = info.split('_&_')
     data.name = info_parts[0]
     data.server = info_parts[1]
     data.currency = info_parts[2]
