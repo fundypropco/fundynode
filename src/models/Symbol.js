@@ -53,7 +53,7 @@ const symbolSchema = new mongoose.Schema({
         default: 1,
         index: true
     },
-    margin_init: {
+    margin: {
         type: Number,
         default: 0
     },

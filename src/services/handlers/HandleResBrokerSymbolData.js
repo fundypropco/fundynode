@@ -26,7 +26,6 @@ export default async (req, res) => {
             symbol.vol_max = data.symbol_info.vol_max
             symbol.digits = data.symbol_info.digits
             symbol.point = data.symbol_info.point
-            symbol.margin_init = data.symbol_info.MARGININIT
             await symbol.save();
         }
     }

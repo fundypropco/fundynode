@@ -61,7 +61,8 @@ export default async (req, res) => {
                 $set: {
                     spread_last: data.spread,
                     spread_avg_5: data.spread_avg_5,
-                    spread_avg_50: data.spread_avg_50
+                    spread_avg_50: data.spread_avg_50,
+                    margin: data.margin
                 }
             },
             {
@@ -113,6 +114,7 @@ function processMessage(msg) {
     data.diff = Number(info_parts[16])
     data.spread_avg_5 = Number(info_parts[17])
     data.spread_avg_50 = Number(info_parts[18])
+    data.margin = Number(info_parts[19])
 
     return data
 }

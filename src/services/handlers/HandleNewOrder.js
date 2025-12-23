@@ -170,7 +170,7 @@ function isOrderPossible(account, copier, data) {
     const freeEq = account.initial + copier.profit_bl + copier.profit_eq - account.drawdown
     const commission = Math.abs(data.symbol_b.commission_max * (data.vol / data.symbol_b.vol_min))
     const spread_value = data.vol * data.symbol_b.tick_value * (data.symbol_b.spread_avg_5 / data.symbol_b.point)
-    const margin = data.symbol_b.margin_init * (data.vol / data.symbol_b.vol_min)
+    const margin = data.symbol_b.margin * (data.vol / data.symbol_b.vol_min)
     const minEq = commission + (2 * spread_value) + margin
     if (freeEq > minEq) {
         result.status = true
