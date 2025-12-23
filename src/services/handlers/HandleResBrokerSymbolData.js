@@ -50,7 +50,7 @@ export default async (req, res) => {
 function processMessage(msg) {
     // E.g. 
     // 1006135456,989,cmpny=LiteFinance Global LLC&name=saeed zarei mohammadAbad&server=LiteFinanceVC-Demo&leverage=500,1758992092,21
-    // acc , 989 , k1=v1 & k2=v2 , timestamp , keyid
+    // acc , 989 , k1=v1 _&_ k2=v2 , timestamp , keyid
     const data = {};
 
     // msg parts
