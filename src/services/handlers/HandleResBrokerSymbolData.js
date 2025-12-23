@@ -60,7 +60,7 @@ function processMessage(msg) {
     data.status = 'success'
     data.result_text = 'success'
     data.code = 0
-    data.keyid = msg_parts[msg_parts.length - 1]
+    data.keyid = Number(msg_parts[msg_parts.length - 1])
     const info = msg_parts[2]
     data.symbol_info = Object.fromEntries(
         info.split("_&_").map(part => part.split("="))

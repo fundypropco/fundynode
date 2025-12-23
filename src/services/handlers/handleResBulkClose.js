@@ -110,7 +110,7 @@ function processMessage(msg) {
     data.timestamp = Number(msg_parts[3])
     data.date = formatDateUTC(data.timestamp)
     let info = msg_parts[2].trim()
-    data.keyid = msg_parts[4]
+    data.keyid = Number(msg_parts[4])
 
     // msg info
     data.items = info.split("_@_")

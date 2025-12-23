@@ -111,6 +111,11 @@ export async function makeMsgForHandler(handler, data) {
             message = `${data.acc},${handler}`;
             message += `,${data.symbol}`
             break
+
+        case ACTION_HANDLER.CHECK_TRADES:
+            message = `${data.acc},${handler}`;
+            message += `,5_&_GET_&_0_&_0_&_0_&_1_&_1_&_0_&_0_&_0_&_0_&_0_&_0_&_0_&_0_&_0_&_1`
+            break
     }
 
     message += `,${Math.floor(Date.now() / 1000)},${data.keyid}`

@@ -111,7 +111,7 @@ function processMessage(msg) {
     data.status = 'success'
     data.result_text = 'success'
     data.code = 0
-    data.keyid = msg_parts[msg_parts.length - 1]
+    data.keyid = Number(msg_parts[msg_parts.length - 1])
     data.symbols = msg_parts.slice(2, -2)
 
     return data

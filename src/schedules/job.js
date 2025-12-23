@@ -2,6 +2,24 @@ import TradeMap from '../models/TradeMap.js'
 import GetUpdateService from '../services/GetUpdateService.js'
 import { ACTION_HANDLER } from '../helpers/constant.js'
 import { makeID, makeMsgForHandler } from '../helpers/helper.js'
+import Account from '../models/Account.js'
+
+export async function checkTradeMap() {
+    const accounts = await Account.find({ copy: true, "copiers.open_trades": { $neq: 0 } })
+
+    let keyid = makeID()
+    const tasks = accounts.map(async (accountItem, index) => {
+        const getUpdateData = {
+            server: accountItem.server,
+            acc: accountItem.acc,
+            handler: ACTION_HANDLER.CHECK_TRADES,
+            keyid: keyid + index,
+        }
+        getUpdateData.message = await makeMsgForHandler(getUpdateData.handler, getUpdateData)
+        return GetUpdateService.create(getUpdateData)
+    })
+    await Promise.all(tasks)
+}
 
 export async function getOpenTradesProfit() {
     const results = await TradeMap.aggregate([

@@ -1,7 +1,7 @@
 import { add2AppQueue } from '../services/QueueService.js'
 
-export async function runEquityRefresh() {
-    return add2AppQueue('equity-refresh', {}, { every: 1000 }, 'equity-refresh')
+export async function runTradeMapChecker() {
+    return add2AppQueue('checkTradeMap', {}, { every: 30000 }, 'checkTradeMap')
 }
 
 export async function runSeed() {
@@ -9,9 +9,7 @@ export async function runSeed() {
 }
 
 export default async function runSchedule() {
-    return await new Promise(resolve => setTimeout(resolve, 3000))
-    // return Promise.all([
-    //     //runEquityRefresh(),
-
-    // ])
+    return Promise.all([
+        runTradeMapChecker(),
+    ])
 }

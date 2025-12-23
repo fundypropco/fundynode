@@ -23,7 +23,8 @@ const copierSchema = new mongoose.Schema({
         type: Number
     },
     open_trades: {
-        type: Number
+        type: Number,
+        index: true,
     }
 }, { _id: false })
 
