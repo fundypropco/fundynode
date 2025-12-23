@@ -10,7 +10,7 @@ export async function add2AppQueue(jobName, jobData = {}, repeat = {}, jobId = '
     const jobOptions = { jobId }
 
     if (repeat && Object.keys(repeat).length > 0) {
-        options.repeat = repeat
+        jobOptions.repeat = repeat
     }
 
     await appQueue.add(
