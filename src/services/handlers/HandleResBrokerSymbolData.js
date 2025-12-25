@@ -26,7 +26,7 @@ export default async (req, res) => {
             symbol.vol_max = data.symbol_info.vol_max
             symbol.digits = data.symbol_info.digits
             symbol.point = data.symbol_info.point
-            await symbol.save();
+            await symbol.save()
         }
     }
 
@@ -62,7 +62,7 @@ function processMessage(msg) {
     data.keyid = Number(msg_parts[msg_parts.length - 1])
     const info = msg_parts[2]
     data.symbol_info = Object.fromEntries(
-        info.split("_&_").map(part => part.split("="))
+        info.split("_&_").map(part => part.split("_=+"))
     )
     return data
 }
