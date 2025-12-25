@@ -80,14 +80,13 @@ export default async (req, res) => {
                 $addFields: {
                     acc_src: "$acc",
                     acc_dist: copierAcc,
-                    profit_bl: { $ifNull: ["$copier.profit_bl", 0] },
+                    profit_bl: "$copier.profit_bl",
                     date: data.date,
                     amount: {
                         $add:
                             [
                                 "$initial",
-                                { $ifNull: ["$copier.profit_bl", 0] },
-                                { $ifNull: ["$copier.profit_eq", 0] }
+                                "$copier.profit_bl",
                             ]
                     }
                 }
@@ -282,6 +281,9 @@ async function updateAccountReport(traderAcc, copierAcc, timestamp, bl, eq, prof
             total_bl_low: lastAccountReport?.total_bl_low ?? bl,
             total_bl_low_time: lastAccountReport?.total_bl_low_time ?? datetime,
             total_bl_low_timestamp: lastAccountReport?.total_bl_low_timestamp ?? timestamp,
+
+            updated_time: formatDateUTC(timestamp),
+            updated_timestamp: timestamp
         })
     }
 

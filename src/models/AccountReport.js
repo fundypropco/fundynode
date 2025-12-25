@@ -18,7 +18,7 @@ const accountReportSchema = new mongoose.Schema({
     },
 
     balance: {
-        type: Number
+        type: Number,
     },
     equity: {
         type: Number
@@ -32,6 +32,7 @@ const accountReportSchema = new mongoose.Schema({
     profit_eq: {
         type: Number
     },
+    
     eq_initial: {
         type: Number
     },
