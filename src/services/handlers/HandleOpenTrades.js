@@ -105,8 +105,8 @@ export default async (req, res) => {
             const copier = updatedDoc.copiers.find(c => c.acc == copierAcc)
             if (!copier) return
 
-            const eq = Number(((updatedDoc.initial || 0) + (copier.profit_bl || 0) + (copier.profit_eq || 0)).toFixed(2))
-            const bl = Number(((updatedDoc.initial || 0) + (copier.profit_bl || 0)).toFixed(2))
+            const eq = Math.round(((updatedDoc.initial || 0) + (copier.profit_bl || 0) + (copier.profit_eq || 0)) * 100) / 100
+            const bl = Math.round(((updatedDoc.initial || 0) + (copier.profit_bl || 0)) * 100) / 100
 
             await updateAccountReport(traderAcc, copierAcc, data.timestamp, bl, eq, copier.profit_bl, copier.profit_eq, data.open_trades[traderAcc])
         })()
@@ -233,6 +233,13 @@ async function updateAccountReport(traderAcc, copierAcc, timestamp, bl, eq, prof
             acc_src: traderAcc,
             acc_dist: copierAcc,
             date: date,
+
+            balance: bl,
+            equity: eq,
+            open_trades: open_trades,
+            profit_bl: profit_bl,
+            profit_eq: profit_eq,
+
 
             eq_initial: eq,
             eq_initial_time: datetime,
