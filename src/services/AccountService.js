@@ -91,7 +91,7 @@ const failIfDrawdown = async (account, copier) => {
 const updateProfitBl = async (traderAcc, copierAcc, profitBl, checkDrawdownFlag = true) => {
     const updatedAccount = await Account.findOneAndUpdate(
         { acc: traderAcc, "copiers.acc": copierAcc },
-        { $inc: { "copiers.$.profit_bl": profitBl } },
+        { $inc: { "copiers.$.profit_bl": Math.round(profitBl * 100) / 100 } },
         { new: true }
     )
     const updatedCopier = updatedAccount.copiers.find(c => c.acc == copierAcc)
