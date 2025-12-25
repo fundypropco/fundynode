@@ -24,6 +24,38 @@ export default async (req, res) => {
         }
     )
 
+    const promises = []
+    for (let [traderAcc, profit] of Object.entries(data.profits)) {
+        const promise = (async () => {
+            const updatedDoc = await Account.findOneAndUpdate(
+                { acc: traderAcc, "copiers.acc": copierAcc },
+                {
+                    $set: {
+                        "copiers.$.profit_eq": Math.round(profit * 100) / 100,
+                        "copiers.$.open_trades": data.open_trades[traderAcc],
+                    }
+                },
+                { new: true }
+            )
+            // $[c]
+            // توضیح اینکه با $ فقط اولین کپی کننده که شماره اکانتش مچ باشه آپدیت میشود که درست است 
+            // اگر بخواهیم چندین کپیر تکراری داشته باشیم از سینتکس دوم استفاده میکنیم 
+            // { arrayFilters: [{ "c.acc": acc }] }
+
+            if (!updatedDoc) return
+            const copier = updatedDoc.copiers.find(c => c.acc == copierAcc)
+            if (!copier) return
+
+            const eq = Math.round(((updatedDoc.initial || 0) + (copier.profit_bl || 0) + (copier.profit_eq || 0)) * 100) / 100
+            const bl = Math.round(((updatedDoc.initial || 0) + (copier.profit_bl || 0)) * 100) / 100
+
+            await updateAccountReport(traderAcc, copierAcc, data.timestamp, bl, eq, copier.profit_bl, copier.profit_eq, data.open_trades[traderAcc])
+        })()
+        promises.push(promise)
+    }
+    await Promise.all(promises)
+
+
     if (updateNoneOrderAccountsResult.modifiedCount > 0) {
         await Account.aggregate([
             {
@@ -83,36 +115,6 @@ export default async (req, res) => {
         ])
     }
 
-    const promises = []
-    for (let [traderAcc, profit] of Object.entries(data.profits)) {
-        const promise = (async () => {
-            const updatedDoc = await Account.findOneAndUpdate(
-                { acc: traderAcc, "copiers.acc": copierAcc },
-                {
-                    $set: {
-                        "copiers.$.profit_eq": Math.round(profit * 100) / 100,
-                        "copiers.$.open_trades": data.open_trades[traderAcc],
-                    }
-                },
-                { new: true }
-            )
-            // $[c]
-            // توضیح اینکه با $ فقط اولین کپی کننده که شماره اکانتش مچ باشه آپدیت میشود که درست است 
-            // اگر بخواهیم چندین کپیر تکراری داشته باشیم از سینتکس دوم استفاده میکنیم 
-            // { arrayFilters: [{ "c.acc": acc }] }
-
-            if (!updatedDoc) return
-            const copier = updatedDoc.copiers.find(c => c.acc == copierAcc)
-            if (!copier) return
-
-            const eq = Math.round(((updatedDoc.initial || 0) + (copier.profit_bl || 0) + (copier.profit_eq || 0)) * 100) / 100
-            const bl = Math.round(((updatedDoc.initial || 0) + (copier.profit_bl || 0)) * 100) / 100
-
-            await updateAccountReport(traderAcc, copierAcc, data.timestamp, bl, eq, copier.profit_bl, copier.profit_eq, data.open_trades[traderAcc])
-        })()
-        promises.push(promise)
-    }
-    await Promise.all(promises)
 
     // #.
     // پیدا کردن اکانت های شکست خورده 
