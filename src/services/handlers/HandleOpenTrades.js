@@ -24,9 +24,9 @@ export default async (req, res) => {
         }
     )
 
-    logger.error(error, 'updateNoneOrderAccountsResult: ' + updateNoneOrderAccountsResult)
+    logger.error('updateNoneOrderAccountsResult: ', updateNoneOrderAccountsResult)
     if (updateNoneOrderAccountsResult.modifiedCount > 0) {
-        logger.error(error, 'modifiedCount: ' + updateNoneOrderAccountsResult.modifiedCount)
+        logger.error('modifiedCount: ', updateNoneOrderAccountsResult.modifiedCount)
         await Account.aggregate([
             {
                 $match: { acc: { $nin: data.copier_acc_arr }, "copiers.acc": copierAcc }
