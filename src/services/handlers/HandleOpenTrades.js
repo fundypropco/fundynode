@@ -10,6 +10,8 @@ export default async (req, res) => {
     const data = processMessage(req.body.message)
     const copierAcc = data.acc
 
+    console.log(data)
+
     // const tasks = Object.entries(data.profits).map(async ([traderAcc, profit]) => {
     // })
     // await Promise.all(tasks)
@@ -200,10 +202,10 @@ function processMessage(msg) {
         .map(part => part.split("_&_"))
         .map(([magic, ticket, symbol, type, lot, swap, commission, profit]) => ({
             magic: Number(magic),
-            ticket,
+            ticket: Number(ticket),
             symbol,
             type,
-            lot,
+            lot: Number(lot),
             swap: Number(swap) || 0,
             commission: Number(commission) || 0,
             profit: Number(profit) || 0,
