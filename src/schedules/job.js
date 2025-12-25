@@ -5,7 +5,7 @@ import { makeID, makeMsgForHandler } from '../helpers/helper.js'
 import Account from '../models/Account.js'
 
 export async function checkTradeMap() {
-    const accounts = await Account.find({ copy: true, "copiers.open_trades": { $neq: 0 } })
+    const accounts = await Account.find({ copy: true, "copiers.open_trades": { $ne: 0 } })
 
     let keyid = makeID()
     const tasks = accounts.map(async (accountItem, index) => {

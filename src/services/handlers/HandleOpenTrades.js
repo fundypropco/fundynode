@@ -214,12 +214,15 @@ function processMessage(msg) {
     data.profits = {}
     data.open_trades = {}
     for (const trade of data.trades) {
-        if (!data.profits[trade.magic]) {
-            data.profits[trade.magic] = 0
-            data.open_trades[trade.magic] = 0
+        const magic = Number(trade.magic)
+        if (!data.profits[magic]) {
+            data.profits[magic] = 0
         }
-        data.profits[trade.magic] += trade.profit + trade.swap
-        data.open_trades[trade.magic]++
+        if (!data.open_trades[magic]) {
+            data.open_trades[magic] = 0
+        }
+        data.profits[magic] += trade.profit + trade.swap
+        data.open_trades[magic]++
     }
 
     data.copier_acc_arr = Object.keys(data.profits).map(Number)
