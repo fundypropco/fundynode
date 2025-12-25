@@ -175,6 +175,7 @@ export default async (req, res) => {
         message: req.body.message,
         datetime: Date.now()
     })
+    await requestLog.save()
 
     res.send({
         status: 'success',
