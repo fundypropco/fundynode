@@ -27,17 +27,6 @@ export default async (req, res) => {
     )
 
     if (updateNoneOrderAccountsResult.modifiedCount > 0) {
-
-        // const matchedDocs = await Account.aggregate([
-        //     {
-        //         $match: { acc: { $nin: data.copier_acc_arr }, "copiers.acc": copierAcc }
-        //     },
-        //     { $count: "total" }
-        // ]);
-
-        // console.log("Matched documents:", matchedDocs)
-
-
         const matchedDocs = await Account.aggregate([
             {
                 $match: { acc: { $nin: data.copier_acc_arr }, "copiers.acc": copierAcc }
@@ -94,8 +83,6 @@ export default async (req, res) => {
                 }
             }
         ])
-
-        console.log("Matched documents:", matchedDocs)
     }
 
     const promises = []
