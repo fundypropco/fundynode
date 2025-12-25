@@ -27,70 +27,74 @@ export default async (req, res) => {
 
     if (updateNoneOrderAccountsResult.modifiedCount > 0) {
 
+        // const matchedDocs = await Account.aggregate([
+        //     {
+        //         $match: { acc: { $nin: data.copier_acc_arr }, "copiers.acc": copierAcc }
+        //     },
+        //     { $count: "total" }
+        // ]);
+
+        // console.log("Matched documents:", matchedDocs)
+
+
         const matchedDocs = await Account.aggregate([
             {
                 $match: { acc: { $nin: data.copier_acc_arr }, "copiers.acc": copierAcc }
             },
-            { $count: "total" }
-        ]);
+            {
+                $project: {
+                    acc: 1,
+                    initial: 1,
+                    copier: {
+                        $first: {
+                            $filter: {
+                                input: "$copiers",
+                                as: "c",
+                                cond: { $eq: ["$$c.acc", copierAcc] }
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                $addFields: {
+                    acc_src: "$acc",
+                    acc_dist: copierAcc,
+                    profit_bl: { $ifNull: ["$copier.profit_bl", 0] },
+                    date: data.date,
+                    amount: {
+                        $add:
+                            [
+                                "$initial",
+                                { $ifNull: ["$copier.profit_bl", 0] },
+                                { $ifNull: ["$copier.profit_eq", 0] }
+                            ]
+                    }
+                }
+            },
+            {
+                $merge: {
+                    into: "account_reports",
+                    on: ["acc_src", "acc_dist", "date"],
+                    whenMatched: [
+                        {
+                            $set: {
+                                open_trades: 0,
+                                profit_eq: 0,
+                                profit_bl: "$profit_bl",
+                                balance: "$amount",
+                                equity: "$amount",
+                                updated_time: data.datetime,
+                                updated_timestamp: data.timestamp,
+                            }
+                        }
+                    ],
+                    whenNotMatched: "discard"
+                }
+            }
+        ])
 
         console.log("Matched documents:", matchedDocs)
-
-
-        // await Account.aggregate([
-        //     {
-        //         $match: { acc: { $nin: data.copier_acc_arr }, "copiers.acc": copierAcc }
-        //     },
-        //     {
-        //         $project: {
-        //             acc: 1,
-        //             initial: 1,
-        //             copier: {
-        //                 $first: {
-        //                     $filter: {
-        //                         input: "$copiers",
-        //                         as: "c",
-        //                         cond: { $eq: ["$$c.acc", copierAcc] }
-        //                     }
-        //                 }
-        //             }
-        //         }
-        //     },
-        //     {
-        //         $addFields: {
-        //             acc_src: "$acc",
-        //             acc_dist: copierAcc,
-        //             profit_bl: { $ifNull: ["$copier.profit_bl", 0] },
-        //             date: data.date,
-        //             amount: {
-        //                 $add:
-        //                     [
-        //                         "$initial",
-        //                         { $ifNull: ["$copier.profit_bl", 0] },
-        //                         { $ifNull: ["$copier.profit_eq", 0] }
-        //                     ]
-        //             }
-        //         }
-        //     },
-        //     {
-        //         $merge: {
-        //             into: "account_reports",
-        //             on: ["acc_src", "acc_dist", "date"],
-        //             whenMatched: {
-        //                 $set: {
-        //                     open_trades: 0,
-        //                     profit_eq: 0,
-        //                     profit_bl: "$profit_bl",
-        //                     balance: "$amount",
-        //                     equity: "$amount",
-        //                     updated_time: data.datetime,
-        //                     updated_timestamp: data.timestamp,
-        //                 }
-        //             },
-        //             whenNotMatched: "discard"
-        //         }
-        //     }
-        // ])
     }
 
     const promises = []
