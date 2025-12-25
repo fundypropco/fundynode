@@ -28,7 +28,7 @@ export default async (req, res) => {
         const accounts = await Account.find({ acc: { $nin: data.copier_acc_arr }, "copiers.acc": copierAcc })
         const tasks = accounts.map(async (accountItem) => {
             const copier = accountItem.copiers.find(c => c.acc == copierAcc)
-            const bl = Math.round(((updatedDoc.initial || 0) + (copier.profit_bl || 0)) * 100) / 100
+            const bl = Math.round(((accountItem.initial || 0) + (copier.profit_bl || 0)) * 100) / 100
             const eq = bl
             const profit_eq = 0
             const profit_bl = copier.profit_bl
