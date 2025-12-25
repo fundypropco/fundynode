@@ -178,7 +178,7 @@ function processMessage(msg) {
 
     // msg parts
     const msg_parts = msg.split(',')
-    data.acc = msg_parts[0].split('_')[0]
+    data.acc = Number(msg_parts[0].split('_')[0])
     data.timestamp = Number(msg_parts[3])
     data.date = formatDateUTC(data.timestamp, 'YMD')
     data.datetime = formatDateUTC(data.timestamp)
