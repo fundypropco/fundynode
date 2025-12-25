@@ -26,10 +26,7 @@ export default async (req, res) => {
     if (updateNoneOrderAccountsResult.modifiedCount > 0) {
         await Account.aggregate([
             {
-                $match: {
-                    acc: { $nin: data.copier_acc_arr },
-                    "copiers.acc": copierAcc
-                }
+                $match: { acc: { $nin: data.copier_acc_arr }, "copiers.acc": copierAcc }
             },
             {
                 $project: {
@@ -51,7 +48,6 @@ export default async (req, res) => {
                     acc_src: "$acc",
                     acc_dist: copierAcc,
                     profit_bl: "$copier.profit_bl",
-                    profit_eq: "$copier.profit_eq",
                     date: data.date,
                     amount: { $add: ["$initial", "$copier.profit_bl", "$copier.profit_eq"] }
                 }
@@ -65,9 +61,8 @@ export default async (req, res) => {
                             $set: {
                                 open_trades: 0,
                                 balance: "$amount",
-                                equity: "$amount",
                                 profit_bl: "$profit_bl",
-                                profit_eq: "$profit_eq",
+                                profit_eq: 0,
                                 equity: "$amount",
                                 updated_time: data.datetime,
                                 updated_timestamp: data.timestamp,
