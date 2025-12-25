@@ -90,7 +90,7 @@ export default async (req, res) => {
                 { acc: traderAcc, "copiers.acc": copierAcc },
                 {
                     $set: {
-                        "copiers.$.profit_eq": profit,
+                        "copiers.$.profit_eq": Math.round(profit * 100) / 100,
                         "copiers.$.open_trades": data.open_trades[traderAcc],
                     }
                 },
