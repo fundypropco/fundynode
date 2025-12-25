@@ -9,8 +9,6 @@ export default async (req, res) => {
     const data = processMessage(req.body.message)
     const copierAcc = data.acc
 
-    console.log(data)
-
     // const tasks = Object.entries(data.profits).map(async ([traderAcc, profit]) => {
     // })
     // await Promise.all(tasks)
