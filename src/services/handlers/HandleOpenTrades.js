@@ -158,16 +158,6 @@ export default async (req, res) => {
         }
     }
 
-
-    // #.
-    // لاگ گرفتن از رکوئست دریافتی 
-    const requestLog = new RequestLog({
-        type: 'SendMessage',
-        message: req.body.message,
-        datetime: Date.now()
-    })
-    await requestLog.save()
-
     res.send({
         status: 'success',
     })
