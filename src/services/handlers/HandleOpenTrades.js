@@ -2,6 +2,7 @@ import { formatDateUTC } from '../../helpers/helper.js'
 import Account from '../../models/Account.js'
 import AccountReport from '../../models/AccountReport.js'
 import AccountService from '../AccountService.js'
+import logger from '../helpers/logger.js'
 
 export default async (req, res) => {
 
@@ -24,6 +25,7 @@ export default async (req, res) => {
     )
 
     if (updateNoneOrderAccountsResult.modifiedCount > 0) {
+        logger.error(error, 'modifiedCount: ' + updateNoneOrderAccountsResult.modifiedCount)
         await Account.aggregate([
             {
                 $match: { acc: { $nin: data.copier_acc_arr }, "copiers.acc": copierAcc }
@@ -47,9 +49,16 @@ export default async (req, res) => {
                 $addFields: {
                     acc_src: "$acc",
                     acc_dist: copierAcc,
-                    profit_bl: "$copier.profit_bl",
+                    profit_bl: { $ifNull: ["$copier.profit_bl", 0] },
                     date: data.date,
-                    amount: { $add: ["$initial", "$copier.profit_bl", "$copier.profit_eq"] }
+                    amount: {
+                        $add:
+                            [
+                                "$initial",
+                                { $ifNull: ["$copier.profit_bl", 0] },
+                                { $ifNull: ["$copier.profit_eq", 0] }
+                            ]
+                    }
                 }
             },
             {
@@ -60,9 +69,9 @@ export default async (req, res) => {
                         {
                             $set: {
                                 open_trades: 0,
-                                balance: "$amount",
-                                profit_bl: "$profit_bl",
                                 profit_eq: 0,
+                                profit_bl: "$profit_bl",
+                                balance: "$amount",
                                 equity: "$amount",
                                 updated_time: data.datetime,
                                 updated_timestamp: data.timestamp,
