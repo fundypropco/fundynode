@@ -58,7 +58,7 @@ export default async (req, res) => {
             },
             {
                 $merge: {
-                    into: "account_report",
+                    into: "account_reports",
                     on: ["acc_src", "acc_dist", "date"],
                     whenMatched: [
                         {
