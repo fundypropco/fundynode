@@ -57,6 +57,63 @@ export default async (req, res) => {
 
 
     if (updateNoneOrderAccountsResult.modifiedCount > 0) {
+        // await Account.aggregate([
+        //     {
+        //         $match: { acc: { $nin: data.copier_acc_arr }, "copiers.acc": copierAcc }
+        //     },
+        //     {
+        //         $project: {
+        //             acc: 1,
+        //             initial: 1,
+        //             copier: {
+        //                 $first: {
+        //                     $filter: {
+        //                         input: "$copiers",
+        //                         as: "c",
+        //                         cond: { $eq: ["$$c.acc", copierAcc] }
+        //                     }
+        //                 }
+        //             }
+        //         }
+        //     },
+        //     {
+        //         $addFields: {
+        //             acc_src: "$acc",
+        //             acc_dist: copierAcc,
+        //             profit_bl: "$copier.profit_bl",
+        //             date: data.date,
+        //             amount: {
+        //                 $add:
+        //                     [
+        //                         "$initial",
+        //                         "$copier.profit_bl",
+        //                     ]
+        //             }
+        //         }
+        //     },
+        //     {
+        //         $merge: {
+        //             into: "account_reports",
+        //             on: ["acc_src", "acc_dist", "date"],
+        //             whenMatched: [
+        //                 {
+        //                     $set: {
+        //                         open_trades: 0,
+        //                         profit_eq: 0,
+        //                         profit_bl: "$profit_bl",
+        //                         balance: "$amount",
+        //                         equity: "$amount",
+        //                         updated_time: data.datetime,
+        //                         updated_timestamp: data.timestamp,
+        //                     }
+        //                 }
+        //             ],
+        //             whenNotMatched: "discard"
+        //         }
+        //     }
+        // ])
+
+
         await Account.aggregate([
             {
                 $match: { acc: { $nin: data.copier_acc_arr }, "copiers.acc": copierAcc }
@@ -81,33 +138,33 @@ export default async (req, res) => {
                     acc_src: "$acc",
                     acc_dist: copierAcc,
                     profit_bl: "$copier.profit_bl",
-                    date: data.date,
-                    amount: {
-                        $add:
-                            [
-                                "$initial",
-                                "$copier.profit_bl",
-                            ]
-                    }
+                    date: data.date
+                }
+            },
+            {
+                $addFields: {
+                    amount: { $add: ["$initial", "$profit_bl"] }
+                }
+            },
+            {
+                $project: {
+                    acc_src: 1,
+                    acc_dist: 1,
+                    date: 1,
+                    profit_bl: 1,
+                    balance: "$amount",
+                    equity: "$amount",
+                    open_trades: { $literal: 0 },
+                    profit_eq: { $literal: 0 },
+                    updated_time: { $literal: data.datetime },
+                    updated_timestamp: { $literal: data.timestamp }
                 }
             },
             {
                 $merge: {
                     into: "account_reports",
                     on: ["acc_src", "acc_dist", "date"],
-                    whenMatched: [
-                        {
-                            $set: {
-                                open_trades: 0,
-                                profit_eq: 0,
-                                profit_bl: "$profit_bl",
-                                balance: "$amount",
-                                equity: "$amount",
-                                updated_time: data.datetime,
-                                updated_timestamp: data.timestamp,
-                            }
-                        }
-                    ],
+                    whenMatched: "replace",
                     whenNotMatched: "discard"
                 }
             }
