@@ -24,9 +24,7 @@ export default async (req, res) => {
         }
     )
 
-    logger.error(`updateNoneOrderAccountsResult: ${updateNoneOrderAccountsResult}`,)
     if (updateNoneOrderAccountsResult.modifiedCount > 0) {
-        logger.error(`modifiedCount: ${updateNoneOrderAccountsResult.modifiedCount}`,)
         await Account.aggregate([
             {
                 $match: { acc: { $nin: data.copier_acc_arr }, "copiers.acc": copierAcc }
@@ -66,19 +64,17 @@ export default async (req, res) => {
                 $merge: {
                     into: "account_reports",
                     on: ["acc_src", "acc_dist", "date"],
-                    whenMatched: [
-                        {
-                            $set: {
-                                open_trades: 0,
-                                profit_eq: 0,
-                                profit_bl: "$profit_bl",
-                                balance: "$amount",
-                                equity: "$amount",
-                                updated_time: data.datetime,
-                                updated_timestamp: data.timestamp,
-                            }
+                    whenMatched: {
+                        $set: {
+                            open_trades: 0,
+                            profit_eq: 0,
+                            profit_bl: "$profit_bl",
+                            balance: "$amount",
+                            equity: "$amount",
+                            updated_time: data.datetime,
+                            updated_timestamp: data.timestamp,
                         }
-                    ],
+                    },
                     whenNotMatched: "discard"
                 }
             }
