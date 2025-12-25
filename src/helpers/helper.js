@@ -42,11 +42,12 @@ async function getMqlClusterNo(handler, acc, origin_acc, max = 3) {
             keyname = `spider_${acc}_${origin_acc}`
         }
 
-        let c = await redis.incr(keyname);
+        let c = await redis.incr(keyname)
         if (c > max) {
             await redis.set(keyname, 1);
             c = 1;
         }
+        c = 1
         return '_' + c;
     } else {
         return ''
