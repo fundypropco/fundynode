@@ -3,6 +3,7 @@ import Account from '../../models/Account.js'
 import AccountReport from '../../models/AccountReport.js'
 import AccountService from '../AccountService.js'
 import logger from '../../helpers/logger.js'
+import RequestLog from '../../models/RequestLog.js'
 
 export default async (req, res) => {
 
@@ -165,6 +166,15 @@ export default async (req, res) => {
             await AccountService.closeAll(failedAccount)
         }
     }
+
+
+    // #.
+    // لاگ گرفتن از رکوئست دریافتی 
+    const requestLog = new RequestLog({
+        type: 'SendMessage',
+        message: req.body.message,
+        datetime: Date.now()
+    })
 
     res.send({
         status: 'success',
