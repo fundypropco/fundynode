@@ -2,6 +2,7 @@ import { getOrderSide } from '../../helpers/helper.js'
 import TradeMap from '../../models/TradeMap.js'
 import Account from '../../models/Account.js'
 import GetUpdateService from '../GetUpdateService.js'
+import TradeMapCheck from '../../models/TradeMapCheck.js'
 
 export default async (req, res) => {
 
@@ -47,9 +48,9 @@ export default async (req, res) => {
         }
     }
 
-    if (result.length) {
+    if (results.length) {
         for (const result of results) {
-            await new TradeMapCheck({
+            const tradeMapCheck = new TradeMapCheck({
                 server_src: account.server,
                 acc_src: account.acc,
                 ticket_src: result.ticket,
@@ -58,11 +59,11 @@ export default async (req, res) => {
                 acc_dist: result.acc_dist,
 
                 desc: result.desc,
-                time: data.date,
+                datetime: data.date,
                 timestamp: data.timestamp
             })
+            await tradeMapCheck.save()
         }
-        // send report to telegram 
     }
 
     res.send({

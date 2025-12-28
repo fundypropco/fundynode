@@ -5,6 +5,7 @@ import middlewares from './middlewares/index.js'
 import exception from './middlewares/exception.js'
 import notfound from './middlewares/404.js'
 import runSchedule from './schedules/run.js'
+import TradeMapCheck from './models/TradeMapCheck.js'
 
 await boot()
 const app = express()

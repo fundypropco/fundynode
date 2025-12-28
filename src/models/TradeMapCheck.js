@@ -15,7 +15,7 @@ const tradeMapCheckSchema = new mongoose.Schema({
     },
 
     server_dist: {
-        type: String,
+        type: String
     },
     acc_dist: {
         type: Number,
@@ -23,32 +23,34 @@ const tradeMapCheckSchema = new mongoose.Schema({
     },
     ticket_dist: {
         type: Number,
-        default: null,
+        default: null
     },
 
     desc: {
         type: String
     },
-    time: {
+    datetime: {
         type: String
     },
     timestamp: {
-        type: Number
+        type: Number,
+        index: true
+    },
+
+    notified: {
+        type: Boolean,
+        default: false
     }
-});
+})
 
-tradeMapSchema.index({ acc_src: 1, ticket_src: 1, acc_dist: 1, ticket_dist: 1 })
-tradeMapSchema.index({ acc_src: 1, acc_dist: 1, status: 1 })
-tradeMapSchema.index({ acc_dist: 1, ticket_dist: 1 })
+const TradeMapCheck = mongoose.model('TradeMapCheck', tradeMapCheckSchema, 'trade_map_checks');
 
-const TradeMap = mongoose.model('TradeMap', tradeMapSchema, 'trade_maps');
+export default TradeMapCheck
 
-export default TradeMap
-
-export async function createTradeMapIndexes() {
+export async function createTradeMapCheckIndexes() {
     try {
-        await TradeMap.createIndexes();
+        await TradeMapCheck.createIndexes();
     } catch (err) {
-        console.error("❌ Error syncing Symbol indexes:", err);
+        console.error("❌ Error syncing TradeMapCheck indexes:", err);
     }
 }

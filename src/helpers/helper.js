@@ -1,6 +1,25 @@
 import Symbol from "../models/Symbol.js"
 import getRedis from "../boot/redis.js"
 import { ACTION_HANDLER } from './constant.js'
+import axios from "axios"
+import logger from '../helpers/logger.js'
+
+
+export async function sendToNotifBot(message) {
+    const botToken = process.env.BALE_NOTIF_BOT_TOKEN
+    const chatId = process.env.BALE_NOTIF_BOT_CHANNEL_ID
+    const url = `https://tapi.bale.ai/bot${botToken}/sendMessage`
+
+    try {
+        await axios.post(url, {
+            chat_id: chatId,
+            text: message,
+            parse_mode: "Markdown"
+        });
+    } catch (err) {
+        logger.error(err.response?.data || err.message, "SendToNotifBot Error")
+    }
+}
 
 export function getHandlerOfMsg(msg) {
     if (!msg || typeof msg !== 'string') {
@@ -115,7 +134,7 @@ export async function makeMsgForHandler(handler, data) {
 
         case ACTION_HANDLER.CHECK_TRADES:
             message = `${data.acc},${handler}`;
-            message += `,5_&_GET_&_0_&_0_&_0_&_1_&_1_&_0_&_0_&_0_&_0_&_0_&_0_&_0_&_0_&_0_&_1`
+            message += `,${data.method}_&_${data.history_count}_&_${data.search_ticket}`
             break
     }
 

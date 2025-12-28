@@ -11,6 +11,8 @@ services:
       - MONGO_URI=mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@my-mongo:27017/${MONGO_INITDB_DATABASE}?authSource=admin
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - BALE_NOTIF_BOT_CHANNEL_ID=${BALE_NOTIF_BOT_CHANNEL_ID}
+      - BALE_NOTIF_BOT_TOKEN=${BALE_NOTIF_BOT_TOKEN}
     volumes:
       - ./logs:/app/logs
     depends_on:
@@ -42,6 +44,8 @@ services:
       - MONGO_URI=mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@my-mongo:27017/${MONGO_INITDB_DATABASE}?authSource=admin
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - BALE_NOTIF_BOT_CHANNEL_ID=${BALE_NOTIF_BOT_CHANNEL_ID}
+      - BALE_NOTIF_BOT_TOKEN=${BALE_NOTIF_BOT_TOKEN}
     depends_on:
       mongo:
         condition: service_healthy

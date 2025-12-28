@@ -2,7 +2,6 @@ import { formatDateUTC } from '../../helpers/helper.js'
 import Account from '../../models/Account.js'
 import AccountReport from '../../models/AccountReport.js'
 import AccountService from '../AccountService.js'
-import RequestLog from '../../models/RequestLog.js'
 
 export default async (req, res) => {
 

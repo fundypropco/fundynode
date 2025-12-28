@@ -17,6 +17,8 @@ services:
       - MONGO_URI=mongodb://mongo:27017/fundynode
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - BALE_NOTIF_BOT_CHANNEL_ID=${BALE_NOTIF_BOT_CHANNEL_ID}
+      - BALE_NOTIF_BOT_TOKEN=${BALE_NOTIF_BOT_TOKEN}
     depends_on:
       - mongo
       - redis
@@ -34,6 +36,8 @@ services:
       - MONGO_URI=mongodb://mongo:27017/fundynode
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - BALE_NOTIF_BOT_CHANNEL_ID=${BALE_NOTIF_BOT_CHANNEL_ID}
+      - BALE_NOTIF_BOT_TOKEN=${BALE_NOTIF_BOT_TOKEN}
     volumes:
       - .:/app
       - ./logs:/app/logs

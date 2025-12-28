@@ -1,8 +1,9 @@
 import TradeMap from '../models/TradeMap.js'
 import GetUpdateService from '../services/GetUpdateService.js'
 import { ACTION_HANDLER } from '../helpers/constant.js'
-import { makeID, makeMsgForHandler } from '../helpers/helper.js'
+import { makeID, makeMsgForHandler, sendToNotifBot } from '../helpers/helper.js'
 import Account from '../models/Account.js'
+import TradeMapCheck from '../models/TradeMapCheck.js'
 
 export async function checkTradeMap() {
     const accounts = await Account.find({ copy: true, "copiers.open_trades": { $ne: 0 } })
@@ -14,11 +15,37 @@ export async function checkTradeMap() {
             acc: accountItem.acc,
             handler: ACTION_HANDLER.CHECK_TRADES,
             keyid: keyid + index,
+            method: 'GET',
+            history_count: 5,
+            search_ticket: 0
         }
         getUpdateData.message = await makeMsgForHandler(getUpdateData.handler, getUpdateData)
         return GetUpdateService.create(getUpdateData)
     })
     await Promise.all(tasks)
+    await notifTradeMap()
+}
+
+export async function notifTradeMap() {
+    const checks = await TradeMapCheck.find({ notified: false }).sort('timestamp')
+    const messages = []
+    if (checks.length) {
+        const header = `*🔥 TradeMap Notification: *\n`
+        let i = 0
+        for (const check of checks) {
+            let text = `Acc Trader: ${check.acc_src} \n`
+            text += `Acc Copier: ${check.acc_dist} \n`
+            text += `Desc: ${check.desc} \n`
+            if (i != checks.length - 1) {
+                text += '------------'
+            }
+            messages.push(text)
+            check.notified = true
+            await check.save()
+            i++
+        }
+        await sendToNotifBot(header + messages.join('\n'))
+    }
 }
 
 export async function getOpenTradesProfit() {
