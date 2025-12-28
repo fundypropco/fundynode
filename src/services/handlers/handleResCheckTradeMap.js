@@ -1,4 +1,4 @@
-import { getOrderSide } from '../../helpers/helper.js'
+import { formatDateUTC, getOrderSide } from '../../helpers/helper.js'
 import TradeMap from '../../models/TradeMap.js'
 import Account from '../../models/Account.js'
 import GetUpdateService from '../GetUpdateService.js'
