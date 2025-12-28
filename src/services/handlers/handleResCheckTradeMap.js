@@ -90,21 +90,21 @@ function processMessage(msg) {
         .filter(part => part.length > 0)
         .map(part => part.split("_&_").map(x => x.trim()))
         .map(item => ({
-            ticket: Number(item[0]),
-            side: getOrderSide(item[1]),
-            vol: Number(item[2]),
-            open_price: Number(item[3]),
-            open_timestamp: Number(item[4]),
-            close_price: Number(item[5]),
-            close_timestamp: Number(item[6]),
-            sl: Number(item[7]),
-            tp: Number(item[8]),
-            swap: Number(item[9]),
-            commission: Number(item[10]),
-            profit: Number(item[11]),
-            magic: Number(item[12]),
-            comment: item[13],
-            status: item[14] === 'HISTROY' ? 'closed' : 'open', // HISTORY | OPENTRADES
+            status: item[0].trim().toLowerCase() === 'open' ? 'open' : 'closed',
+            ticket: Number(item[1]),
+            open_timestamp: Number(item[2]),
+            close_timestamp: Number(item[3]),
+            side: getOrderSide(item[4]),
+            vol: Number(item[5]),
+            sl: Number(item[6]),
+            tp: Number(item[7]),
+            open_price: Number(item[8]),
+            close_price: Number(item[9]),
+            swap: Number(item[10]),
+            commission: Number(item[11]),
+            profit: Number(item[12]),
+            magic: Number(item[13]),
+            comment: item[14].trim(),
         }))
 
     return data
