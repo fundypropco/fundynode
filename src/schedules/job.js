@@ -33,8 +33,8 @@ export async function notifTradeMap() {
         const header = `*🔥 TradeMap Notification: *\n`
         let i = 0
         for (const check of checks) {
-            let text = `Acc Trader: ${check.acc_src} \n`
-            text += `Acc Copier: ${check.acc_dist} \n`
+            let text = `Trader: ${check.acc_src} \n`
+            text += `Copier: ${check.acc_dist} \n`
             text += `Desc: ${check.desc} \n`
             if (i != checks.length - 1) {
                 text += '------------'

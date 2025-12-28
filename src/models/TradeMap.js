@@ -133,6 +133,7 @@ const tradeMapSchema = new mongoose.Schema({
     side: {
         type: String,
         enum: ['buy', 'buy_limit', 'buy_stop', 'sell', 'sell_limit', 'sell_stop'],
+        index: true
     },
     closing_type: {
         type: String,

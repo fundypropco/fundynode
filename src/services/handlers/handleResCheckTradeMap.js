@@ -27,13 +27,13 @@ export default async (req, res) => {
                     ).values()
                 ]
                 if (copier_trades.length) {
-                    const trade = copier_trades.find(t => t.status === item.status)
+                    const trade = copier_trades.find(t => t.status === item.status && t.side === item.side)
                     if (!trade) {
                         results.push({
                             ticket_src: item.ticket,
                             server_dist: copier.server,
                             acc_dist: copier.acc,
-                            desc: `Trade status is not correct: TraderAcc: ${data.acc} CopierAcc: ${copier.acc} | Ticket: ${item.ticket} | Status: ${item.status}`
+                            desc: `Trade status/side is not correct: TraderAcc: ${data.acc} CopierAcc: ${copier.acc} | Ticket: ${item.ticket} | Status: ${item.status} | Side: ${item.side}`
                         })
                     }
                 } else {
