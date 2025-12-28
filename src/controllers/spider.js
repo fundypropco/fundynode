@@ -18,6 +18,7 @@ import HandleResCloseMagic from '../services/handlers/HandleResCloseMagic.js'
 import HandleOpenTrades from '../services/handlers/HandleOpenTrades.js'
 import HandleResOpenPendingOrder from '../services/handlers/HandleResOpenPendingOrder.js'
 import HandleSampleTrade from '../services/handlers/handleSampleTrade.js'
+import handleResCheckTradeMap from '../services/handlers/handleResCheckTradeMap.js'
 
 const getUpdates = asyncHandler(async (req, res) => {
     const result = await GetUpdateService.getUnprocessed(req.params.acc)
@@ -64,6 +65,9 @@ const sendMessage = asyncHandler(async (req, res) => {
         case 993:
         case 992:
             return await handleResNewOrder(req, res)
+
+        case 970:
+            return await handleResCheckTradeMap(req, res)
 
         case 975:
             return await HandleResOpenPendingOrder(req, res)
