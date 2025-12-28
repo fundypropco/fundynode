@@ -16,7 +16,7 @@ export default async (req, res) => {
 
     const results = []
     const trades = await TradeMap.find({ acc_src: data.acc })
-    const account = await Account.find({ acc: data.acc })
+    const account = await Account.findOne({ acc: data.acc })
 
     for (const item of data.items) {
         for (const copier of account.copiers) {
