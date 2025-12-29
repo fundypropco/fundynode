@@ -6,7 +6,7 @@ import Account from '../models/Account.js'
 import TradeMapCheck from '../models/TradeMapCheck.js'
 
 export async function checkTradeMap() {
-    const accounts = await Account.find({ copy: true }).sort('check_trade_map_time').limit(10)
+    const accounts = await Account.find({ copy: true, check_trade_map_time: { $gte: Date.now(), $ne: 0 } })
 
     let keyid = makeID()
     const tasks = accounts.map(async (accountItem, index) => {
@@ -20,7 +20,10 @@ export async function checkTradeMap() {
             search_ticket: 0
         }
         getUpdateData.message = await makeMsgForHandler(getUpdateData.handler, getUpdateData)
-        return GetUpdateService.create(getUpdateData)
+        await GetUpdateService.create(getUpdateData)
+
+        accountItem.check_trade_map_time = 0
+        await accountItem.save()
     })
     await Promise.all(tasks)
     await notifTradeMap()

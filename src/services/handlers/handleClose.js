@@ -85,6 +85,8 @@ async function processClose(data) {
                 }
             }
         }
+
+        await sendForCheck(data.accountObj)
     }
 }
 
@@ -136,7 +138,16 @@ async function processPartial(data) {
                 }
             }
         }
+
+        await sendForCheck(data.accountObj)
     }
+}
+
+async function sendForCheck(account) {
+    // #. 
+    // ثبت دستور بررسی صحت کپی
+    account.check_trade_map_time = Date.now() + 10000
+    await account.save()
 }
 
 async function processMessage(msg) {
@@ -151,7 +162,7 @@ async function processMessage(msg) {
     data.acc = Number(msg_parts[0].replace(/_.*/, ''))
 
     //پیدا کردن اکانت مربوط به عملیات دریافتی و پارامترهای مربوط به سرور بروکر آن 
-    data.accountObj = await Account.findOne({ acc: data.acc }).lean()
+    data.accountObj = await Account.findOne({ acc: data.acc })
     data.brokerData = await getBrokerData(data.accountObj.server)
     data.diff_time = Number(data.brokerData.diff_time)
 

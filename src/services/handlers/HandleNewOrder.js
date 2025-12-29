@@ -42,10 +42,15 @@ async function processNewOrder(data) {
 
         let keyid = makeID()
 
+        let sendForCheckFlag = false
+
         // #
         // بدست آوردن اکانتهای کپی کننده
         for (const copier of account.copiers) {
             if (copier.copy) {
+
+                let closeOriginFlag = false
+
                 // # 
                 // بررسی اینکه آیا این سفارش تکراری است یا خیر 
                 const is_duplicated = await isDuplicatedOrder(account, copier, data)
@@ -80,23 +85,34 @@ async function processNewOrder(data) {
 
                         // #
                         // ثبت دستور اجرای سفارش
-                        return await GetUpdateService.create(getUpdateData)
+                        await GetUpdateService.create(getUpdateData)
+
+                        sendForCheckFlag = true
                     } else {
+                        closeOriginFlag = true
                         localData.description = isPossible.description
                     }
+                } else {
+                    closeOriginFlag = true
                 }
 
-                // #. 
-                // if order is not possible
-                // اگر نمادهای معاملاتی نامعتبر باشند یا موجودی کاربر برای انجام سفارش کافی نباشد
+                if (closeOriginFlag) {
+                    // #. 
+                    // if order is not possible
+                    // اگر نمادهای معاملاتی نامعتبر باشند یا موجودی کاربر برای انجام سفارش کافی نباشد
 
-                // #
-                // بستن معامله در اکانت ترید 
-                const getUpdateData = await GetUpdateService.prepareCloseOriginData(account, localData)
+                    // #
+                    // بستن معامله در اکانت ترید 
+                    const getUpdateData = await GetUpdateService.prepareCloseOriginData(account, localData)
 
-                // #
-                // ثبت دستور اجرا 
-                await GetUpdateService.create(getUpdateData)
+                    // #
+                    // ثبت دستور اجرا 
+                    await GetUpdateService.create(getUpdateData)
+                }
+
+                if (sendForCheckFlag) {
+                    await sendForCheck(data.accountObj)
+                }
 
             } // copier copy is enabled
         }// for
@@ -150,6 +166,8 @@ async function processPartial(data) {
                 }
             }
         }
+
+        await sendForCheck(data.accountObj)
     }
 }
 
@@ -163,6 +181,13 @@ async function isDuplicatedOrder(account, copier, data) {
     }
 
     return !!tradeMap
+}
+
+async function sendForCheck(account) {
+    // #. 
+    // ثبت دستور بررسی صحت کپی
+    account.check_trade_map_time = Date.now() + 10000
+    await account.save()
 }
 
 function isOrderPossible(account, copier, data) {
@@ -193,7 +218,7 @@ async function processMessage(msg) {
     data.acc = Number(msg_parts[0].replace(/_.*/, ''))
 
     //پیدا کردن اکانت مربوط به عملیات دریافتی و پارامترهای مربوط به سرور بروکر آن 
-    data.accountObj = await Account.findOne({ acc: data.acc }).lean()
+    data.accountObj = await Account.findOne({ acc: data.acc })
     data.brokerData = await getBrokerData(data.accountObj.server)
     data.diff_time = Number(data.brokerData.diff_time)
 
