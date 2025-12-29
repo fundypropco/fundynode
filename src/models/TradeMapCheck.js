@@ -7,11 +7,9 @@ const tradeMapCheckSchema = new mongoose.Schema({
     },
     acc_src: {
         type: Number,
-        index: true
     },
     ticket_src: {
         type: Number,
-        index: true
     },
 
     server_dist: {
@@ -19,7 +17,6 @@ const tradeMapCheckSchema = new mongoose.Schema({
     },
     acc_dist: {
         type: Number,
-        index: true
     },
     ticket_dist: {
         type: Number,
@@ -39,7 +36,6 @@ const tradeMapCheckSchema = new mongoose.Schema({
     },
     timestamp: {
         type: Number,
-        index: true
     },
 
     notified: {
