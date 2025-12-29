@@ -1,6 +1,7 @@
 import { formatDateUTC } from '../../helpers/helper.js'
 import Account from '../../models/Account.js'
 import AccountReport from '../../models/AccountReport.js'
+import RequestLog from '../../models/RequestLog.js'
 import AccountService from '../AccountService.js'
 
 export default async (req, res) => {
@@ -110,6 +111,16 @@ export default async (req, res) => {
             await AccountService.closeAll(failedAccount)
         }
     }
+
+
+    // #.
+    // لاگ گرفتن از رکوئست دریافتی
+    const requestLog = new RequestLog({
+        type: 'SendMessage',
+        message: req.body.message,
+        datetime: Date.now()
+    })
+    await requestLog.save()
 
     res.send({
         status: 'success',
