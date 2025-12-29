@@ -33,6 +33,7 @@ export default async (req, res) => {
                             ticket_src: item.ticket,
                             server_dist: copier.server,
                             acc_dist: copier.acc,
+                            type: 'mismatch',
                             desc: `Trade status/side is not correct: TraderAcc: ${data.acc} CopierAcc: ${copier.acc} | Ticket: ${item.ticket} | Status: ${item.status} | Side: ${item.side}`
                         })
                     }
@@ -41,6 +42,7 @@ export default async (req, res) => {
                         ticket_src: item.ticket,
                         server_dist: copier.server,
                         acc_dist: copier.acc,
+                        type: 'existence',
                         desc: `Trade is not copied: TraderAcc: ${data.acc} | CopierAcc: ${copier.acc} | Ticket: ${item.ticket}`
                     })
                 }
@@ -50,21 +52,32 @@ export default async (req, res) => {
 
     if (results.length) {
         for (const result of results) {
-            const tradeMapCheck = new TradeMapCheck({
-                server_src: account.server,
-                acc_src: account.acc,
-                ticket_src: result.ticket,
+            try {
+                const tradeMapCheck = new TradeMapCheck({
+                    server_src: account.server,
+                    acc_src: account.acc,
+                    ticket_src: result.ticket,
 
-                server_dist: result.server_dist,
-                acc_dist: result.acc_dist,
+                    server_dist: result.server_dist,
+                    acc_dist: result.acc_dist,
 
-                desc: result.desc,
-                datetime: data.date,
-                timestamp: data.timestamp
-            })
-            await tradeMapCheck.save()
+                    type: result.type,
+
+                    desc: result.desc,
+                    datetime: data.date,
+                    timestamp: data.timestamp
+                })
+                await tradeMapCheck.save()
+            } catch (err) {
+                if (err.code !== 11000) {
+                    throw err
+                }
+            }
         }
     }
+
+    account.check_trade_map_time = Date.now()
+    await account.save()
 
     res.send({
         status: 'success',
@@ -78,7 +91,7 @@ function processMessage(msg) {
     const msg_parts = msg.split(',')
     data.acc = Number(msg_parts[0].replace(/_.*/, ''))
     data.handler = 1000 - parseInt(msg_parts[1])
-    let info = msg_parts[2].trim()
+    const info = msg_parts[2].trim()
     data.timestamp = Number(msg_parts[3])
     data.date = formatDateUTC(data.timestamp)
     data.status = 'success'

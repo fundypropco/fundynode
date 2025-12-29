@@ -26,6 +26,11 @@ const tradeMapCheckSchema = new mongoose.Schema({
         default: null
     },
 
+    type: {
+        type: String,
+        enum: ['existence', 'mismatch']
+    },
+
     desc: {
         type: String
     },
@@ -42,6 +47,8 @@ const tradeMapCheckSchema = new mongoose.Schema({
         default: false
     }
 })
+
+tradeMapCheckSchema.index({ acc_src: 1, ticket_src: 1, acc_dist: 1, ticket_dist: 1, type: 1 }, { unique: true })
 
 const TradeMapCheck = mongoose.model('TradeMapCheck', tradeMapCheckSchema, 'trade_map_checks');
 

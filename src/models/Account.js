@@ -51,6 +51,10 @@ const accountSchema = new mongoose.Schema({
         type: [copierSchema],
         default: []
     },
+    check_trade_map_time: {
+        type: Number,
+        default: 0
+    },
     created_at: {
         type: Number,
         default: Date.now

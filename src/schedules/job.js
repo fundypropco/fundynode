@@ -6,7 +6,7 @@ import Account from '../models/Account.js'
 import TradeMapCheck from '../models/TradeMapCheck.js'
 
 export async function checkTradeMap() {
-    const accounts = await Account.find({ copy: true, "copiers.open_trades": { $ne: 0 } })
+    const accounts = await Account.find({ copy: true }).sort('check_trade_map_time').limit(10)
 
     let keyid = makeID()
     const tasks = accounts.map(async (accountItem, index) => {
@@ -30,12 +30,10 @@ export async function notifTradeMap() {
     const checks = await TradeMapCheck.find({ notified: false }).sort('timestamp')
     const messages = []
     if (checks.length) {
-        const header = `*🔥 TradeMap Notification: *\n`
+        const header = `*🔥 TradeMap Notifications: *\n`
         let i = 0
         for (const check of checks) {
-            let text = `Trader: ${check.acc_src} \n`
-            text += `Copier: ${check.acc_dist} \n`
-            text += `Desc: ${check.desc} \n`
+            let text = `${check.desc} \n`
             if (i != checks.length - 1) {
                 text += '------------'
             }
