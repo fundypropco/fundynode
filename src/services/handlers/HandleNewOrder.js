@@ -186,7 +186,7 @@ async function isDuplicatedOrder(account, copier, data) {
 async function sendForCheck(account) {
     // #. 
     // ثبت دستور بررسی صحت کپی
-    account.check_trade_map_time = Date.now() + (60 * 60 * 1000)
+    account.check_time = Date.now() + (60 * 60 * 1000)
     await account.save()
 }
 

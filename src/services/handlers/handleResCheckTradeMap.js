@@ -76,7 +76,7 @@ export default async (req, res) => {
         }
     }
 
-    account.check_trade_map_time = Date.now()
+    account.check_time = 0
     await account.save()
 
     res.send({

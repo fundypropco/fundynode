@@ -51,7 +51,7 @@ const accountSchema = new mongoose.Schema({
         type: [copierSchema],
         default: []
     },
-    check_trade_map_time: {
+    check_time: {
         type: Number,
         default: 0,
     },
@@ -62,7 +62,7 @@ const accountSchema = new mongoose.Schema({
 })
 
 accountSchema.index({ acc: 1, "copiers.acc": 1 })
-accountSchema.index({ copy: 1, check_trade_map_time: 1 })
+accountSchema.index({ copy: 1, check_time: 1 })
 
 const Account = mongoose.model('Account', accountSchema, 'accounts');
 
