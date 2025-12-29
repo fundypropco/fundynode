@@ -131,7 +131,7 @@ const getUnprocessed = async (acc) => {
     //     ]
     // }).sort('-created_at')
 
-    let results = await GetUpdate.find({ acc, status: 'pending' }).sort('-created_at')
+    let results = await GetUpdate.find({ acc, status: 'pending', created_at: { $gte: Date.now() - 60000 } }).sort('-created_at')
 
     const finalResults = results.map(doc => ({
         update_id: doc.keyid,

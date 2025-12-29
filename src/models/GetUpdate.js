@@ -141,7 +141,8 @@ const getUpdateSchema = new mongoose.Schema({
     },
     created_at: {
         type: Number,
-        default: Date.now
+        default: Date.now,
+        index: true,
     },
     updated_at: {
         type: Number,
@@ -152,6 +153,7 @@ const getUpdateSchema = new mongoose.Schema({
 getUpdateSchema.index({ acc: 1, handler: 1 })
 getUpdateSchema.index({ server: 1, handler: 1 })
 getUpdateSchema.index({ origin_acc: 1, origin_ticket: 1 })
+getUpdateSchema.index({ acc: 1, status: 1, created_at: -1 })
 
 const GetUpdate = mongoose.model('GetUpdate', getUpdateSchema, 'get_updates')
 

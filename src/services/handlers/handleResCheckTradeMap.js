@@ -43,7 +43,7 @@ export default async (req, res) => {
                         server_dist: copier.server,
                         acc_dist: copier.acc,
                         type: 'existence',
-                        desc: `Trade is not copied: TraderAcc: ${data.acc} | CopierAcc: ${copier.acc} | Ticket: ${item.ticket}`
+                        desc: `Trade is not copied: TraderAcc: ${data.acc} | CopierAcc: ${copier.acc} | Ticket: ${item.ticket} | Status: ${item.status}`
                     })
                 }
             }
