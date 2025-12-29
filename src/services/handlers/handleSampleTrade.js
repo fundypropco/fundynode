@@ -1,4 +1,4 @@
-import { normalizeSymbol } from '../../helpers/helper.js'
+import { formatDate, formatDateUTC, normalizeSymbol } from '../../helpers/helper.js'
 import Broker from '../../models/Broker.js'
 import Symbol from '../../models/Symbol.js'
 import SymbolAlias from '../../models/SymbolAlias.js'
@@ -62,7 +62,9 @@ export default async (req, res) => {
                     spread_last: data.spread,
                     spread_avg_5: data.spread_avg_5,
                     spread_avg_50: data.spread_avg_50,
-                    margin: data.margin
+                    margin: data.margin,
+                    leverage: data.leverage,
+                    updated_at: data.date,
                 }
             },
             {
@@ -91,7 +93,10 @@ function processMessage(msg) {
     // msg parts
     const msg_parts = msg.split(',')
     data.acc = Number(msg_parts[0].replace(/_.*/, ''))
-    let info = msg_parts[2]
+    const info = msg_parts[2]
+    data.handler = 1000 - parseInt(msg_parts[1])
+    data.timestamp = Number(msg_parts[3])
+    data.date = formatDateUTC(data.timestamp)
 
     // msg info
     const info_parts = info.split('_&_')
@@ -114,7 +119,8 @@ function processMessage(msg) {
     data.diff = Number(info_parts[16])
     data.spread_avg_5 = Number(info_parts[17])
     data.spread_avg_50 = Number(info_parts[18])
-    data.margin = Number(info_parts[19])
+    data.leverage = Number(info_parts[19])
+    data.margin = Number(info_parts[20])
 
     return data
 }

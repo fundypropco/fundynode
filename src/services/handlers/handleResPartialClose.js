@@ -127,7 +127,7 @@ function processMessage(msg) {
     // 1006135456 , 978 , OK PARTIAL & old_ticket & new_ticket & remain_lots & close_timestamp & close_price & swap & commision & profit & error , 1758983673 , id
     // 1006135456, 978, CANT PARTIAL & error, 1758983673, id
     // acc , 978 , OK PARTIAL & closed-ticket & open-ticket & open-vol & closed_timestamp & close_price & swap & commission & profit & result_code , timestamp, keyid
-    const data = {};
+    const data = {}
 
     // msg parts
     const msg_parts = msg.split(',')

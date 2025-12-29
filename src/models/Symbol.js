@@ -57,6 +57,10 @@ const symbolSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
+    leverage: {
+        type: Number,
+        default: 0
+    },
     spread_min: {
         type: Number,
         default: 0,
@@ -85,6 +89,9 @@ const symbolSchema = new mongoose.Schema({
         type: Number,
         default: 0,
     },
+    updated_at: {
+        type: String
+    }
 })
 
 symbolSchema.index({ server: 1, title: 1 }, { unique: true })
