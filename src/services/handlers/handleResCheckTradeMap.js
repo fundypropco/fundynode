@@ -56,7 +56,7 @@ export default async (req, res) => {
                 const tradeMapCheck = new TradeMapCheck({
                     server_src: account.server,
                     acc_src: account.acc,
-                    ticket_src: result.ticket,
+                    ticket_src: result.ticket_src,
 
                     server_dist: result.server_dist,
                     acc_dist: result.acc_dist,
