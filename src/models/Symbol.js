@@ -105,6 +105,6 @@ export async function createSymbolIndexes() {
     try {
         await Symbol.createIndexes();
     } catch (err) {
-        console.error("❌ Error syncing Symbol indexes:", err);
+        console.error("❌ Error Syncing Symbol indexes:", err);
     }
 }

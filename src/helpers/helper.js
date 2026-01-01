@@ -1,9 +1,21 @@
 import Symbol from "../models/Symbol.js"
+import RequestLog from "../models/RequestLog.js"
 import getRedis from "../boot/redis.js"
 import { ACTION_HANDLER } from './constant.js'
 import axios from "axios"
 import logger from '../helpers/logger.js'
+import { getLogRuleData } from '../boot/cache.js'
 
+export async function SetRequestLog(handler, message) {
+    if (getLogRuleData[handler]) {
+        const requestLog = new RequestLog({
+            message: req.body.message,
+            datetime: formatDate(Date.now()),
+            timestamp: Date.now()
+        })
+        await requestLog.save()
+    }
+}
 
 export async function sendToNotifBot(message) {
     const botToken = process.env.BALE_NOTIF_BOT_TOKEN
@@ -141,15 +153,6 @@ export async function makeMsgForHandler(handler, data) {
     message += `,${Math.floor(Date.now() / 1000)},${data.keyid}`
 
     return message
-}
-
-export function formatDateYMD(timestamp) {
-    const d = new Date(timestamp)
-    const y = d.getUTCFullYear()
-    const m = d.getUTCMonth() + 1
-    const day = d.getUTCDate()
-
-    return `${y}-${m < 10 ? '0' + m : m}-${day < 10 ? '0' + day : day}`
 }
 
 export function formatDateUTC(timestamp, format = "YMDHIS") {

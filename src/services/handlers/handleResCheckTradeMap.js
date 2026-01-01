@@ -76,9 +76,6 @@ export default async (req, res) => {
         }
     }
 
-    account.check_time = 0
-    await account.save()
-
     res.send({
         status: 'success',
     })

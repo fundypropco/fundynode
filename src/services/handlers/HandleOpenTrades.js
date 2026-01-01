@@ -1,11 +1,12 @@
 import { formatDateUTC } from '../../helpers/helper.js'
 import Account from '../../models/Account.js'
 import AccountReport from '../../models/AccountReport.js'
-import RequestLog from '../../models/RequestLog.js'
 import AccountService from '../AccountService.js'
 
 export default async (req, res) => {
 
+    // #.
+    // پردازش پیام ورودی 
     const data = processMessage(req.body.message)
     const copierAcc = data.acc
 
@@ -13,6 +14,8 @@ export default async (req, res) => {
     // })
     // await Promise.all(tasks)
 
+    // #.
+    // صفر کردن سود و ضرر معاملات باز برای اکانتهایی که متصل به این کپیر هستند و اطلاعاتی از آنها دریافت نشده
     const updateNoneOrderAccountsResult = await Account.updateMany(
         { acc: { $nin: data.copier_acc_arr }, "copiers.acc": copierAcc },
         {
@@ -38,6 +41,9 @@ export default async (req, res) => {
         await Promise.all(tasks)
     }
 
+
+    // #
+    // بروزرسانی سود و ضرر معاملات باز برای تریدرهایی که به این کپیر متصل هستند و دیتای آنها دریافت شده است
     const promises = []
     for (let [traderAcc, profit] of Object.entries(data.profits)) {
         const promise = (async () => {
@@ -112,16 +118,8 @@ export default async (req, res) => {
         }
     }
 
-
-    // #.
-    // لاگ گرفتن از رکوئست دریافتی
-    const requestLog = new RequestLog({
-        type: 'SendMessage',
-        message: req.body.message,
-        datetime: Date.now()
-    })
-    await requestLog.save()
-
+    // #
+    // ارسال پاسخ موفق
     res.send({
         status: 'success',
     })

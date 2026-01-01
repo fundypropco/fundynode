@@ -1,4 +1,4 @@
-import { formatDate, formatDateUTC, normalizeSymbol } from '../../helpers/helper.js'
+import { formatDateUTC, normalizeSymbol } from '../../helpers/helper.js'
 import Broker from '../../models/Broker.js'
 import Symbol from '../../models/Symbol.js'
 import SymbolAlias from '../../models/SymbolAlias.js'

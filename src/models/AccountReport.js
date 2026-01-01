@@ -153,6 +153,6 @@ export async function createAccountReportIndexes() {
     try {
         await AccountReport.createIndexes();
     } catch (err) {
-        console.error("❌ Error syncing Symbol indexes:", err);
+        console.error("❌ Error Syncing Symbol indexes:", err);
     }
 }

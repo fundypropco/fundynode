@@ -1,4 +1,3 @@
-import RequestLog from "../../models/RequestLog.js"
 import { normalizeSymbol } from '../../helpers/helper.js'
 import GetUpdateService from '../GetUpdateService.js'
 import SymbolAlias from "../../models/SymbolAlias.js"
@@ -83,16 +82,7 @@ export default async (req, res) => {
     // await Promise.all(promises)
 
     // #
-    // لاگ گرفتن از رکوئست دریافتی 
-    const requestLog = new RequestLog({
-        type: 'GetUpdateResponse',
-        message: req.body.message,
-        datetime: Date.now()
-    })
-    await requestLog.save()
-
-    // #
-    // ارسال پاسخ عملیات موفقیت آمیز 
+    // ارسال پاسخ موفق 
     res.send({
         status: 'success',
     })

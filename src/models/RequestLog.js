@@ -1,15 +1,19 @@
 import mongoose from "mongoose"
 
 const requestLogSchema = new mongoose.Schema({
-    type: {
-        type: String,
-        enum: ['SendMessage', 'GetUpdateResponse']
+    handler: {
+        type: Number,
+        index: true
     },
     message: {
         type: String
     },
     datetime: {
-        type: Number
+        type: String
+    },
+    timestamp: {
+        type: Number,
+        index: true
     }
 });
 
@@ -21,6 +25,6 @@ export async function createRequestLogIndexes() {
     try {
         await RequestLog.createIndexes();
     } catch (err) {
-        console.error("❌ Error syncing Symbol indexes:", err);
+        console.error("❌ Error Syncing Symbol indexes:", err);
     }
 }

@@ -1,4 +1,3 @@
-import RequestLog from "../../models/RequestLog.js"
 import GetUpdateService from "../GetUpdateService.js"
 import { formatDateUTC } from '../../helpers/helper.js'
 import TradeMap from '../../models/TradeMap.js'
@@ -107,15 +106,6 @@ export default async (req, res) => {
         // ارسال دستورات در وضعیت انتظار و وابسته به این دیتا 
         await GetUpdateService.updateWaitings(getUpdateDoc.origin_acc, getUpdateDoc.origin_new_ticket, data.open_ticket, getUpdateDoc)
     }
-
-    // 6.
-    // لاگ گرفتن از رکوئست دریافتی 
-    const requestLog = new RequestLog({
-        type: 'GetUpdateResponse',
-        message: req.body.message,
-        datetime: Date.now()
-    })
-    await requestLog.save()
 
     res.send({
         status: 'success',

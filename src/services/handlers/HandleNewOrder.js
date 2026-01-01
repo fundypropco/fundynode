@@ -1,5 +1,4 @@
 import Account from '../../models/Account.js'
-import RequestLog from "../../models/RequestLog.js"
 import GetUpdateService from "../GetUpdateService.js"
 import { isValidSymbols, makeID, getOrderSide, formatDateUTC } from '../../helpers/helper.js'
 import TradeMap from '../../models/TradeMap.js'
@@ -17,14 +16,6 @@ export default async (req, res) => {
         // اگر پارشیال کلوز باشد
         await processPartial(data)
     }
-
-    //# لاگ گرفتن از رکوئست دریافتی
-    const requestLog = new RequestLog({
-        type: 'SendMessage',
-        message: req.body.message,
-        datetime: Date.now()
-    })
-    await requestLog.save()
 
     res.send({
         status: 'success',

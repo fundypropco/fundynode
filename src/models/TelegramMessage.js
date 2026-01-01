@@ -21,6 +21,6 @@ export async function createTelegramMessageIndexes() {
     try {
         await TelegramMessage.createIndexes();
     } catch (err) {
-        console.error("❌ Error syncing TelegramMessage indexes:", err);
+        console.error("❌ Error Syncing TelegramMessage indexes:", err);
     }
 }

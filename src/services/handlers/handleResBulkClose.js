@@ -1,4 +1,3 @@
-import RequestLog from "../../models/RequestLog.js"
 import GetUpdateService from "../GetUpdateService.js"
 import { formatDateUTC, makeID, makeMsgForHandler } from '../../helpers/helper.js'
 import { ACTION_HANDLER } from "../../helpers/constant.js"
@@ -83,15 +82,8 @@ export default async (req, res) => {
         }
     }
 
-    // 6.
-    // لاگ گرفتن از رکوئست دریافتی
-    const requestLog = new RequestLog({
-        type: 'GetUpdateResponse',
-        message: req.body.message,
-        datetime: Date.now()
-    })
-    await requestLog.save()
-
+    // #
+    // ارسال پاسخ موفق
     res.send({
         status: 'success',
     })

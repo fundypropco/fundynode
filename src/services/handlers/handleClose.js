@@ -1,5 +1,4 @@
 import Account from '../../models/Account.js'
-import RequestLog from "../../models/RequestLog.js"
 import GetUpdateService from "../GetUpdateService.js"
 import { formatDateUTC, getOrderSide, makeID } from '../../helpers/helper.js'
 import TradeMap from '../../models/TradeMap.js'
@@ -11,6 +10,8 @@ export default async (req, res) => {
     //پردازش پیام ورودی 
     const data = await processMessage(req.body.message)
 
+    // #.
+    // انجام فرآیند بر اساس نوع کلوز
     if (!data.is_partial) {
         // اگر کلوز کامل باشد 
         await processClose(data)
@@ -20,14 +21,7 @@ export default async (req, res) => {
     }
 
     // #.
-    // لاگ گرفتن از رکوئست دریافتی
-    const requestLog = new RequestLog({
-        type: 'SendMessage',
-        message: req.body.message,
-        datetime: Date.now()
-    })
-    await requestLog.save()
-
+    // ارسال پاسخ
     res.send({
         status: 'success',
     })
@@ -160,6 +154,7 @@ async function processMessage(msg) {
     // msg parts
     const msg_parts = msg.split(',')
     data.acc = Number(msg_parts[0].replace(/_.*/, ''))
+    data.handler = Number(msg_parts[1])
 
     //پیدا کردن اکانت مربوط به عملیات دریافتی و پارامترهای مربوط به سرور بروکر آن 
     data.accountObj = await Account.findOne({ acc: data.acc })
@@ -168,7 +163,7 @@ async function processMessage(msg) {
 
 
     data.timestamp = Number(msg_parts[3])
-    let info = msg_parts[2]
+    const info = msg_parts[2]
     const partial_info = msg_parts[4]
     data.is_partial = false
 

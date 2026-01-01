@@ -163,6 +163,6 @@ export async function createGetUpdateIndexes() {
     try {
         await GetUpdate.createIndexes();
     } catch (err) {
-        console.error("❌ Error syncing Symbol indexes:", err);
+        console.error("❌ Error Syncing Symbol indexes:", err);
     }
 }

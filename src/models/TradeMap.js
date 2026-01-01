@@ -162,6 +162,6 @@ export async function createTradeMapIndexes() {
     try {
         await TradeMap.createIndexes();
     } catch (err) {
-        console.error("❌ Error syncing Symbol indexes:", err);
+        console.error("❌ Error Syncing Symbol indexes:", err);
     }
 }

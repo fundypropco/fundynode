@@ -72,6 +72,6 @@ export async function createAccountIndexes() {
     try {
         await Account.createIndexes();
     } catch (err) {
-        console.error("❌ Error syncing Symbol indexes:", err);
+        console.error("❌ Error Syncing Symbol indexes:", err);
     }
 }

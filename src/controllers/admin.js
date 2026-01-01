@@ -2,10 +2,16 @@ import asyncHandler from '../middlewares/asyncHandler.js'
 import symbolAliasSeeder from '../seeders/symbolAliasSeeder.js'
 import brokerSymbolsSeeder from '../seeders/brokerSymbolsSeeder.js'
 import brokerSymbolsDataSeeder from '../seeders/brokerSymbolsDataSeeder.js'
+import logRulesSeeder from '../seeders/logRulesSeeder.js'
 import TradeMap from '../models/TradeMap.js'
 
 const seedSymbolAlias = asyncHandler(async (req, res) => {
     await symbolAliasSeeder()
+    res.send({ message: 'success' })
+})
+
+const seedLogRules = asyncHandler(async (req, res) => {
+    await logRulesSeeder()
     res.send({ message: 'success' })
 })
 
@@ -76,5 +82,6 @@ export default {
     seedSymbolAlias,
     seedBrokerSymbols,
     seedBrokerSymbolsData,
-    showTradeMap
+    showTradeMap,
+    seedLogRules
 }

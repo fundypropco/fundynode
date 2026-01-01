@@ -1,4 +1,3 @@
-import RequestLog from "../../models/RequestLog.js"
 import { formatDateUTC } from '../../helpers/helper.js'
 import GetUpdateService from '../GetUpdateService.js'
 import TradeMap from "../../models/TradeMap.js"
@@ -62,15 +61,6 @@ export default async (req, res) => {
             await latestTradeMap.save()
         }
     }
-
-    // #.
-    // لاگ گرفتن از رکوئست دریافتی 
-    const requestLog = new RequestLog({
-        type: 'GetUpdateResponse',
-        message: req.body.message,
-        datetime: Date.now()
-    })
-    await requestLog.save()
 
     // #. 
     // ارسال پاسخ عملیات موفقیت آمیز 

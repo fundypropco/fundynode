@@ -21,6 +21,6 @@ export async function createTelegramPermissionIndexes() {
     try {
         await TelegramPermission.createIndexes();
     } catch (err) {
-        console.error("❌ Error syncing TelegramPermission indexes:", err);
+        console.error("❌ Error Syncing TelegramPermission indexes:", err);
     }
 }

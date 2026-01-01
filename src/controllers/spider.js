@@ -19,6 +19,7 @@ import HandleOpenTrades from '../services/handlers/HandleOpenTrades.js'
 import HandleResOpenPendingOrder from '../services/handlers/HandleResOpenPendingOrder.js'
 import HandleSampleTrade from '../services/handlers/handleSampleTrade.js'
 import handleResCheckTradeMap from '../services/handlers/handleResCheckTradeMap.js'
+import HandleUsage from '../services/handlers/HandleUsage.js'
 
 const getUpdates = asyncHandler(async (req, res) => {
     const result = await GetUpdateService.getUnprocessed(req.params.acc)
@@ -38,7 +39,14 @@ const sendMessage = asyncHandler(async (req, res) => {
         })
     }
 
+    // #. 
+    // ثبت لاگ در صورت لزوم
+    await SetRequestLog(handlerNo, req.body.message)
+
     switch (handlerNo) {
+
+        case 300:
+            return await HandleUsage(req, res)
 
         case 400:
             return await HandleOpenTrades(req, res)

@@ -54,6 +54,6 @@ export async function createTradeMapCheckIndexes() {
     try {
         await TradeMapCheck.createIndexes();
     } catch (err) {
-        console.error("❌ Error syncing TradeMapCheck indexes:", err);
+        console.error("❌ Error Syncing TradeMapCheck indexes:", err);
     }
 }
