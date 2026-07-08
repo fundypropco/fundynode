@@ -153,6 +153,7 @@ const prepareOrderData = async (account, copier, data) => {
     const perparedData = {}
 
     perparedData.handler = ACTION_HANDLER[data.type]
+
     perparedData.server = copier.server
     perparedData.acc = copier.acc
     perparedData.symbol = data.symbol_b.symbol
@@ -171,6 +172,7 @@ const prepareOrderData = async (account, copier, data) => {
 
     perparedData.origin_server = account.server
     perparedData.origin_acc = account.acc
+    perparedData.origin_meta_acc = account.meta_acc
     perparedData.origin_ticket = data.ticket
     perparedData.origin_symbol = data.symbol_a.symbol
     perparedData.origin_vol = data.vol

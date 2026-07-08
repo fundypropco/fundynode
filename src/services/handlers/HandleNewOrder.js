@@ -92,13 +92,17 @@ async function processNewOrder(data) {
                     // if order is not possible
                     // اگر نمادهای معاملاتی نامعتبر باشند یا موجودی کاربر برای انجام سفارش کافی نباشد
 
-                    // #
-                    // بستن معامله در اکانت ترید 
-                    const getUpdateData = await GetUpdateService.prepareCloseOriginData(account, localData)
+                    if (account.acc_meta) {
+                        // فقط در حالتی که متاتریدر مبدا در کار باشد اقدام به بستن میکنیم
 
-                    // #
-                    // ثبت دستور اجرا 
-                    await GetUpdateService.create(getUpdateData)
+                        // #
+                        // بستن معامله در اکانت ترید 
+                        const getUpdateData = await GetUpdateService.prepareCloseOriginData(account, localData)
+
+                        // #
+                        // ثبت دستور اجرا 
+                        await GetUpdateService.create(getUpdateData)
+                    }
                 }
 
                 if (sendForCheckFlag) {
@@ -183,24 +187,34 @@ async function sendForCheck(account) {
 
 function isOrderPossible(account, copier, data) {
     const result = {}
+
     const freeEq = account.initial + copier.profit_bl + copier.profit_eq - account.drawdown
+
+    if (freeEq < 0) {
+        result.status = false
+        result.description = [`free equity is negative / ${freeEq}`]
+        return result
+    }
+
     const commission = Math.abs(data.symbol_b.commission_max * (data.vol / data.symbol_b.vol_min))
     const spread_value = data.vol * data.symbol_b.tick_value * (data.symbol_b.spread_avg_5 / data.symbol_b.point)
     const margin = data.symbol_b.margin * (data.vol / data.symbol_b.vol_min)
     const minEq = commission + (2 * spread_value) + margin
+
     if (freeEq > minEq) {
         result.status = true
     } else {
         result.status = false
         result.description = [`free equity is not enough / ${freeEq} <= ${minEq}`]
     }
+
     return result
 }
 
 async function processMessage(msg) {
-    //E.g. 
-    // 1006135456,500,NEW ORDER&324253368&BTCUSD&BUY&0.01&109245.51000&2025.09.27 18:05:14&0.00000&0.00000&-1.31000&0&,1758998114,-1
-    // acc , 500 , NEW ORDER & ticket & symbol & type & vol & open_price & open_time & sl & tp & commission & magic & comment , timestamp , -1
+    // # E.g. 
+    // 1006135456,500,NEW ORDER & 324253368 & BTCUSD & BUY & 0.01 & 109245.51000 & 2025.09.27 18:05:14 & 0.00000 & 0.00000 &-1.31000 & 0 & ,1758998114,-1
+    // acc , 500 , NEW ORDER & ticket & symbol & type & vol & open_price & open_time & sl & tp & commission & magic & comment & acc_fp , timestamp , -1
     // partial → acc , 500 , NEW ORDER & ticket & symbol & type & vol & open_price & open_time & sl & tp & commission & magic & comment , timestamp , CLOSED_TICKET @ CLOSED_VOL @ CLOSED_TIME @ OPEN_TICKET @ OPEN_VOL @ OPEN_TIME ; CLOSED_TICKET @ CLOSED_VOL @ CLOSED_TIME @ OPEN_TICKET @ OPEN_VOL @ OPEN_TIME
     const data = {}
 
@@ -208,15 +222,8 @@ async function processMessage(msg) {
     const msg_parts = msg.split(',')
     data.acc = Number(msg_parts[0].replace(/_.*/, ''))
 
-    //پیدا کردن اکانت مربوط به عملیات دریافتی و پارامترهای مربوط به سرور بروکر آن 
-    data.accountObj = await Account.findOne({ acc: data.acc })
-    data.brokerData = await getBrokerData(data.accountObj.server)
-    data.diff_time = Number(data.brokerData.diff_time)
-
     data.timestamp = Number(msg_parts[3])
     const info = msg_parts[2]
-    const partial_info = msg_parts[4]
-    data.is_partial = false
 
     // msg info
     const info_parts = info.split('_&_')
@@ -232,7 +239,20 @@ async function processMessage(msg) {
     data.commission = Number(info_parts[9])
     data.magic = Number(info_parts[10])
     data.comment = info_parts[11]
+    data.acc_fp = info_parts[12] || 0
 
+    //پیدا کردن اکانت مربوط به عملیات دریافتی و پارامترهای مربوط به سرور بروکر آن 
+    if (data.acc_fp)
+        data.accountObj = await Account.findOne({ acc: data.acc_fp })
+    else
+        data.accountObj = await Account.findOne({ acc_meta: data.acc })
+
+    data.brokerData = await getBrokerData(data.accountObj.server)
+    data.diff_time = Number(data.brokerData.diff_time)
+
+
+    const partial_info = msg_parts[4]
+    data.is_partial = false
     if (partial_info != -1) {
         // partial
         data.partial_item = partial_info.trim().split("_@_").filter(Boolean)

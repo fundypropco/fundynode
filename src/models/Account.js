@@ -29,23 +29,34 @@ const copierSchema = new mongoose.Schema({
 }, { _id: false })
 
 const accountSchema = new mongoose.Schema({
-    acc: {
+    acc_meta: {
         type: Number,
-        required: true,
-        unique: true
+        index: true,
+        default: 0
+    },
+    acc: {
+        /* اگر حساب پراپ باشه این کد برابر کد حساب معاملاتی کاربر در پراپ است */
+        /* در کپی ترید ساده که فقط 2 متاتریدر در کار است نیز این فیلد مقدار میگیرد و مقدار آن برابر شناسه متاتریدر است */
+        type: Number,
+        index: true,
+        default: 0
     },
     server: {
         type: String,
-        index: true
+        index: true,
+        default: ''
     },
     initial: {
         type: Number
     },
     drawdown: {
-        type: Number
+        /* مینیمم عدد مجاز ایکوئیتی حساب به دلار مثال 950 دلار */
+        type: Number,
+        default: 0
     },
     copy: {
         type: Boolean,
+        default: false
     },
     copiers: {
         type: [copierSchema],

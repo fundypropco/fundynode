@@ -1,6 +1,6 @@
 import mongoose from "mongoose"
 
-const accountSchema = new mongoose.Schema({
+const brokerSchema = new mongoose.Schema({
     title: {
         type: String,
     },
@@ -17,7 +17,7 @@ const accountSchema = new mongoose.Schema({
     }
 })
 
-const Broker = mongoose.model('Broker', accountSchema, 'brokers')
+const Broker = mongoose.model('Broker', brokerSchema, 'brokers')
 
 export default Broker
 

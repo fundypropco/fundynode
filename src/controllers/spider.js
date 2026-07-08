@@ -1,5 +1,5 @@
 import asyncHandler from '../middlewares/asyncHandler.js'
-import { getHandlerOfMsg, getTimeOfMsg } from '../helpers/helper.js'
+import { getHandlerOfMsg, getTimeOfMsg, setRequestLog } from '../helpers/helper.js'
 import GetUpdateService from '../services/GetUpdateService.js'
 import handleNewData from '../services/handlers/HandleNewData.js'
 import handleNewOrder from '../services/handlers/HandleNewOrder.js'
@@ -30,9 +30,7 @@ const sendMessage = asyncHandler(async (req, res) => {
 
     const handlerNo = getHandlerOfMsg(req.body.message)
     const timestamp = getTimeOfMsg(req.body.message)
-    const dateObj = new Date(timestamp)
-    const dateObjTimestamp = Number(dateObj.getTime())
-    if (timestamp < (dateObjTimestamp - 60_000)) {
+    if (timestamp < (Date.now() - 60_000)) {
         return res.send({
             status: 'error',
             message: 'Expired Message!!!'
@@ -41,7 +39,7 @@ const sendMessage = asyncHandler(async (req, res) => {
 
     // #. 
     // ثبت لاگ در صورت لزوم
-    await SetRequestLog(handlerNo, req.body.message)
+    await setRequestLog(handlerNo, req.body.message)
 
     switch (handlerNo) {
 

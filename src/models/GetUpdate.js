@@ -75,6 +75,11 @@ const getUpdateSchema = new mongoose.Schema({
         index: true,
         default: 0
     },
+    origin_fp_acc: {
+        type: Number,
+        index: true,
+        default: 0
+    },
     origin_ticket: {
         type: Number,
         index: true,
