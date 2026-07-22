@@ -13,6 +13,12 @@ const getUpdateSchema = new mongoose.Schema({
         type: Number,
         index: true
     },
+    platform: {
+        type: String,
+        enum: ['metatrader', 'panel'],
+        default: 'metatrader',
+        index: true
+    },
     try_count: {
         type: Number,
         default: 0,
@@ -75,7 +81,7 @@ const getUpdateSchema = new mongoose.Schema({
         index: true,
         default: 0
     },
-    origin_fp_acc: {
+    origin_meta_acc: {
         type: Number,
         index: true,
         default: 0

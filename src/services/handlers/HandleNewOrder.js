@@ -240,12 +240,16 @@ async function processMessage(msg) {
     data.magic = Number(info_parts[10])
     data.comment = info_parts[11]
     data.acc_fp = info_parts[12] || 0
+    data.platform = 'metatrader'
 
     //پیدا کردن اکانت مربوط به عملیات دریافتی و پارامترهای مربوط به سرور بروکر آن 
-    if (data.acc_fp)
-        data.accountObj = await Account.findOne({ acc: data.acc_fp })
-    else
+    if (data.acc_fp) {
+        data.platform = 'panel'
+        data.accountObj = await Account.findOne({ acc: data.acc })
+    }
+    else {
         data.accountObj = await Account.findOne({ acc_meta: data.acc })
+    }
 
     data.brokerData = await getBrokerData(data.accountObj.server)
     data.diff_time = Number(data.brokerData.diff_time)

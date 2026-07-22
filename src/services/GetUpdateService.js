@@ -153,6 +153,7 @@ const prepareOrderData = async (account, copier, data) => {
     const perparedData = {}
 
     perparedData.handler = ACTION_HANDLER[data.type]
+    perparedData.platform = data.platform || 'metatrader'
 
     perparedData.server = copier.server
     perparedData.acc = copier.acc

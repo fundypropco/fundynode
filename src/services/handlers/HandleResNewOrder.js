@@ -76,19 +76,21 @@ export default async (req, res) => {
     } else {
         const account = await Account.findOne({ acc: getUpdateDoc.origin_acc, server: getUpdateDoc.origin_server })
         if (account && account.copiers?.length == 1) {
-            const getUpdateData = await GetUpdateService.prepareCloseOriginData(account, {
-                description: [`Copier Error: ${data.result_text} / ${getMqlError(data.result_code)}`],
-                keyid: makeID(),
-                side: getUpdateDoc.side,
-                ticket: getUpdateDoc.origin_ticket,
-                origin_ticket: getUpdateDoc.origin_ticket,
-                symbol: getUpdateDoc.origin_symbol,
-                symbol_title: getUpdateDoc.symbol_title,
-                origin_symbol: getUpdateDoc.origin_symbol,
-                vol: getUpdateDoc.origin_vol,
-                origin_vol: getUpdateDoc.origin_vol
-            })
-            await GetUpdateService.create(getUpdateData)
+            if (getUpdateDoc.platform == 'metatrader') {
+                const getUpdateData = await GetUpdateService.prepareCloseOriginData(account, {
+                    description: [`Copier Error: ${data.result_text} / ${getMqlError(data.result_code)}`],
+                    keyid: makeID(),
+                    side: getUpdateDoc.side,
+                    ticket: getUpdateDoc.origin_ticket,
+                    origin_ticket: getUpdateDoc.origin_ticket,
+                    symbol: getUpdateDoc.origin_symbol,
+                    symbol_title: getUpdateDoc.symbol_title,
+                    origin_symbol: getUpdateDoc.origin_symbol,
+                    vol: getUpdateDoc.origin_vol,
+                    origin_vol: getUpdateDoc.origin_vol
+                })
+                await GetUpdateService.create(getUpdateData)
+            }
         }
     }
 
