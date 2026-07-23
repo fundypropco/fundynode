@@ -246,14 +246,14 @@ async function processMessage(msg) {
     if (data.acc_fp) {
         data.platform = 'panel'
         data.accountObj = await Account.findOne({ acc: data.acc })
+        data.diff_time = 0
+
     }
     else {
         data.accountObj = await Account.findOne({ acc_meta: data.acc })
+        data.brokerData = await getBrokerData(data.accountObj.server)
+        data.diff_time = Number(data.brokerData.diff_time)
     }
-
-    data.brokerData = await getBrokerData(data.accountObj.server)
-    data.diff_time = Number(data.brokerData.diff_time)
-
 
     const partial_info = msg_parts[4]
     data.is_partial = false
