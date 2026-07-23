@@ -81,6 +81,9 @@ const brokerSymbolsSeeder = async (serverName = 'all') => {
                 message: await makeMsgForHandler(handler, { acc: accServer.acc, keyid: keyid }),
             })
             await getUpdate.save()
+        } else {
+            pendingGetUpdate.created_at = Date.now()
+            await pendingGetUpdate.save()
         }
     }
 }
