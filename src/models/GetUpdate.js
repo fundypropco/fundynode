@@ -17,7 +17,6 @@ const getUpdateSchema = new mongoose.Schema({
         type: String,
         enum: ['metatrader', 'panel'],
         default: 'metatrader',
-        index: true
     },
     try_count: {
         type: Number,

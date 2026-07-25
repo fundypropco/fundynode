@@ -144,6 +144,11 @@ const tradeMapSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
+    platform: {
+        type: String,
+        enum: ['metatrader', 'panel'],
+        default: 'metatrader',
+    },
     created_at: {
         type: Number,
         default: Date.now

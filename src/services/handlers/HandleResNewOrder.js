@@ -62,7 +62,8 @@ export default async (req, res) => {
                 return ''
             })(),
             tick_value: Number((symbol.tick_value * getUpdateDoc.vol).toFixed(2)),
-            symbol_weight: symbol.weight
+            symbol_weight: symbol.weight,
+            platform: getUpdateDoc.platform
         })
         await tradeMap.save()
 
