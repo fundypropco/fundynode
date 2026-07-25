@@ -170,7 +170,7 @@ const prepareOrderData = async (account, copier, data) => {
     perparedData.comment = data.comment
     perparedData.open_price = data.open_price
     perparedData.status = 'pending'
-    preparedData.platform = data.platform
+    perparedData.platform = data.platform
     perparedData.keyid = data.keyid++
 
     perparedData.origin_server = account.server
