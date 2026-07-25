@@ -48,6 +48,7 @@ const create = async (data) => {
         side: data.side ?? 'none',
         description: data.description ?? [],
         symbol_title: data.symbol_title ?? '',
+        platform: data.origin_platform,
         origin_acc: data.origin_acc ?? 0,
         origin_ticket: data.origin_ticket ?? 0,
         origin_server: data.origin_server ?? '',
@@ -169,6 +170,7 @@ const prepareOrderData = async (account, copier, data) => {
     perparedData.comment = data.comment
     perparedData.open_price = data.open_price
     perparedData.status = 'pending'
+    preparedData.platform = data.platform
     perparedData.keyid = data.keyid++
 
     perparedData.origin_server = account.server
