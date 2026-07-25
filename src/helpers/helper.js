@@ -7,9 +7,9 @@ import logger from '../helpers/logger.js'
 import { getLogRuleData } from '../boot/cache.js'
 
 export async function setRequestLog(handler, message) {
-    if (getLogRuleData[handler]) {
+    if (getLogRuleData(handler)) {
         const requestLog = new RequestLog({
-            message: req.body.message,
+            message: message,
             datetime: formatDate(Date.now()),
             timestamp: Date.now()
         })
@@ -615,18 +615,27 @@ export async function isValidSymbols(accountObj, copierObj, data) {
     result.description = []
     result.is_valid_symbols = false
 
-    result.symbol_a = await Symbol.findOne({ server: accountObj.server, symbol: data.symbol })
-    if (!result.symbol_a) {
-        result.description.push(`symbol ${data.symbol} not found for broker ${accountObj.server}`)
-        return result
+    if (accountObj.server && accountObj.acc_meta) {
+        result.symbol_a = await Symbol.findOne({ server: accountObj.server, symbol: data.symbol })
+        if (!result.symbol_a) {
+            result.description.push(`symbol ${data.symbol} not found for broker ${accountObj.server}`)
+            return result
+        }
+
+        result.symbol_b = await Symbol.findOne({ server: copierObj.server, title: result.symbol_a.title })
+        if (!result.symbol_b) {
+            result.description.push(`symbol ${data.symbol} not found for broker ${copierObj.server}`)
+            return result
+        }
+    } else {
+        result.symbol_b = await Symbol.findOne({ server: copierObj.server, symbol: data.symbol })
+        if (!result.symbol_b) {
+            result.description.push(`symbol ${data.symbol} not found for broker ${copierObj.server}`)
+            return result
+        }
+        result.symbol_a = result.symbol_b
     }
 
-    result.symbol_b = await Symbol.findOne({ server: copierObj.server, title: result.symbol_a.title })
-    if (!result.symbol_b) {
-        result.description.push(`symbol ${data.symbol} not found for broker ${copierObj.server}`)
-        return result
-    }
-    
     result.is_valid_symbols = true
     return result
 }

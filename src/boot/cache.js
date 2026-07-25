@@ -38,10 +38,12 @@ export async function getLogRuleData(handler) {
 
     const logRules = await LogRule.find().lean()
 
+
     logRulesData = logRules.reduce((t, lr) => {
         t[lr.handler] = lr.log
         return t
     }, {})
+
 
     logRulesData_expire = now + (5 * 60 * 1000)
 
