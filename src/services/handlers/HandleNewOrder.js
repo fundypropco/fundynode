@@ -47,7 +47,9 @@ async function processNewOrder(data) {
                 // # 
                 // بررسی اینکه آیا این سفارش تکراری است یا خیر 
                 const is_duplicated = await isDuplicatedOrder(account, copier, data)
+
                 if (is_duplicated) {
+                    logger.error(is_duplicated ? 'duplicated' : 'unique')
                     continue
                 }
                 const localData = JSON.parse(JSON.stringify(data))
