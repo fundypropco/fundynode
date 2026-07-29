@@ -3,6 +3,7 @@ import GetUpdateService from "../GetUpdateService.js"
 import { isValidSymbols, makeID, getOrderSide, formatDateUTC } from '../../helpers/helper.js'
 import TradeMap from '../../models/TradeMap.js'
 import { getBrokerData } from '../../boot/cache.js'
+import logger from '../../helpers/logger.js'
 
 export default async (req, res) => {
 
@@ -82,9 +83,11 @@ async function processNewOrder(data) {
                     } else {
                         closeOriginFlag = true
                         localData.description = isPossible.description
+                        logger.error(localData.description);
                     }
                 } else {
                     closeOriginFlag = true
+                    logger.error('invalid symbol');
                 }
 
                 if (closeOriginFlag) {
@@ -103,6 +106,7 @@ async function processNewOrder(data) {
                         // ثبت دستور اجرا 
                         await GetUpdateService.create(getUpdateData)
                     }
+                    logger.error('closing');
                 }
 
                 if (sendForCheckFlag) {
