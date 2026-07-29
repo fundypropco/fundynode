@@ -9,6 +9,7 @@ export default async (req, res) => {
 
     //# پردازش پیام ورودی
     const data = await processMessage(req.body.message)
+    logger.error(data)
 
     if (!data.is_partial) {
         // اگر سفارش جدید باشد
