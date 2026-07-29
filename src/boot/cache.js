@@ -32,7 +32,7 @@ export async function getBrokerData(server) {
 export async function getLogRuleData(handler) {
     const now = Date.now()
 
-    if (logRulesData && logRulesData[handler] && now < logRulesData_expire) {
+    if (logRulesData && logRulesData[handler] && logRulesData_expire && now < logRulesData_expire) {
         return logRulesData[handler]
     }
 
