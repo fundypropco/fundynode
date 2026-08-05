@@ -7,14 +7,17 @@ import logger from '../helpers/logger.js'
 import { getLogRuleData } from '../boot/cache.js'
 
 export async function setRequestLog(handler, message) {
-    if (getLogRuleData(handler)) {
+    if (await getLogRuleData(handler)) {
         const requestLog = new RequestLog({
+            handler: handler,
             message: message,
             datetime: formatDate(Date.now()),
-            timestamp: Date.now()
+            reqTime: Date.now()
         })
         await requestLog.save()
+        return requestLog
     }
+    return null
 }
 
 export async function sendToNotifBot(message) {

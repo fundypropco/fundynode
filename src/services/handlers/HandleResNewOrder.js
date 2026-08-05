@@ -5,6 +5,7 @@ import Symbol from "../../models/Symbol.js"
 import { formatDateUTC, getMqlError, makeID } from "../../helpers/helper.js"
 import { getBrokerData } from "../../boot/cache.js"
 import AccountService from "../AccountService.js"
+import TradeMapService from '../TradeMapService.js'
 
 export default async (req, res) => {
 
@@ -66,6 +67,10 @@ export default async (req, res) => {
             platform: getUpdateDoc.platform
         })
         await tradeMap.save()
+        TradeMapService.sync({
+            event: "created",
+            data: tradeMap.toObject()
+        });
 
         // #.
         // ثبت اطلاعات مالی در بالانس و بررسی دراودان 

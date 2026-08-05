@@ -151,11 +151,14 @@ const tradeMapSchema = new mongoose.Schema({
     },
     created_at: {
         type: Number,
-        default: Date.now
+        default: Date.now,
+        index: true
     }
 });
 
+
 tradeMapSchema.index({ acc_src: 1, ticket_src: 1, acc_dist: 1, ticket_dist: 1 })
+tradeMapSchema.index({ acc_src: 1, ticket_src: 1 })
 tradeMapSchema.index({ acc_src: 1, acc_dist: 1, status: 1 })
 tradeMapSchema.index({ acc_dist: 1, ticket_dist: 1 })
 

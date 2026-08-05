@@ -29,6 +29,7 @@ const copierSchema = new mongoose.Schema({
 }, { _id: false })
 
 const accountSchema = new mongoose.Schema({
+    // در حالت پراپ بدون متاتریدر دمو، مقدار این فیلد برابر صفر خواهد بود
     acc_meta: {
         type: Number,
         index: true,

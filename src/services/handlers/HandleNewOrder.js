@@ -4,27 +4,42 @@ import { isValidSymbols, makeID, getOrderSide, formatDateUTC } from '../../helpe
 import TradeMap from '../../models/TradeMap.js'
 import { getBrokerData } from '../../boot/cache.js'
 import logger from '../../helpers/logger.js'
+import RequestLog from '../../models/RequestLog.js'
+import TradeMapService from '../TradeMapService.js'
 
-export default async (req, res) => {
+export default async (req, res, reqLog) => {
 
     //# پردازش پیام ورودی
     const data = await processMessage(req.body.message)
-    logger.error(data)
 
+    let result
     if (!data.is_partial) {
         // اگر سفارش جدید باشد
-        await processNewOrder(data)
+        result = await processNewOrder(data)
     } else {
         // اگر پارشیال کلوز باشد
-        await processPartial(data)
+        result = await processPartial(data)
     }
 
-    res.send({
+    const response = {
         status: 'success',
-    })
+        message: result.msg
+    }
+
+    if (reqLog) {
+        await RequestLog.findByIdAndUpdate(reqLog._id, {
+            response,
+            resTime: Date.now(),
+            duration: Date.now() - reqLog.reqTime
+        });
+    }
+
+    res.send(response)
 }
 
 async function processNewOrder(data) {
+
+    let msg = '';
 
     // #
     // پیدا کردن اکانت مربوط به عملیات دریافتی 
@@ -49,7 +64,7 @@ async function processNewOrder(data) {
                 const is_duplicated = await isDuplicatedOrder(account, copier, data)
 
                 if (is_duplicated) {
-                    logger.error(is_duplicated ? 'duplicated' : 'unique')
+                    msg += `| order is duplicated for copier ${copier.acc} |`
                     continue
                 }
                 const localData = JSON.parse(JSON.stringify(data))
@@ -83,14 +98,16 @@ async function processNewOrder(data) {
                         await GetUpdateService.create(getUpdateData)
 
                         sendForCheckFlag = true
+
+                        msg += `| order processed for copier ${copier.acc} |`
                     } else {
                         closeOriginFlag = true
                         localData.description = isPossible.description
-                        logger.error(localData.description);
+                        msg += `| ${isPossible.description} |`
                     }
                 } else {
                     closeOriginFlag = true
-                    logger.error('invalid symbol');
+                    msg += `| invalid symbol for copier ${copier.acc} |`
                 }
 
                 if (closeOriginFlag) {
@@ -109,7 +126,6 @@ async function processNewOrder(data) {
                         // ثبت دستور اجرا 
                         await GetUpdateService.create(getUpdateData)
                     }
-                    logger.error('closing');
                 }
 
                 if (sendForCheckFlag) {
@@ -119,9 +135,18 @@ async function processNewOrder(data) {
             } // copier copy is enabled
         }// for
     } // account copy is enabled
+    else {
+        msg += `| copy is disabled for account |`
+    }
+
+    return {
+        msg
+    }
 }
 
 async function processPartial(data) {
+
+    let msg = '';
 
     // #
     //پیدا کردن اکانت مربوط به عملیات دریافتی 
@@ -165,11 +190,18 @@ async function processPartial(data) {
                     openTradeMap.swap_src = partialInfo.closed_swap
                     openTradeMap.profit_src = partialInfo.closed_profit
                     await openTradeMap.save()
+                    TradeMapService.sync({ event: 'updated', data: openTradeMap.toObject() })
                 }
             }
         }
 
         await sendForCheck(data.accountObj)
+    } else {
+        msg += `| copy is disabled for account |`
+    }
+
+    return {
+        msg
     }
 }
 

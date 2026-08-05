@@ -8,10 +8,21 @@ const requestLogSchema = new mongoose.Schema({
     message: {
         type: String
     },
+    response: {
+        type: Object
+    },
     datetime: {
         type: String
     },
-    timestamp: {
+    reqTime: {
+        type: Number,
+        index: true
+    },
+    resTime: {
+        type: Number,
+        index: true
+    },
+    duration: {
         type: Number,
         index: true
     }

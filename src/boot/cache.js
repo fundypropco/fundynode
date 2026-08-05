@@ -30,14 +30,12 @@ export async function getBrokerData(server) {
 }
 
 export async function getLogRuleData(handler) {
-    const now = Date.now()
 
-    if (logRulesData && logRulesData[handler] && logRulesData_expire && now < logRulesData_expire) {
+    if (logRulesData && logRulesData[handler] && logRulesData_expire && Date.now() < logRulesData_expire) {
         return logRulesData[handler]
     }
 
     const logRules = await LogRule.find().lean()
-
 
     logRulesData = logRules.reduce((t, lr) => {
         t[lr.handler] = lr.log
@@ -45,7 +43,7 @@ export async function getLogRuleData(handler) {
     }, {})
 
 
-    logRulesData_expire = now + (5 * 60 * 1000)
+    logRulesData_expire = Date.now() + (60 * 1000)
 
     return logRulesData[handler] || false
 }

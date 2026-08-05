@@ -39,7 +39,7 @@ const sendMessage = asyncHandler(async (req, res) => {
 
     // #. 
     // ثبت لاگ در صورت لزوم
-    await setRequestLog(handlerNo, req.body.message)
+    const reqLog = await setRequestLog(handlerNo, req.body.message)
 
     switch (handlerNo) {
 
@@ -53,7 +53,7 @@ const sendMessage = asyncHandler(async (req, res) => {
             return await HandleSampleTrade(req, res)
 
         case 500:
-            return await handleNewOrder(req, res)
+            return await handleNewOrder(req, res, reqLog)
 
         case 501:
             return await handleClose(req, res)
