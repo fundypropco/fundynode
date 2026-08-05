@@ -272,7 +272,6 @@ async function processMessage(msg) {
     data.side = getOrderSide(data.type)
     data.vol = Number(info_parts[4])
     data.open_price = Number(info_parts[5])
-    data.open_timestamp = Number(info_parts[6]) + data.diff_time
     data.sl = Number(info_parts[7])
     data.tp = Number(info_parts[8])
     data.commission = Number(info_parts[9])
@@ -292,6 +291,7 @@ async function processMessage(msg) {
         data.brokerData = await getBrokerData(accountObj.server)
         data.diff_time = Number(data.brokerData.diff_time)
     }
+    data.open_timestamp = Number(info_parts[6]) + data.diff_time
 
     const partial_info = msg_parts[4]
     data.is_partial = false
