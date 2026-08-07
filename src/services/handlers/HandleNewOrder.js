@@ -190,7 +190,7 @@ async function processPartial(data) {
                     openTradeMap.swap_src = partialInfo.closed_swap
                     openTradeMap.profit_src = partialInfo.closed_profit
                     await openTradeMap.save()
-                    TradeMapService.sync({ event: 'updated', data: openTradeMap.toObject() })
+                    TradeMapService.sync({ event: 'updated', data: [openTradeMap.toObject()] })
                 }
             }
         }

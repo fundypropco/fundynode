@@ -69,7 +69,7 @@ export default async (req, res) => {
         await tradeMap.save()
         TradeMapService.sync({
             event: "created",
-            data: tradeMap.toObject()
+            data: [tradeMap.toObject()]
         });
 
         // #.
