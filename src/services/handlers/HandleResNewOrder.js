@@ -62,7 +62,8 @@ export default async (req, res) => {
                 if (['buy_limit', 'buy_stop', 'sell_limit', 'sell_stop'].includes(getUpdateDoc.side)) return 'pending'
                 return ''
             })(),
-            tick_value: Number((symbol.tick_value * getUpdateDoc.vol).toFixed(2)),
+            tick_value: Number(symbol.tick_value),
+            tick_size: Number(symbol.tick_size),
             symbol_weight: symbol.weight,
             platform: getUpdateDoc.platform
         })

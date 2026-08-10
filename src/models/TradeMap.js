@@ -125,6 +125,11 @@ const tradeMapSchema = new mongoose.Schema({
         default: 0,
         index: true
     },
+    tick_size: {
+        type: Number,
+        default: 0,
+        index: true
+    },
     status: {
         type: String,
         enum: ['open', 'closed', 'pending', 'canceled', 'deleted'],
