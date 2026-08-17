@@ -4,7 +4,7 @@ import { formatDateUTC, getOrderSide, makeID } from '../../helpers/helper.js'
 import TradeMap from '../../models/TradeMap.js'
 import { getBrokerData } from '../../boot/cache.js'
 
-export default async (req, res) => {
+export default async (req, res, reqLog) => {
 
     // #.
     //پردازش پیام ورودی 
@@ -21,10 +21,20 @@ export default async (req, res) => {
     }
 
     // #.
-    // ارسال پاسخ
-    res.send({
+    // ارسال پاسخ و ذخیره لاگ درصورت لزوم
+    const response = {
         status: 'success',
-    })
+    }
+
+    if (reqLog) {
+        await RequestLog.findByIdAndUpdate(reqLog._id, {
+            response,
+            resTime: Date.now(),
+            duration: Date.now() - reqLog.reqTime
+        });
+    }
+
+    res.send(response)
 }
 
 async function processClose(data) {
@@ -156,16 +166,8 @@ async function processMessage(msg) {
     data.acc = Number(msg_parts[0].replace(/_.*/, ''))
     data.handler = Number(msg_parts[1])
 
-    //پیدا کردن اکانت مربوط به عملیات دریافتی و پارامترهای مربوط به سرور بروکر آن 
-    data.accountObj = await Account.findOne({ acc: data.acc })
-    data.brokerData = await getBrokerData(data.accountObj.server)
-    data.diff_time = Number(data.brokerData.diff_time)
-
-
     data.timestamp = Number(msg_parts[3])
     const info = msg_parts[2]
-    const partial_info = msg_parts[4]
-    data.is_partial = false
 
     // msg info
     const info_parts = info.split('_&_')
@@ -179,6 +181,24 @@ async function processMessage(msg) {
     data.closed_commission = Number(info_parts[8])
     data.closed_profit = Number(info_parts[9])
     data.magic = Number(info_parts[10])
+    data.acc_fp = Number(info_parts[12] || 0)
+    data.platform = 'metatrader'
+
+    if (data.acc_fp) {
+        data.platform = 'panel'
+        data.accountObj = await Account.findOne({ acc: data.acc })
+        data.diff_time = 0
+    }
+    else {
+        data.accountObj = await Account.findOne({ acc_meta: data.acc })
+        data.brokerData = await getBrokerData(accountObj.server)
+        data.diff_time = Number(data.brokerData.diff_time)
+    }
+    data.open_timestamp = Number(info_parts[6]) + data.diff_time
+
+
+    const partial_info = msg_parts[4]
+    data.is_partial = false
 
     if (partial_info != -1) {
         // partial
