@@ -171,7 +171,6 @@ const prepareOrderData = async (account, copier, data) => {
     perparedData.comment = data.comment
     perparedData.open_price = data.open_price
     perparedData.status = 'pending'
-    perparedData.platform = data.platform
     perparedData.keyid = data.keyid++
 
     perparedData.origin_server = account.server
@@ -269,6 +268,7 @@ const prepareCloseData = async (account, copier, data, tradeMap) => {
     const perparedData = {}
 
     perparedData.handler = ACTION_HANDLER.CLOSE
+    perparedData.platform = data.platform || 'metatrader'
     perparedData.server = copier.server
     perparedData.acc = copier.acc
     perparedData.ticket = tradeMap?.ticket_dist ?? -1
@@ -314,6 +314,7 @@ const prepareModifyData = async (account, copier, data, tradeMap) => {
     }
 
     perparedData.handler = ACTION_HANDLER.MODIFY
+    perparedData.platform = data.platform || 'metatrader'
     perparedData.server = copier.server
     perparedData.acc = copier.acc
     perparedData.ticket = tradeMap?.ticket_dist ?? -1

@@ -4,14 +4,21 @@ import { makeID } from '../../helpers/helper.js'
 import TradeMap from '../../models/TradeMap.js'
 
 export default async (req, res) => {
-    
+
     // #.
     // پردازش پیام ورودی 
     const data = processMessage(req.body.message)
 
+
     // #.
     // پیدا کردن اکانت مربوط به عملیات دریافتی 
-    const account = await Account.findOne({ acc: data.acc })
+    if (data.acc_fp !== -1) {
+        const account = await Account.findOne({ acc: data.acc })
+        const platform = 'panel'
+    } else {
+        const account = await Account.findOne({ acc_meta: data.acc })
+        const platform = 'metatrader'
+    }
 
     // #.
     // بررسی اینکه آیا قابلیت برای این اکانت فعال هست یا نه 
@@ -21,6 +28,7 @@ export default async (req, res) => {
 
         for (const modifyInfo of data.items) {
             modifyInfo.keyid = keyid
+            modifyInfo.platform = platform
 
             // #.
             // بدست آوردن تیکتهای متناظر با این سفارش روی اکانتهای دیگر 
@@ -53,6 +61,7 @@ function processMessage(msg) {
     const msg_parts = msg.split(',')
     data.acc = Number(msg_parts[0].replace(/_.*/, ''))
     data.timestamp = Number(msg_parts[3])
+    data.acc_fp = Number(msg_parts[4])
     let info = msg_parts[2]
 
     // msg info
