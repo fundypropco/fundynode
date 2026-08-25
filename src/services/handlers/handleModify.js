@@ -8,16 +8,16 @@ export default async (req, res) => {
     // #.
     // پردازش پیام ورودی 
     const data = processMessage(req.body.message)
-
+    let account, platform;
 
     // #.
     // پیدا کردن اکانت مربوط به عملیات دریافتی 
     if (data.acc_fp !== -1) {
-        const account = await Account.findOne({ acc: data.acc })
-        const platform = 'panel'
+        account = await Account.findOne({ acc: data.acc })
+        platform = 'panel'
     } else {
-        const account = await Account.findOne({ acc_meta: data.acc })
-        const platform = 'metatrader'
+        account = await Account.findOne({ acc_meta: data.acc })
+        platform = 'metatrader'
     }
 
     // #.
