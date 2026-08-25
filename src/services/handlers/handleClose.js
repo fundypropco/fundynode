@@ -173,7 +173,6 @@ async function processMessage(msg) {
     const info_parts = info.split('_&_')
     data.closed_ticket = Number(info_parts[1])
     data.closed_price = Number(info_parts[2])
-    data.closed_timestamp = Number(info_parts[3]) + data.diff_time
     data.symbol = info_parts[4]
     data.side = getOrderSide(info_parts[5])
     data.closed_vol = Number(info_parts[6])
@@ -194,7 +193,7 @@ async function processMessage(msg) {
         data.brokerData = await getBrokerData(data.accountObj.server)
         data.diff_time = Number(data.brokerData.diff_time)
     }
-    data.open_timestamp = Number(info_parts[6]) + data.diff_time
+    data.closed_timestamp = Number(info_parts[3]) + data.diff_time
 
 
     const partial_info = msg_parts[4]
