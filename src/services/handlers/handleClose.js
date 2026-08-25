@@ -181,7 +181,7 @@ async function processMessage(msg) {
     data.closed_commission = Number(info_parts[8])
     data.closed_profit = Number(info_parts[9])
     data.magic = Number(info_parts[10])
-    data.acc_fp = Number(info_parts[12] || 0)
+    data.acc_fp = Number(info_parts[11] || 0)
     data.platform = 'metatrader'
 
     if (data.acc_fp) {
@@ -191,7 +191,7 @@ async function processMessage(msg) {
     }
     else {
         data.accountObj = await Account.findOne({ acc_meta: data.acc })
-        data.brokerData = await getBrokerData(accountObj.server)
+        data.brokerData = await getBrokerData(data.accountObj.server)
         data.diff_time = Number(data.brokerData.diff_time)
     }
     data.open_timestamp = Number(info_parts[6]) + data.diff_time

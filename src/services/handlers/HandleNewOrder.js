@@ -288,7 +288,7 @@ async function processMessage(msg) {
     }
     else {
         data.accountObj = await Account.findOne({ acc_meta: data.acc })
-        data.brokerData = await getBrokerData(accountObj.server)
+        data.brokerData = await getBrokerData(data.accountObj.server)
         data.diff_time = Number(data.brokerData.diff_time)
     }
     data.open_timestamp = Number(info_parts[6]) + data.diff_time
