@@ -2,114 +2,149 @@ import mongoose from "mongoose"
 
 const tradeMapSchema = new mongoose.Schema({
     server_src: {
-        type: String
+        type: String,
+        default: ''
     },
     acc_src: {
         type: Number,
-        index: true
+        index: true,
+        default: 0
     },
     ticket_src: {
-        type: Number
+        type: Number,
+        default: 0
     },
     symbol_src: {
-        type: String
+        type: String,
+        default: ''
     },
     vol_src: {
-        type: Number
+        type: Number,
+        default: 0
     },
     open_price_src: {
-        type: Number
+        type: Number,
+        default: 0
     },
     open_time_src: {
-        type: String
+        type: String,
+        default: ''
     },
     open_timestamp_src: {
-        type: Number
+        type: Number,
+        default: 0
     },
     sl_src: {
-        type: Number
+        type: Number,
+        default: 0
     },
     tp_src: {
-        type: Number
+        type: Number,
+        default: 0
     },
     close_price_src: {
-        type: Number
+        type: Number,
+        default: 0
     },
     close_time_src: {
         type: String,
+        default: ''
     },
     close_timestamp_src: {
         type: Number,
+        default: 0
     },
     magic_src: {
-        type: Number
+        type: Number,
+        default: 0
     },
     comment_src: {
-        type: String
+        type: String,
+        default: ''
     },
     commission_src: {
-        type: Number
+        type: Number,
+        default: 0
     },
     swap_src: {
-        type: Number
+        type: Number,
+        default: 0
     },
     profit_src: {
-        type: Number
+        type: Number,
+        default: 0
     },
 
     acc_dist: {
-        type: Number
+        type: Number,
+        default: 0
     },
     ticket_dist: {
-        type: Number
+        type: Number,
+        default: 0
     },
     server_dist: {
-        type: String
+        type: String,
+        default: ''
     },
     symbol_dist: {
-        type: String
+        type: String,
+        default: ''
     },
     vol_dist: {
-        type: Number
+        type: Number,
+        default: 0
     },
     open_price_dist: {
-        type: Number
+        type: Number,
+        default: 0
     },
     open_time_dist: {
         type: String,
+        default: ''
     },
     open_timestamp_dist: {
         type: Number,
+        default: 0
     },
     sl_dist: {
-        type: Number
+        type: Number,
+        default: 0
     },
     tp_dist: {
-        type: Number
+        type: Number,
+        default: 0
     },
     close_price_dist: {
-        type: Number
+        type: Number,
+        default: 0
     },
     close_time_dist: {
         type: String,
+        default: ''
     },
     close_timestamp_dist: {
         type: Number,
+        default: 0
     },
     magic_dist: {
         type: Number,
+        default: 0
     },
     comment_dist: {
         type: String
     },
     commission_dist: {
-        type: Number
+        type: Number,
+        default: 0
     },
     swap_dist: {
-        type: Number
+        type: Number,
+        default: 0
     },
     profit_dist: {
-        type: Number
+        type: Number,
+        default: 0
     },
 
     symbol_title: {
