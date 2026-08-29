@@ -1,5 +1,6 @@
 import GetUpdateService from '../GetUpdateService.js'
 import TradeMap from "../../models/TradeMap.js"
+import TradeMapService from '../TradeMapService.js'
 
 export default async (req, res) => {
 
@@ -14,7 +15,7 @@ export default async (req, res) => {
     if (getUpdateDoc && getUpdateDoc.status === 'success') {
         // #.
         // بروزرسانی مپ معامله 
-        await TradeMap.updateOne(
+        const updatedDoc = await TradeMap.findOneAndUpdate(
             {
                 acc_src: getUpdateDoc.origin_acc,
                 ticket_src: getUpdateDoc.origin_ticket,
@@ -31,8 +32,16 @@ export default async (req, res) => {
                     sl_dist: data.sl,
                     tp_dist: data.tp
                 }
-            }
-        )
+            },
+            { new: true }
+        );
+
+        if (updatedDoc) {
+            TradeMapService.sync({
+                event: "modified",
+                data: [updatedDoc.toObject()]
+            });
+        }
     } else {
         // todo 
         // What needs to be done here?

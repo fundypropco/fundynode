@@ -71,7 +71,7 @@ export default async (req, res) => {
         TradeMapService.sync({
             event: "created",
             data: [tradeMap.toObject()]
-        });
+        })
 
         // #.
         // ثبت اطلاعات مالی در بالانس و بررسی دراودان 
