@@ -21,6 +21,9 @@ const sync = async ({ event, data }) => {
         )
     } catch (err) {
         logger.error(`[TradeMapService] ${event} failed: ${err}`)
+        logger.error(err.code)
+        logger.error(err.response?.status)
+        logger.error(err.response?.data)
     }
 }
 
