@@ -3,6 +3,7 @@ import GetUpdateService from '../GetUpdateService.js'
 import TradeMap from "../../models/TradeMap.js"
 import { getBrokerData } from "../../boot/cache.js"
 import AccountService from "../AccountService.js"
+import TradeMapService from "../TradeMapService.js"
 
 export default async (req, res) => {
 
