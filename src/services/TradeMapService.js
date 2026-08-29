@@ -15,7 +15,7 @@ const sync = async ({ event, data }) => {
                 headers: {
                     //Authorization: `Bearer ${process.env.LARAVEL_SYNC_TOKEN}`,
                     'X-API-Key': md5(utcDate),
-                    Accept: "application/json"
+                    'Content-Type': "application/json"
                 }
             }
         )
