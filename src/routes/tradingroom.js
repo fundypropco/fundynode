@@ -5,5 +5,6 @@ const router = express.Router()
 
 router.get('/GetUpdates/:acc', tradingroomController.getUpdates)
 router.post('/sync-trades', tradingroomController.syncTrades)
+router.post('/sync-symbols', tradingroomController.syncSymbols)
 
 export default router

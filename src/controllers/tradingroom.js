@@ -1,5 +1,6 @@
 import asyncHandler from '../middlewares/asyncHandler.js'
 import GetUpdate from "../models/GetUpdate.js"
+import Symbol from '../models/Symbol.js'
 import TradeMap from "../models/TradeMap.js"
 
 
@@ -12,9 +13,20 @@ const getUpdates = asyncHandler(async (req, res) => {
         result: result
     })
 })
+
 const syncTrades = asyncHandler(async (req, res) => {
 
     const results = await TradeMap.find({ created_at: { $gte: req.body.from_timestamp } }).sort('created_at')
+
+    res.send({
+        status: 'success',
+        results: results
+    })
+})
+
+const syncSymbols = asyncHandler(async (req, res) => {
+
+    const results = await Symbol.find()
 
     res.send({
         status: 'success',
@@ -26,4 +38,5 @@ const syncTrades = asyncHandler(async (req, res) => {
 export default {
     getUpdates,
     syncTrades,
+    syncSymbols
 }
