@@ -99,7 +99,7 @@ async function processNewOrder(data) {
 
                         // #
                         // ثبت دستور اجرای سفارش
-                        await GetUpdateService.create(getUpdateData)
+                        createdGetUpdateDoc = await GetUpdateService.create(getUpdateData)
 
                         sendForCheckFlag = true
 
@@ -128,7 +128,7 @@ async function processNewOrder(data) {
 
                         // #
                         // ثبت دستور اجرا 
-                        createdGetUpdateDoc = await GetUpdateService.create(getUpdateData)
+                        await GetUpdateService.create(getUpdateData)
                     }
                 }
 
