@@ -23,7 +23,10 @@ export default async (req, res, reqLog) => {
 
     const response = {
         status: 'success',
-        message: result.msg
+        message: result.msg,
+        data: {
+            keyid: result?.keyid
+        }
     }
 
     if (reqLog) {
@@ -39,7 +42,8 @@ export default async (req, res, reqLog) => {
 
 async function processNewOrder(data) {
 
-    let msg = '';
+    let msg = ''
+    let createdGetUpdateDoc = {}
 
     // #
     // پیدا کردن اکانت مربوط به عملیات دریافتی 
@@ -124,7 +128,7 @@ async function processNewOrder(data) {
 
                         // #
                         // ثبت دستور اجرا 
-                        await GetUpdateService.create(getUpdateData)
+                        createdGetUpdateDoc = await GetUpdateService.create(getUpdateData)
                     }
                 }
 
@@ -140,13 +144,15 @@ async function processNewOrder(data) {
     }
 
     return {
-        msg
+        msg,
+        keyid: createdGetUpdateDoc?.keyid
     }
 }
 
 async function processPartial(data) {
 
-    let msg = '';
+    let msg = ''
+    let createdGetUpdateDoc = {};
 
     // #
     //پیدا کردن اکانت مربوط به عملیات دریافتی 
@@ -180,7 +186,7 @@ async function processPartial(data) {
                 }
                 partialInfo.origin_new_commission = newCommission
                 const getUpdateData = await GetUpdateService.preparePartialCloseData(account, copier, partialInfo, openTradeMap)
-                await GetUpdateService.create(getUpdateData)
+                createdGetUpdateDoc = await GetUpdateService.create(getUpdateData)
 
                 if (openTradeMap) {
                     openTradeMap.vol_src = partialInfo.closed_vol
@@ -201,7 +207,8 @@ async function processPartial(data) {
     }
 
     return {
-        msg
+        msg,
+        keyid: createdGetUpdateDoc?.keyid
     }
 }
 

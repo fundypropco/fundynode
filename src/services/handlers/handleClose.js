@@ -12,18 +12,22 @@ export default async (req, res, reqLog) => {
 
     // #.
     // انجام فرآیند بر اساس نوع کلوز
+    let result
     if (!data.is_partial) {
         // اگر کلوز کامل باشد 
-        await processClose(data)
+        result = await processClose(data)
     } else {
         // اگر پارشیال کلوز باشد 
-        await processPartial(data)
+        result = await processPartial(data)
     }
 
     // #.
     // ارسال پاسخ و ذخیره لاگ درصورت لزوم
     const response = {
         status: 'success',
+        data: {
+            keyid: result?.keyid
+        }
     }
 
     if (reqLog) {
@@ -38,6 +42,8 @@ export default async (req, res, reqLog) => {
 }
 
 async function processClose(data) {
+
+    let createdGetUpdateDoc = {}
 
     // #
     // پیدا کردن اکانت مربوط به عملیات دریافتی 
@@ -70,7 +76,7 @@ async function processClose(data) {
                     commission_src = Math.round((data.closed_commission - sumCommissions) * 100) / 100
                 }
                 const getUpdateData = await GetUpdateService.prepareCloseData(account, copier, data, openTradeMap)
-                await GetUpdateService.create(getUpdateData)
+                createdGetUpdateDoc = await GetUpdateService.create(getUpdateData)
 
                 if (openTradeMap) {
                     openTradeMap.close_price_src = data.closed_price
@@ -92,6 +98,10 @@ async function processClose(data) {
 
         await sendForCheck(data.accountObj)
     }
+
+    return {
+        keyid: createdGetUpdateDoc?.keyid
+    }
 }
 
 async function processPartial(data) {
@@ -99,6 +109,7 @@ async function processPartial(data) {
     // #.
     // پیدا کردن اکانت مربوط به عملیات دریافتی 
     const account = data.accountObj
+    let createdGetUpdateDoc = {}
 
     // #.
     // بررسی اینکه آیا قابلیت برای این اکانت فعال هست یا نه 
@@ -129,7 +140,7 @@ async function processPartial(data) {
                 }
                 partialInfo.origin_new_commission = newCommission
                 const getUpdateData = await GetUpdateService.preparePartialCloseData(account, copier, partialInfo, openTradeMap)
-                await GetUpdateService.create(getUpdateData)
+                createdGetUpdateDoc = await GetUpdateService.create(getUpdateData)
 
                 if (openTradeMap) {
                     openTradeMap.vol_src = partialInfo.closed_vol
@@ -144,6 +155,10 @@ async function processPartial(data) {
         }
 
         await sendForCheck(data.accountObj)
+    }
+
+    return {
+        keyid: createdGetUpdateDoc?.keyid
     }
 }
 

@@ -9,6 +9,7 @@ export default async (req, res) => {
     // پردازش پیام ورودی 
     const data = processMessage(req.body.message)
     let account, platform;
+    let createdGetUpdateDoc = {};
 
     // #.
     // پیدا کردن اکانت مربوط به عملیات دریافتی 
@@ -40,7 +41,7 @@ export default async (req, res) => {
                 if (copier.copy) {
                     const tradeMap = tradeMaps.find(t => t.acc_dist == copier.acc && t.status === 'open')
                     const getUpdateData = await GetUpdateService.prepareModifyData(account, copier, modifyInfo, tradeMap)
-                    await GetUpdateService.create(getUpdateData)
+                    createdGetUpdateDoc = await GetUpdateService.create(getUpdateData)
                 }
             }
         }
@@ -48,6 +49,9 @@ export default async (req, res) => {
 
     res.send({
         status: 'success',
+        data: {
+            keyid: createdGetUpdateDoc?.keyid
+        }
     })
 }
 
