@@ -163,8 +163,8 @@ const prepareOrderData = async (account, copier, data) => {
     perparedData.symbol_title = data.symbol_a.title
     perparedData.side = data.side
     perparedData.vol = data.vol
-    perparedData.sl = getWiderSl(data.symbol_b, perparedData.side, Number(data.sl))
-    perparedData.tp = getWiderTp(data.symbol_b, perparedData.side, Number(data.tp))
+    perparedData.sl = perparedData.platform === 'metatrader' ? getWiderSl(data.symbol_b, perparedData.side, Number(data.sl)) : data.sl
+    perparedData.tp = perparedData.platform === 'metatrader' ? getWiderTp(data.symbol_b, perparedData.side, Number(data.tp)) : data.tp
     perparedData.slippage = 50
     perparedData.description = data.description
     perparedData.magic = account.acc
@@ -321,8 +321,8 @@ const prepareModifyData = async (account, copier, data, tradeMap) => {
     perparedData.symbol = tradeMap?.symbol_dist ?? ''
     perparedData.symbol_title = tradeMap?.symbol_title ?? ''
     perparedData.status = tradeMap ? 'pending' : 'waiting'
-    perparedData.sl = Number(data.sl) && symbol && side ? getWiderSl(symbol, side, Number(data.sl)) : data.sl
-    perparedData.tp = Number(data.tp) && symbol && side ? getWiderTp(symbol, side, Number(data.tp)) : data.tp
+    perparedData.sl = Number(data.sl) && symbol && side && perparedData.platform === 'metatrader' ? getWiderSl(symbol, side, Number(data.sl)) : data.sl
+    perparedData.tp = Number(data.tp) && symbol && side && perparedData.platform === 'metatrader' ? getWiderTp(symbol, side, Number(data.tp)) : data.tp
     perparedData.side = tradeMap?.side ?? 'none'
     perparedData.keyid = data.keyid++
 
