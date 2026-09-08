@@ -207,6 +207,7 @@ export function makeID() {
 }
 
 export function getMqlError(no) {
+    const code = Number(no)
     switch (no) {
         case 0:
         case 4000:
