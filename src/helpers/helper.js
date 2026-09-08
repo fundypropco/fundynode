@@ -527,6 +527,91 @@ export function getMqlError(no) {
             return 'ERR_WEBREQUEST_TIMEOUT'
         case 5203:
             return 'ERR_WEBREQUEST_REQUEST_FAILED'
+
+        // --- MT5 trade server return codes (10004 - 10046) ---
+        case 10004:
+            return 'TRADE_RETCODE_REQUOTE'
+        case 10006:
+            return 'TRADE_RETCODE_REJECT'
+        case 10007:
+            return 'TRADE_RETCODE_CANCEL'
+        case 10008:
+            return 'TRADE_RETCODE_PLACED'
+        case 10009:
+            return 'TRADE_RETCODE_DONE'
+        case 10010:
+            return 'TRADE_RETCODE_DONE_PARTIAL'
+        case 10011:
+            return 'TRADE_RETCODE_ERROR'
+        case 10012:
+            return 'TRADE_RETCODE_TIMEOUT'
+        case 10013:
+            return 'TRADE_RETCODE_INVALID'
+        case 10014:
+            return 'TRADE_RETCODE_INVALID_VOLUME'
+        case 10015:
+            return 'TRADE_RETCODE_INVALID_PRICE'
+        case 10016:
+            return 'TRADE_RETCODE_INVALID_STOPS'
+        case 10017:
+            return 'TRADE_RETCODE_TRADE_DISABLED'
+        case 10018:
+            return 'TRADE_RETCODE_MARKET_CLOSED'
+        case 10019:
+            return 'TRADE_RETCODE_NO_MONEY'
+        case 10020:
+            return 'TRADE_RETCODE_PRICE_CHANGED'
+        case 10021:
+            return 'TRADE_RETCODE_PRICE_OFF'
+        case 10022:
+            return 'TRADE_RETCODE_INVALID_EXPIRATION'
+        case 10023:
+            return 'TRADE_RETCODE_ORDER_CHANGED'
+        case 10024:
+            return 'TRADE_RETCODE_TOO_MANY_REQUESTS'
+        case 10025:
+            return 'TRADE_RETCODE_NO_CHANGES'
+        case 10026:
+            return 'TRADE_RETCODE_SERVER_DISABLES_AT'
+        case 10027:
+            return 'TRADE_RETCODE_CLIENT_DISABLES_AT'
+        case 10028:
+            return 'TRADE_RETCODE_LOCKED'
+        case 10029:
+            return 'TRADE_RETCODE_FROZEN'
+        case 10030:
+            return 'TRADE_RETCODE_INVALID_FILL'
+        case 10031:
+            return 'TRADE_RETCODE_CONNECTION'
+        case 10032:
+            return 'TRADE_RETCODE_ONLY_REAL'
+        case 10033:
+            return 'TRADE_RETCODE_LIMIT_ORDERS'
+        case 10034:
+            return 'TRADE_RETCODE_LIMIT_VOLUME'
+        case 10035:
+            return 'TRADE_RETCODE_INVALID_ORDER'
+        case 10036:
+            return 'TRADE_RETCODE_POSITION_CLOSED'
+        case 10038:
+            return 'TRADE_RETCODE_INVALID_CLOSE_VOLUME'
+        case 10039:
+            return 'TRADE_RETCODE_CLOSE_ORDER_EXIST'
+        case 10040:
+            return 'TRADE_RETCODE_LIMIT_POSITIONS'
+        case 10041:
+            return 'TRADE_RETCODE_REJECT_CANCEL'
+        case 10042:
+            return 'TRADE_RETCODE_LONG_ONLY'
+        case 10043:
+            return 'TRADE_RETCODE_SHORT_ONLY'
+        case 10044:
+            return 'TRADE_RETCODE_CLOSE_ONLY'
+        case 10045:
+            return 'TRADE_RETCODE_FIFO_CLOSE'
+        case 10046:
+            return 'TRADE_RETCODE_HEDGE_PROHIBITED'
+
         default:
             return 'ERR'
     }

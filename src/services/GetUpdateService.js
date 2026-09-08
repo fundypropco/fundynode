@@ -89,7 +89,7 @@ const updateStatus = async (data) => {
     };
 
     if (data.status != 'success' && data.result_text && data.result_code) {
-        update.$push = { description: `${data.result_text} / ${getMqlError(data.result_code)}` }
+        update.$push = { description: `${data.result_text}/${data.result_code}/${getMqlError(data.result_code)}` }
     }
 
     const ticketHandlers = [ACTION_HANDLER.BUY, ACTION_HANDLER.BUYLIMIT, ACTION_HANDLER.BUYSTOP, ACTION_HANDLER.SELL, ACTION_HANDLER.SELLLIMIT, ACTION_HANDLER.SELLSTOP]
