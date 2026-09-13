@@ -80,7 +80,7 @@ const getUpdateSchema = new mongoose.Schema({
         index: true,
         default: 0
     },
-    origin_meta_acc: {
+    origin_acc_meta: {
         type: Number,
         index: true,
         default: 0

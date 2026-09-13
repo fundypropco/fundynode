@@ -50,7 +50,7 @@ const create = async (data) => {
         symbol_title: data.symbol_title ?? '',
         platform: data.platform,
         origin_acc: data.origin_acc ?? 0,
-        origin_meta_acc: data.origin_meta_acc ?? 0,
+        origin_acc_meta: data.origin_acc_meta ?? 0,
         origin_ticket: data.origin_ticket ?? 0,
         origin_server: data.origin_server ?? '',
         origin_symbol: data.origin_symbol ?? '',
@@ -175,7 +175,7 @@ const prepareOrderData = async (account, copier, data) => {
 
     perparedData.origin_server = account.server
     perparedData.origin_acc = account.acc
-    perparedData.origin_meta_acc = account.meta_acc
+    perparedData.origin_acc_meta = account.acc_meta
     perparedData.origin_ticket = data.ticket
     perparedData.origin_symbol = data.symbol_a.symbol
     perparedData.origin_vol = data.vol
@@ -281,7 +281,7 @@ const prepareCloseData = async (account, copier, data, tradeMap) => {
 
     perparedData.origin_server = account.server
     perparedData.origin_acc = account.acc
-    perparedData.origin_meta_acc = account.meta_acc
+    perparedData.origin_acc_meta = account.acc_meta
     perparedData.origin_ticket = data.closed_ticket
     perparedData.origin_symbol = tradeMap?.symbol_src ?? ''
     perparedData.origin_vol = data.closed_vol
@@ -328,6 +328,7 @@ const prepareModifyData = async (account, copier, data, tradeMap) => {
 
     perparedData.origin_server = account.server
     perparedData.origin_acc = account.acc
+    perparedData.origin_acc_meta = account.acc_meta
     perparedData.origin_ticket = data.ticket
     perparedData.origin_symbol = tradeMap?.symbol_src ?? ''
     perparedData.origin_sl = data.sl
