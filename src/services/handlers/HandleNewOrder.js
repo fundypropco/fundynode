@@ -29,6 +29,12 @@ export default async (req, res, reqLog) => {
         }
     }
 
+    if (data.acc_fp) {
+        if (!String(response.message).toLowerCase().includes('processed')) {
+            response.status = 'error'
+        }
+    }
+
     if (reqLog) {
         await RequestLog.findByIdAndUpdate(reqLog._id, {
             response,
