@@ -140,7 +140,7 @@ async function processNewOrder(data) {
         }// for
     } // account copy is enabled
     else {
-        msg += `| copy is disabled for account |`
+        msg += `| Account Is Disabled |`
     }
 
     return {
