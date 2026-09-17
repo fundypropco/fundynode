@@ -5,7 +5,7 @@ import md5 from 'md5';
 
 const sync = async ({ event, data }) => {
     try {
-        const utcDate = new Date().toISOString().slice(0, 10);
+        //const utcDate = new Date().toISOString().slice(0, 10);
 
         await axios.post(
             "https://panel.fundyprop.com/api/sync-trade",
@@ -14,7 +14,7 @@ const sync = async ({ event, data }) => {
                 timeout: 10000,
                 headers: {
                     //Authorization: `Bearer ${process.env.LARAVEL_SYNC_TOKEN}`,
-                    'X-API-Key': md5(utcDate),
+                    'X-API-Key': process.env.FUNDYPANEL_API_KEY,
                     'Content-Type': "application/json"
                 }
             }
