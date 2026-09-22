@@ -11,10 +11,12 @@ export default async (req, res, reqLog) => {
     //پردازش پیام ورودی 
     const data = await processMessage(req.body.message)
 
+    let result
+
     if (data.acc_type === 'user') {
         // #.
         // انجام فرآیند بر اساس نوع کلوز
-        let result
+
         if (!data.is_partial) {
             // اگر کلوز کامل باشد 
             result = await processClose(data)
