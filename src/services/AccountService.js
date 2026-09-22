@@ -4,6 +4,10 @@ import TradeMap from "../models/TradeMap.js"
 import GetUpdateService from "./GetUpdateService.js"
 import Account from "../models/Account.js"
 
+
+const test = () => {
+    return
+}
 // const bulkClose = async (account) => {
 //     // تمام تریدهای مربوط به اکانت تریدر
 //     // مرتب سازی اول اپن بعد پندینگ - با ارزش ها اول لیست شوند
@@ -106,9 +110,10 @@ import Account from "../models/Account.js"
 //     }
 // }
 
-// export default {
-//     closeAll,
-//     bulkClose,
-//     failIfDrawdown,
-//     updateProfitBl
-// }
+export default {
+    //     closeAll,
+    //     bulkClose,
+    //     failIfDrawdown,
+    //     updateProfitBl
+    test
+}
