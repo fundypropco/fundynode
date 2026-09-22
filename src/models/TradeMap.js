@@ -125,6 +125,7 @@ const tradeMapSchema = new mongoose.Schema({
     },
     close_timestamp_dist: {
         type: Number,
+        index: true,
         default: 0
     },
     magic_dist: {

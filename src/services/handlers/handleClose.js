@@ -3,6 +3,7 @@ import GetUpdateService from "../GetUpdateService.js"
 import { formatDateUTC, getOrderSide, makeID } from '../../helpers/helper.js'
 import TradeMap from '../../models/TradeMap.js'
 import { getBrokerData } from '../../boot/cache.js'
+import TradeMapService from '../TradeMapService.js'
 
 export default async (req, res, reqLog) => {
 
@@ -10,15 +11,42 @@ export default async (req, res, reqLog) => {
     //پردازش پیام ورودی 
     const data = await processMessage(req.body.message)
 
-    // #.
-    // انجام فرآیند بر اساس نوع کلوز
-    let result
-    if (!data.is_partial) {
-        // اگر کلوز کامل باشد 
-        result = await processClose(data)
-    } else {
-        // اگر پارشیال کلوز باشد 
-        result = await processPartial(data)
+    if (data.acc_type === 'user') {
+        // #.
+        // انجام فرآیند بر اساس نوع کلوز
+        let result
+        if (!data.is_partial) {
+            // اگر کلوز کامل باشد 
+            result = await processClose(data)
+        } else {
+            // اگر پارشیال کلوز باشد 
+            result = await processPartial(data)
+        }
+    } else if (data.acc_type === 'master') {
+
+        const tradeMaps = await TradeMap.find({
+            acc_dist: data.acc,
+            ticket_dist: data.ticket,
+        })
+
+        const openTradeMap = tradeMaps.find(t => t.status === 'open')
+
+        if (openTradeMap) {
+            openTradeMap.close_price_dist = data.closed_price
+            openTradeMap.close_time_dist = formatDateUTC(data.closed_timestamp)
+            openTradeMap.close_timestamp_dist = data.closed_timestamp
+            openTradeMap.profit_dist = data.closed_profit
+            openTradeMap.swap_dist = data.closed_swap
+            openTradeMap.status = 'closed'
+            openTradeMap.closing_type = 'single'
+            openTradeMap.commission_dist = data.closed_commission
+            await openTradeMap.save()
+
+            await TradeMapService.sync({
+                event: "closed",
+                data: [openTradeMap.toObject()]
+            })
+        }
     }
 
     // #.
@@ -183,6 +211,8 @@ async function processMessage(msg) {
 
     data.timestamp = Number(msg_parts[3])
     const info = msg_parts[2]
+
+    data.acc_type = msg_parts[4] === '-1234' ? 'master' : 'user'
 
     // msg info
     const info_parts = info.split('_&_')

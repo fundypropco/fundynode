@@ -61,8 +61,8 @@ export default async (req, res) => {
 
             // #.
             // ثبت اطلاعات مالی در بالانس 
-            const profit_bl = Math.round((item.profit + item.swap + commission_dist) * 100) / 100
-            await AccountService.updateProfitBl(getUpdateDoc.origin_acc, data.acc, profit_bl, false)
+            // const profit_bl = Math.round((item.profit + item.swap + commission_dist) * 100) / 100
+            // await AccountService.updateProfitBl(getUpdateDoc.origin_acc, data.acc, profit_bl, false)
         }
     }
 

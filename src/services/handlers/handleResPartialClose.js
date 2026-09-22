@@ -99,8 +99,8 @@ export default async (req, res) => {
 
         // #.
         // ثبت اطلاعات مالی در بالانس و بررسی دراودان 
-        const profit_bl = Math.round((data.profit + data.swap + new_commission_dist) * 100) / 100
-        await AccountService.updateProfitBl(getUpdateDoc.origin_acc, data.acc, profit_bl)
+        // const profit_bl = Math.round((data.profit + data.swap + new_commission_dist) * 100) / 100
+        // await AccountService.updateProfitBl(getUpdateDoc.origin_acc, data.acc, profit_bl)
 
         // #.
         // ارسال دستورات در وضعیت انتظار و وابسته به این دیتا 

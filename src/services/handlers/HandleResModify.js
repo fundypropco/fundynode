@@ -37,7 +37,7 @@ export default async (req, res) => {
         );
 
         if (updatedDoc) {
-            TradeMapService.sync({
+            await TradeMapService.sync({
                 event: "modified",
                 data: [updatedDoc.toObject()]
             });

@@ -68,14 +68,14 @@ export default async (req, res) => {
             platform: getUpdateDoc.platform
         })
         await tradeMap.save()
-        TradeMapService.sync({
+        await TradeMapService.sync({
             event: "created",
             data: [tradeMap.toObject()]
         })
 
         // #.
         // ثبت اطلاعات مالی در بالانس و بررسی دراودان 
-        await AccountService.updateProfitBl(getUpdateDoc.origin_acc, data.acc, data.commission)
+        // await AccountService.updateProfitBl(getUpdateDoc.origin_acc, data.acc, data.commission)
 
         // #.
         // ارسال دستورات در وضعیت انتظار و وابسته به این دیتا 

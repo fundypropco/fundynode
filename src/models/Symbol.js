@@ -81,11 +81,19 @@ const symbolSchema = new mongoose.Schema({
         type: Number,
         default: 0,
     },
+    commission: {
+        type: Number,
+        default: 0,
+    },
     commission_min: {
         type: Number,
         default: 0,
     },
     commission_max: {
+        type: Number,
+        default: 0,
+    },
+    swap: {
         type: Number,
         default: 0,
     },

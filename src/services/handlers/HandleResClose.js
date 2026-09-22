@@ -63,7 +63,7 @@ export default async (req, res) => {
             }
             await openTradeMap.save()
 
-            TradeMapService.sync({
+            await TradeMapService.sync({
                 event: "closed",
                 data: [openTradeMap.toObject()]
             })
@@ -71,10 +71,8 @@ export default async (req, res) => {
 
         // #.
         // ثبت اطلاعات مالی در بالانس و بررسی دراودان 
-        const profit_bl = Math.round((data.profit + data.swap + commission_dist) * 100) / 100
-        await AccountService.updateProfitBl(getUpdateDoc.origin_acc, data.acc, profit_bl)
-
-
+        // const profit_bl = Math.round((data.profit + data.swap + commission_dist) * 100) / 100
+        // await AccountService.updateProfitBl(getUpdateDoc.origin_acc, data.acc, profit_bl)
 
     }
 

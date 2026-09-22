@@ -48,7 +48,7 @@ const create = async (data) => {
         side: data.side ?? 'none',
         description: data.description ?? [],
         symbol_title: data.symbol_title ?? '',
-        platform: data.platform,
+        platform: data.platform ?? 'metatrader',
         origin_acc: data.origin_acc ?? 0,
         origin_acc_meta: data.origin_acc_meta ?? 0,
         origin_ticket: data.origin_ticket ?? 0,
@@ -133,7 +133,7 @@ const getUnprocessed = async (acc) => {
     //     ]
     // }).sort('-created_at')
 
-    let results = await GetUpdate.find({ acc, status: 'pending', created_at: { $gte: Date.now() - 60000 } }).sort('-created_at')
+    let results = await GetUpdate.find({ origin_acc: acc, status: 'pending', created_at: { $gte: Date.now() - 60000 } }).sort('-created_at')
 
     const finalResults = results.map(doc => ({
         update_id: doc.keyid,
@@ -163,8 +163,8 @@ const prepareOrderData = async (account, copier, data) => {
     perparedData.symbol_title = data.symbol_a.title
     perparedData.side = data.side
     perparedData.vol = data.vol
-    perparedData.sl = perparedData.platform === 'metatrader' ? getWiderSl(data.symbol_b, perparedData.side, Number(data.sl)) : data.sl
-    perparedData.tp = perparedData.platform === 'metatrader' ? getWiderTp(data.symbol_b, perparedData.side, Number(data.tp)) : data.tp
+    perparedData.sl = data.sl // perparedData.platform === 'metatrader' ? getWiderSl(data.symbol_b, perparedData.side, Number(data.sl)) : data.sl
+    perparedData.tp = data.tp // perparedData.platform === 'metatrader' ? getWiderTp(data.symbol_b, perparedData.side, Number(data.tp)) : data.tp
     perparedData.slippage = 50
     perparedData.description = data.description
     perparedData.magic = account.acc
@@ -321,8 +321,8 @@ const prepareModifyData = async (account, copier, data, tradeMap) => {
     perparedData.symbol = tradeMap?.symbol_dist ?? ''
     perparedData.symbol_title = tradeMap?.symbol_title ?? ''
     perparedData.status = tradeMap ? 'pending' : 'waiting'
-    perparedData.sl = Number(data.sl) && symbol && side && perparedData.platform === 'metatrader' ? getWiderSl(symbol, side, Number(data.sl)) : data.sl
-    perparedData.tp = Number(data.tp) && symbol && side && perparedData.platform === 'metatrader' ? getWiderTp(symbol, side, Number(data.tp)) : data.tp
+    perparedData.sl = data.sl // Number(data.sl) && symbol && side && perparedData.platform === 'metatrader' ? getWiderSl(symbol, side, Number(data.sl)) : data.sl
+    perparedData.tp = data.tp // Number(data.tp) && symbol && side && perparedData.platform === 'metatrader' ? getWiderTp(symbol, side, Number(data.tp)) : data.tp
     perparedData.side = tradeMap?.side ?? 'none'
     perparedData.keyid = data.keyid++
 

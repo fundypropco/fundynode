@@ -20,6 +20,10 @@ import HandleResOpenPendingOrder from '../services/handlers/HandleResOpenPending
 import HandleSampleTrade from '../services/handlers/handleSampleTrade.js'
 import handleResCheckTradeMap from '../services/handlers/handleResCheckTradeMap.js'
 import HandleUsage from '../services/handlers/HandleUsage.js'
+import HandleSymbolData from '../services/handlers/HandleSymbolData.js'
+import HandleResSymbolData from '../services/handlers/HandleResSymbolData.js'
+import HandleRequestProfile from '../services/handlers/HandleRequestProfile.js'
+import HandleResRequestProfile from '../services/handlers/HandleResRequestProfile.js'
 
 const getUpdates = asyncHandler(async (req, res) => {
     const result = await GetUpdateService.getUnprocessed(req.params.acc)
@@ -46,8 +50,17 @@ const sendMessage = asyncHandler(async (req, res) => {
         case 300:
             return await HandleUsage(req, res)
 
-        case 400:
-            return await HandleOpenTrades(req, res)
+        case 301:
+            return await HandleSymbolData(req, res)
+
+        case 399:
+            return await HandleResSymbolData(req, res)
+
+        case 302:
+            return await HandleRequestProfile(req, res)
+
+        // case 400:
+        //     return await HandleOpenTrades(req, res)
 
         case 401:
             return await HandleSampleTrade(req, res)
@@ -61,8 +74,8 @@ const sendMessage = asyncHandler(async (req, res) => {
         case 502:
             return await handleModify(req, res)
 
-        case 504:
-            return await handleNewData(req, res)
+        // case 504:
+        //     return await handleNewData(req, res)
 
         case 999:
         case 998:
@@ -72,11 +85,11 @@ const sendMessage = asyncHandler(async (req, res) => {
         case 992:
             return await handleResNewOrder(req, res)
 
-        case 970:
-            return await handleResCheckTradeMap(req, res)
+        // case 970:
+        //     return await handleResCheckTradeMap(req, res)
 
-        case 975:
-            return await HandleResOpenPendingOrder(req, res)
+        // case 975:
+        //     return await HandleResOpenPendingOrder(req, res)
 
         case 997:
             return await handleResModify(req, res)
@@ -87,17 +100,20 @@ const sendMessage = asyncHandler(async (req, res) => {
         case 977:
             return await HandleResCloseOrigin(req, res)
 
-        case 978:
-            return await handleResPartialClose(req, res)
+        // case 978:
+        //     return await handleResPartialClose(req, res)
 
-        case 979:
-            return await handleResBulkClose(req, res)
+        // case 979:
+        //     return await handleResBulkClose(req, res)
 
-        case 980:
-            return await HandleResCloseAllOrigin(req, res)
+        // case 980:
+        //     return await HandleResCloseAllOrigin(req, res)
 
-        case 974:
-            return await HandleResCloseMagic(req, res)
+        // case 974:
+        //     return await HandleResCloseMagic(req, res)
+
+        case 960:
+            return await HandleResRequestProfile(req, res)
 
         case 987:
             return await HandleResBrokerSymbols(req, res)
@@ -108,7 +124,7 @@ const sendMessage = asyncHandler(async (req, res) => {
         default:
             return res.send({
                 status: 'error',
-                message: 'Wrong handler received!!!'
+                message: 'Wrong Handler Received!!!'
             })
     }
 })

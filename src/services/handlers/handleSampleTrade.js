@@ -48,7 +48,8 @@ export default async (req, res) => {
                 $setOnInsert: {
                     server: data.server,
                     symbol: data.symbol,
-                    title: symbolTitle
+                    title: symbolTitle,
+                    commission: data.commission
                 },
                 $min: {
                     commission_max: data.commission,

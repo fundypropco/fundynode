@@ -12,23 +12,17 @@ const copierSchema = new mongoose.Schema({
     copy: {
         type: Boolean,
     },
-    vol: {
-        type: String,
-        enum: ['calc', 'exact']
-    },
-    profit_bl: {
-        type: Number
-    },
-    profit_eq: {
-        type: Number
-    },
-    open_trades: {
+    vol_factor: {
         type: Number,
-        index: true,
+        default: 1
     }
 }, { _id: false })
 
 const accountSchema = new mongoose.Schema({
+    username: {
+        type: String,
+        default: ''
+    },
     // در حالت پراپ بدون متاتریدر دمو، مقدار این فیلد برابر صفر خواهد بود
     acc_meta: {
         type: Number,
@@ -55,6 +49,14 @@ const accountSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
+    commission_rate: {
+        type: Number,
+        default: 0
+    },
+    swap_rate: {
+        type: Number,
+        default: 0
+    },
     copy: {
         type: Boolean,
         default: false
@@ -62,6 +64,12 @@ const accountSchema = new mongoose.Schema({
     copiers: {
         type: [copierSchema],
         default: []
+    },
+    status: {
+        type: String,
+        enum: ['trading', 'passed', 'failed', 'stopped'],
+        index: true,
+        default: 'stopped'
     },
     check_time: {
         type: Number,
