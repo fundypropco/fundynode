@@ -239,6 +239,8 @@ async function sendForCheck(account) {
 
 function isOrderPossible(account, copier, data) {
     const result = {}
+    result.status = true
+    return result
 
     const freeEq = account.initial + copier.profit_bl + copier.profit_eq - account.drawdown
 
