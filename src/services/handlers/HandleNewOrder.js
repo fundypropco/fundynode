@@ -139,7 +139,7 @@ async function processNewOrder(data) {
                 }
 
                 if (sendForCheckFlag) {
-                    await sendForCheck(data.accountObj)
+                    //await sendForCheck(data.accountObj)
                 }
 
             } // copier copy is enabled
@@ -207,7 +207,7 @@ async function processPartial(data) {
             }
         }
 
-        await sendForCheck(data.accountObj)
+        //await sendForCheck(data.accountObj)
     } else {
         msg += `| copy is disabled for account |`
     }

@@ -58,7 +58,6 @@ export default async (req, res) => {
             openTradeMap.close_time_dist = formatDateUTC(data.closed_timestamp + diff_time)
             openTradeMap.close_timestamp_dist = data.closed_timestamp + diff_time
             openTradeMap.profit_dist = data.profit
-            openTradeMap.profit_final = data.profit_final
             openTradeMap.swap_dist = data.swap
             openTradeMap.swap_final = data.swap_final
             openTradeMap.status = 'closed'
@@ -134,10 +133,9 @@ function processMessage(msg) {
             data.commission = Number(info_parts[6])
             data.commission_final = Number(info_parts[7])
             data.profit = Number(info_parts[8])
-            data.profit_final = Number(info_parts[9])
-            data.error = info_parts[10]
-            data.vol = Number(info_parts[11])
-            data.symbol = info_parts[12]
+            data.error = info_parts[9]
+            data.vol = Number(info_parts[10])
+            data.symbol = info_parts[11]
         }
         else if (data.result_text.toLowerCase().includes('delete')) {
             data.closed_timestamp = Number(info_parts[2])

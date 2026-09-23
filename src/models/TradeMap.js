@@ -155,10 +155,6 @@ const tradeMapSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
-    profit_final: {
-        type: Number,
-        default: 0
-    },
 
     symbol_title: {
         type: String
