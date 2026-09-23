@@ -24,6 +24,7 @@ import HandleSymbolData from '../services/handlers/HandleSymbolData.js'
 import HandleResSymbolData from '../services/handlers/HandleResSymbolData.js'
 import HandleRequestProfile from '../services/handlers/HandleRequestProfile.js'
 import HandleResRequestProfile from '../services/handlers/HandleResRequestProfile.js'
+import HandleDrawdown from '../services/handlers/HandleDrawdown.js'
 
 const getUpdates = asyncHandler(async (req, res) => {
     const result = await GetUpdateService.getUnprocessed(req.params.acc)
@@ -46,6 +47,9 @@ const sendMessage = asyncHandler(async (req, res) => {
     const reqLog = await setRequestLog(handlerNo, req.body.message)
 
     switch (handlerNo) {
+
+        case 41:
+            return await HandleDrawdown(req, res)
 
         case 300:
             return await HandleUsage(req, res)

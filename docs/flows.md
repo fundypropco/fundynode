@@ -147,5 +147,7 @@ POST /api/admin/seed-broker-symbols-data/:server ──► دستور 11 برا�
 ## ۱۲. کنترل صحت کپی (غیرفعال)
 `sendForCheck` → `Account.check_time` → job هر ۳۰ ثانیه → دستور `CHECK_TRADES (30)` → پاسخ 970 مقایسه با TradeMap و ساخت `TradeMapCheck` (`existence` / `mismatch`) → اعلان بله. همه حلقه‌های این زنجیره فعلاً کامنت شده‌اند.
 
-## ۱۳. مدیریت ریسک / دراودان (غیرفعال)
-کد مرده در `AccountService.js` (کامنت‌شده)، `HandleOpenTrades.js` (400) و `HandleNewData.js` (504): محاسبه `profit_bl/profit_eq` هر copier، گزارش روزانه `AccountReport`، و در صورت رسیدن اکوئیتی به `drawdown`: `BULK_CLOSE` روی Master + `copy=false` + `CLOSE_ALL_ORIGIN`/`CLOSE_MAGIC`. فیلدهای `profit_bl/profit_eq` از اسکیمای copier حذف شده‌اند، پس فعال‌سازی مجدد نیاز به بازطراحی دارد.
+## ۱۳. مدیریت ریسک / دراودان
+**فعال:** تشخیص دراودان در EA حساب Master انجام می‌شود و با پیام **41** (`HandleDrawdown.js`) به FundyNode اطلاع داده می‌شود؛ FundyNode حساب تریدر (`acc = magic` و متصل به آن Master) را `status='failed'` و `copy=false` (روی حساب و همه copier ها) می‌کند. از این به بعد `processNewOrder` برای این حساب `| Account Is Disabled |` برمی‌گرداند. بستن معاملات باز در این مسیر با FundyNode نیست.
+
+**غیرفعال (کد قدیمی):** کد مرده در `AccountService.js` (کامنت‌شده)، `HandleOpenTrades.js` (400) و `HandleNewData.js` (504): محاسبه `profit_bl/profit_eq` هر copier، گزارش روزانه `AccountReport`، و در صورت رسیدن اکوئیتی به `drawdown`: `BULK_CLOSE` روی Master + `copy=false` + `CLOSE_ALL_ORIGIN`/`CLOSE_MAGIC`. فیلدهای `profit_bl/profit_eq` از اسکیمای copier حذف شده‌اند، پس فعال‌سازی مجدد نیاز به بازطراحی دارد.

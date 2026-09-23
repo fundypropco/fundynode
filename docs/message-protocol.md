@@ -53,6 +53,7 @@
 
 | کد | نام | handler | فعال؟ |
 |---|---|---|---|
+| 41 | DRAWDOWN (Master اعلام می‌کند تریدر دراودان خورده) | HandleDrawdown | ✅ |
 | 300 | USAGE (CPU/RAM سرور EA) | HandleUsage | ✅ |
 | 301 | REQUEST SYMBOL RATES | HandleSymbolData | ✅ |
 | 302 | REQUEST PROFILE | HandleRequestProfile | ✅ |
@@ -129,6 +130,16 @@ acc,502,NEW MODIFY_&_ticket_&_sl_&_tp_&_open_price_@_ticket_&_sl_&_tp_&_open_pri
 acc,401,name_&_server_&_currency_&_tehran_ts_msc_&_symbol_&_lots_&_type_&_open_price_&_close_price_&_open_time_msc_&_close_time_msc_&_commission_&_profit_&_spread_&_bid_&_ask_&_diff_with_tehran_&_spread_avg_5_&_spread_avg_50_&_leverage_&_margin,timestamp,-2
 ```
 اثر: upsert `Broker{server, title=name, diff_time = round(diff/1800)*1800*1000}` و اگر نماد در SymbolAlias شناخته شد upsert `Symbol` (کمیسیون min/max، اسپرد min/max/last/avg، margin، leverage).
+
+### 41 — DRAWDOWN (`HandleDrawdown.js`)
+```
+master_acc_x_y,41,DRAWDOWN_&_magic_&_user_name_&_lane_&_mode_&_reason_&_eq_real_&_bal_real_&_eq_company_&_bal_company_&_dd_real_&_dd_company_&_closed_&_failed_&_flags_@_record_1_@_record_2_@_,timestamp,-2
+```
+- فرستنده: EA حساب **Master**؛ `acc` قبل از اولین `_` = شماره Master (همان `copiers.acc`).
+- `magic` (i=1 از بخش قبل از اولین `_@_`) = `Account.acc` تریدر.
+- فعلاً فقط `magic` استفاده می‌شود؛ بقیه فیلدها و رکوردهای بعد از `_@_` پارس نمی‌شوند.
+- اثر: `Account` با `{acc: magic, "copiers.acc": master}` → `status='failed'`، `copy=false`، و `copy=false` برای **همه** copier ها.
+- پاسخ: `{status:'success'}` یا `{status:'error', message:'Account Not Found!!!'}`.
 
 ### 300 — USAGE
 ```
