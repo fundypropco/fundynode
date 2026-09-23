@@ -35,12 +35,19 @@ export default async (req, res) => {
         // #.
         // محاسبه کمیسیون های تجمیعی لحاظ شده برای این معامله تا کنون
         const sumCommissions = tradeMaps.reduce((s, t) => s + (t.commission_dist ?? 0), 0)
+        const sumCommissionsFinal = tradeMaps.reduce((s, t) => s + (t.commission_final ?? 0), 0)
 
         // #.
         // اگر مقدار کمیسیون گزارش شده از کمیسیون های تجمیعی بیشتر باشد
+        // در کمیسیون منفی تر بودن یعنی بیشتر بود
         let commission_dist = 0
         if (data.commission < sumCommissions) {
             commission_dist = Math.round((data.commission - sumCommissions) * 100) / 100
+        }
+
+        let commission_final = 0
+        if (data.commission_final < sumCommissionsFinal) {
+            commission_final = Math.round((data.commission_final - sumCommissionsFinal) * 100) / 100
         }
 
         // #. 
@@ -51,7 +58,9 @@ export default async (req, res) => {
             openTradeMap.close_time_dist = formatDateUTC(data.closed_timestamp + diff_time)
             openTradeMap.close_timestamp_dist = data.closed_timestamp + diff_time
             openTradeMap.profit_dist = data.profit
+            openTradeMap.profit_final = data.profit_final
             openTradeMap.swap_dist = data.swap
+            openTradeMap.swap_final = data.swap_final
             openTradeMap.status = 'closed'
             openTradeMap.closing_type = 'single'
             if (commission_dist) {
@@ -59,6 +68,13 @@ export default async (req, res) => {
                     openTradeMap.commission_dist = data.commission
                 } else if (tradeMaps.length > 1) {
                     openTradeMap.commission_dist += commission_dist
+                }
+            }
+            if (commission_final) {
+                if (tradeMaps.length === 1) {
+                    openTradeMap.commission_final = data.commission_final
+                } else if (tradeMaps.length > 1) {
+                    openTradeMap.commission_final += commission_final
                 }
             }
             await openTradeMap.save()
@@ -114,11 +130,14 @@ function processMessage(msg) {
             data.closed_price = Number(info_parts[2])
             data.closed_timestamp = Number(info_parts[3])
             data.swap = Number(info_parts[4])
-            data.commission = Number(info_parts[5])
-            data.profit = Number(info_parts[6])
-            data.error = info_parts[7]
-            data.vol = Number(info_parts[8])
-            data.symbol = info_parts[9]
+            data.swap_final = Number(info_parts[5])
+            data.commission = Number(info_parts[6])
+            data.commission_final = Number(info_parts[7])
+            data.profit = Number(info_parts[8])
+            data.profit_final = Number(info_parts[9])
+            data.error = info_parts[10]
+            data.vol = Number(info_parts[11])
+            data.symbol = info_parts[12]
         }
         else if (data.result_text.toLowerCase().includes('delete')) {
             data.closed_timestamp = Number(info_parts[2])

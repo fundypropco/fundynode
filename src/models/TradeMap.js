@@ -139,11 +139,23 @@ const tradeMapSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
+    commission_final: {
+        type: Number,
+        default: 0
+    },
     swap_dist: {
         type: Number,
         default: 0
     },
+    swap_final: {
+        type: Number,
+        default: 0
+    },
     profit_dist: {
+        type: Number,
+        default: 0
+    },
+    profit_final: {
         type: Number,
         default: 0
     },

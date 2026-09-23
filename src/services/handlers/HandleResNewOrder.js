@@ -54,6 +54,7 @@ export default async (req, res) => {
             magic_dist: data.magic,
             comment_dist: data.comment,
             commission_dist: data.commission,
+            commission_final: data.commission_final,
 
             symbol_title: getUpdateDoc.symbol_title,
             side: getUpdateDoc.side,
@@ -138,7 +139,8 @@ function processMessage(msg) {
         data.magic = Number(info_parts[7])
         data.comment = info_parts[8]
         data.error = info_parts[9]
-        data.commission = Math.round(Number(info_parts[10]) * 100) / 100
+        data.commission = Number(info_parts[10])
+        data.commission_final = Number(info_parts[11])
     } else {
         data.status = 'error'
         data.result_code = info_parts[2]
