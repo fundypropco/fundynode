@@ -94,7 +94,7 @@ FundyNode یکی از چند پروژه سامانه پراپ‌تریدینگ F
 ## ۶. لاگ
 
 - `src/helpers/logger.js`: pino، سطح `warn`، خروجی همزمان stdout و `logs/app.log`، زمان به وقت تهران.
-- **RequestLog** (کالکشن `request_logs`): اگر برای handler در `log_rules` مقدار `log: true` باشد، `setRequestLog` پیام ورودی را ذخیره می‌کند. فقط `HandleNewOrder` پاسخ و مدت زمان را روی همان سند ثبت می‌کند.
+- **RequestLog** (کالکشن `request_logs`): اگر برای handler در `log_rules` مقدار `log: true` باشد، `setRequestLog` پیام ورودی را ذخیره می‌کند. فقط `HandleNewOrder` (500) و `handleClose` (501) پاسخ و مدت زمان را روی همان سند ثبت می‌کنند.
 - کش LogRule یک دقیقه‌ای است؛ پس از تغییر `log_rules` تا ۱ دقیقه طول می‌کشد اعمال شود.
 
 ## ۷. استقرار و بکاپ

@@ -308,8 +308,10 @@ const prepareModifyData = async (account, copier, data, tradeMap) => {
             symbol = await Symbol.findOne({ server: tradeMap.server_dist, symbol: tradeMap.symbol_dist })
         } else {
             const doc = await GetUpdate.findOne({ acc: copier.acc, origin_acc: account.acc, origin_ticket: data.ticket, handler: { $in: [ACTION_HANDLER.BUY, ACTION_HANDLER.BUYLIMIT, ACTION_HANDLER.BUYSTOP, ACTION_HANDLER.SELL, ACTION_HANDLER.SELLLIMIT, ACTION_HANDLER.SELLSTOP] } })
-            side = doc.side
-            symbol = await Symbol.findOne({ server: doc.server, symbol: doc.symbol })
+            if (doc) {
+                side = doc.side
+                symbol = await Symbol.findOne({ server: doc.server, symbol: doc.symbol })
+            }
         }
     }
 

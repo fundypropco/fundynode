@@ -4,12 +4,20 @@ import { formatDateUTC, getOrderSide, makeID } from '../../helpers/helper.js'
 import TradeMap from '../../models/TradeMap.js'
 import { getBrokerData } from '../../boot/cache.js'
 import TradeMapService from '../TradeMapService.js'
+import RequestLog from '../../models/RequestLog.js'
 
 export default async (req, res, reqLog) => {
 
     // #.
-    //پردازش پیام ورودی 
+    //پردازش پیام ورودی
     const data = await processMessage(req.body.message)
+
+    if (data.acc_type === 'user' && !data.accountObj) {
+        return res.send({
+            status: 'error',
+            message: 'Account Not Found!!!'
+        })
+    }
 
     let result
 
@@ -239,8 +247,11 @@ async function processMessage(msg) {
     }
     else {
         data.accountObj = await Account.findOne({ acc_meta: data.acc })
-        data.brokerData = await getBrokerData(data.accountObj.server)
-        data.diff_time = Number(data.brokerData.diff_time)
+        data.diff_time = 0
+        if (data.accountObj) {
+            data.brokerData = await getBrokerData(data.accountObj.server)
+            data.diff_time = Number(data.brokerData.diff_time)
+        }
     }
     data.closed_timestamp = Number(info_parts[3]) + data.diff_time
 

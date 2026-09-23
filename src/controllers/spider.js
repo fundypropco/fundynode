@@ -69,7 +69,7 @@ const sendMessage = asyncHandler(async (req, res) => {
             return await handleNewOrder(req, res, reqLog)
 
         case 501:
-            return await handleClose(req, res)
+            return await handleClose(req, res, reqLog)
 
         case 502:
             return await handleModify(req, res)

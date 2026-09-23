@@ -1,5 +1,6 @@
 import { formatDateUTC, makeID } from '../../helpers/helper.js'
 import GetUpdate from '../../models/GetUpdate.js'
+import Symbol from '../../models/Symbol.js'
 
 export default async (req, res) => {
 
@@ -16,6 +17,7 @@ export default async (req, res) => {
     const getUpdate = new GetUpdate({
         server: data.server,
         acc: data.acc,
+        handler: data.handler,
         status: 'pending',
         message: `${data.acc_cluster},${data.handler},${data.server}_$_${message},${Math.floor(Date.now() / 1000)},${keyid}`,
         keyid,
@@ -25,7 +27,6 @@ export default async (req, res) => {
 
     res.send({
         status: 'success',
-        message: output
     })
 }
 

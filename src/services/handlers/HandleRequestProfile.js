@@ -9,6 +9,13 @@ export default async (req, res) => {
 
     const account = await Account.findOne({ acc: data.magic }).sort({ created_at: -1 }).lean()
 
+    if (!account) {
+        return res.send({
+            status: 'error',
+            message: 'Account Not Found!!!'
+        })
+    }
+
     const tradeMap = await TradeMap.findOne({ acc_src: data.magic, acc_dist: data.acc, status: 'closed' }).sort({ close_timestamp_dist: -1 }).lean()
 
     let last_close_time = 0
@@ -36,6 +43,7 @@ export default async (req, res) => {
     const getUpdate = new GetUpdate({
         server: data.server,
         acc: data.acc,
+        handler: 40,
         status: 'pending',
         message: `${data.acc_cluster},40,${message},${Math.floor(Date.now() / 1000)},${keyid}`,
         keyid

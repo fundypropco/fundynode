@@ -5,7 +5,7 @@ export default async (req, res) => {
 
     const data = processMessage(req.body.message)
 
-    if (data.cpu > 70 || ram > 80 || true) {
+    if (data.cpu > 70 || data.ram > 80 || true) {
         const usage = new Usage({
             acc: data.acc,
             cpu: data.cpu,

@@ -6,7 +6,7 @@
 
 1. `getHandlerOfMsg` = `Number(parts[1])` ، `getTimeOfMsg` = `Number(parts[3])`
 2. اگر `timestamp < Date.now() - 60_000` → `{status:'error', message:'Expired Message!!!'}`
-3. `setRequestLog(handler, message)` — اگر LogRule آن handler فعال باشد یک RequestLog می‌سازد (فقط 500 آن را تکمیل می‌کند)
+3. `setRequestLog(handler, message)` — اگر LogRule آن handler فعال باشد یک RequestLog می‌سازد (فقط 500 و 501 پاسخ و مدت زمان را روی آن ثبت می‌کنند)
 4. `switch(handler)` → فایل handler مربوطه. خطای پرتاب‌شده → middleware خطا → HTTP 500.
 
 ---
@@ -21,6 +21,7 @@ MT دمو / پنل ──500──► processMessage ──► partial? ──no
 **processMessage**
 - اگر `acc_fp` ≠ 0 → `platform='panel'`، `Account.findOne({acc})`، `diff_time=0`
 - وگرنه → `Account.findOne({acc_meta: acc})`، `diff_time` از `getBrokerData(account.server)`
+- اگر حساب پیدا نشود → پاسخ `{status:'error', message:'Account Not Found!!!'}` (همین رفتار در 501 کاربر، 502 و 302)
 - `open_timestamp = open_time + diff_time`
 
 **processNewOrder** (اگر `account.copy == false` → پیام `| Account Is Disabled |`)
@@ -68,7 +69,7 @@ MT دمو / پنل ──500──► processMessage ──► partial? ──no
 ## ۳. مدیفای (502) — `handleModify.js`
 - `acc_fp` از اندیس 4 پیام؛ `-1` ⇒ متاتریدر.
 - برای هر آیتم (ticket, sl, tp, open_price) و هر copier: `prepareModifyData` → `MODIFY (3)` (`pending` اگر TradeMap باز پیدا شد، وگرنه `waiting` با `-1`).
-  - ⚠ اگر sl یا tp ≠ 0 و TradeMap نیست، کد سند سفارش اولیه را از GetUpdate می‌خواند و بدون null-check از `doc.side` استفاده می‌کند.
+  - اگر sl یا tp ≠ 0 و TradeMap نیست، سند سفارش اولیه از GetUpdate خوانده می‌شود (side/symbol آن فعلاً فقط برای `getWiderSl/Tp` کامنت‌شده لازم است).
 - پاسخ 997 (`HandleResModify.js`): TradeMap باز → `open_price/sl/tp` هر دو سمت → sync `modified`.
 - پیام MODIFY قیمت ورود (`origin_open_price`) را هم می‌فرستد تا پندینگ‌ها جابه‌جا شوند.
 
@@ -124,7 +125,7 @@ POST /api/admin/seed-broker-symbols-data/:server ──► دستور 11 برا�
 
 ## ۹. پروفایل و نرخ نمادها (برای EA)
 - **302 → دستور 40 → تأیید 960**: EA پروفایل کاربر (magic = Account.acc) را می‌خواهد؛ پاسخ: username، commission_rate، swap_rate، drawdown، server، زمان آخرین بستن (از TradeMap)، initial و `initial - drawdown`.
-- **301 → دستور 301 → تأیید 399**: لیست `symbol/commission/swap` همه نمادهای یک server. ⚠ در حال حاضر خطا می‌دهد (known-issues).
+- **301 → دستور 301 → تأیید 399**: لیست `symbol/commission/swap` همه نمادهای یک server.
 
 ## ۱۰. همگام‌سازی با لاراول — `TradeMapService.sync`
 | رویداد | کجا |

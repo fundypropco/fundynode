@@ -1,31 +1,28 @@
 # مشکلات شناخته‌شده، ریسک‌ها و کد مرده
 
-> این فهرست حاصل خواندن کامل کد در تاریخ 2026-09-23 (commit `3e4c08c`) است. **هیچ‌کدام هنوز اصلاح نشده‌اند.**
+> این فهرست حاصل خواندن کامل کد در تاریخ 2026-09-23 (commit `3e4c08c`) است. موارد اصلاح‌شده در بخش «ب» آمده‌اند.
 > برچسب‌ها: 🔴 قطعی (از روی کد مشخص است) · 🟡 باید با رفتار EA/پنل تأیید شود · ⚪ ریسک/بهبود
 > بعد از رفع هر مورد، آن را از این فایل حذف یا علامت‌گذاری کن.
 
-## الف) خطاهای قطعی در handler های فعال
+## الف) خطاهای باز در handler های فعال
 
 | # | | محل | مشکل | اثر |
 |---|---|---|---|---|
-| 1 | 🔴 | `src/services/handlers/HandleUsage.js:8` | `ram` تعریف نشده (باید `data.ram` باشد) | اگر `cpu <= 70` باشد → `ReferenceError` → HTTP 500؛ Usage ذخیره نمی‌شود |
-| 2 | 🔴 | `src/services/handlers/HandleSymbolData.js:8` | مدل `Symbol` import نشده؛ در ESM `Symbol` به `Symbol` سراسری جاوااسکریپت اشاره می‌کند | `Symbol.find is not a function` → پیام 301 همیشه 500 |
-| 3 | 🔴 | `src/services/handlers/HandleSymbolData.js:28` | متغیر `output` تعریف نشده | حتی با رفع #2 باز هم `ReferenceError` |
-| 4 | 🔴 | `HandleSymbolData.js:16` و `HandleRequestProfile.js:36` | سند GetUpdate بدون فیلد `handler` ساخته می‌شود؛ ولی `HandleResSymbolData` (399) و `HandleResRequestProfile` (960) با `handler: 301/40` جستجو می‌کنند | وضعیت این دستورها هرگز `success` نمی‌شود و تا ۶۰ ثانیه مدام دوباره تحویل می‌شوند |
-| 5 | 🔴 | `src/services/handlers/handleClose.js:66` | `RequestLog` import نشده | فعلاً خاموش است چون کنترلر `reqLog` را پاس نمی‌دهد؛ با پاس دادن آن crash می‌کند |
-| 6 | 🔴 | `handleClose.js:42,46` (مسیر master) | `data.closed_swap_final` و `data.closed_commission_final` در `processMessage` پارس نمی‌شوند | `swap_final`/`commission_final` برای بستن‌های مستقیم Master پر نمی‌شود (کار commit های اخیر ناتمام) |
-| 7 | 🔴 | `HandleNewOrder.js:190` | در `processPartial`، `data.closed_commission` وجود ندارد (داخل `partial_item` است) | `newCommission` همیشه 0 |
+| 6 | 🔴 | `handleClose.js` (مسیر master، `-1234`) | `data.closed_swap_final` و `data.closed_commission_final` در `processMessage` پارس نمی‌شوند | `swap_final`/`commission_final` برای بستن‌های مستقیم Master پر نمی‌شود — اندیس این فیلدها در پیام EA باید مشخص شود |
+| 12 | 🟡 | `handleClose.js` (مسیر master) | crash با `acc_fp = 0` رفع شد، ولی در این مسیر `diff_time` بروکر Master اعمال نمی‌شود (برخلاف 996) | زمان بستن ممکن است با اختلاف ساعت بروکر ذخیره شود |
 
-## ب) crash های احتمالی (null-check ندارد)
+## ب) اصلاح‌شده در branch `claude/fix-handler-bugs`
 
-| # | | محل | سناریو |
-|---|---|---|---|
-| 8 | 🔴 | `HandleNewOrder.js:301-307` ، `handleClose.js:237-242` ، `handleModify.js:17-26` | حساب پیدا نشود (acc/acc_meta ناشناخته) → `TypeError` روی `account.copy` یا `accountObj.server` |
-| 9 | 🔴 | `HandleResNewOrder.js:85` | اگر `updateStatus` سندی پیدا نکند (keyid اشتباه) → شاخه else روی `getUpdateDoc.origin_acc` crash می‌کند |
-| 10 | 🔴 | `HandleResNewOrder.js:66` | نماد Master در `symbols` نباشد → `symbol.tick_value` crash (بعد از `updateStatus` موفق، پس TradeMap ساخته نمی‌شود) |
-| 11 | 🔴 | `GetUpdateService.js:310-311` | modify با sl/tp ≠ 0 وقتی TradeMap و سند سفارش اولیه وجود ندارند (مثلاً کپی رد شده) → `doc.side` روی null |
-| 12 | 🟡 | `handleClose.js:241` | اگر Master پیام 501/`-1234` را با `acc_fp = 0` بفرستد، حساب با `acc_meta` پیدا نمی‌شود و crash می‌کند؛ ظاهراً Master باید acc_fp غیرصفر بفرستد. همچنین در این مسیر `diff_time` اعمال نمی‌شود (برخلاف 996) |
-| 13 | 🔴 | `HandleRequestProfile.js:21` | حساب با `acc = magic` پیدا نشود → crash |
+- #1 `HandleUsage`: `ram` → `data.ram`
+- #2، #3 `HandleSymbolData`: import مدل `Symbol` و حذف `output` تعریف‌نشده
+- #4 دستورهای 301 و 40 حالا فیلد `handler` دارند تا 399/960 وضعیتشان را `success` کنند
+- #5 `handleClose`: import `RequestLog` و پاس دادن `reqLog` از کنترلر (لاگ پاسخ 501 کامل می‌شود)
+- #7 `HandleNewOrder.processPartial`: کمیسیون از `partialInfo.closed_commission` خوانده می‌شود
+- #8، #13 حساب ناشناخته در 500/501(کاربر)/502/302 → پاسخ `{status:'error', message:'Account Not Found!!!'}` به جای HTTP 500
+- #9 `HandleResNewOrder`: شاخه خطا فقط وقتی سند GetUpdate پیدا شده اجرا می‌شود
+- #10 `HandleResNewOrder`: نبود نماد Master دیگر مانع ساخت TradeMap نمی‌شود (`tick_value/tick_size/weight = 0`)
+- #11 `prepareModifyData`: null-check روی سند سفارش اولیه
+- #12 (بخش crash) مسیر master در 501 با `acc_fp = 0` دیگر crash نمی‌کند
 
 ## ج) جریان‌های ناقص (پاسخ‌های غیرفعال)
 

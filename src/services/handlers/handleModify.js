@@ -21,6 +21,13 @@ export default async (req, res) => {
         platform = 'metatrader'
     }
 
+    if (!account) {
+        return res.send({
+            status: 'error',
+            message: 'Account Not Found!!!'
+        })
+    }
+
     // #.
     // بررسی اینکه آیا قابلیت برای این اکانت فعال هست یا نه 
     if (account.copy) {

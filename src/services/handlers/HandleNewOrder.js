@@ -12,6 +12,13 @@ export default async (req, res, reqLog) => {
     //# پردازش پیام ورودی
     const data = await processMessage(req.body.message)
 
+    if (!data.accountObj) {
+        return res.send({
+            status: 'error',
+            message: 'Account Not Found!!!'
+        })
+    }
+
     let result
     if (!data.is_partial) {
         // اگر سفارش جدید باشد
@@ -187,8 +194,8 @@ async function processPartial(data) {
                     return s
                 }, 0)
                 let newCommission = 0
-                if (data.closed_commission < sumCommissions) {
-                    newCommission = Math.round((data.closed_commission - sumCommissions) * 100) / 100
+                if (partialInfo.closed_commission < sumCommissions) {
+                    newCommission = Math.round((partialInfo.closed_commission - sumCommissions) * 100) / 100
                 }
                 partialInfo.origin_new_commission = newCommission
                 const getUpdateData = await GetUpdateService.preparePartialCloseData(account, copier, partialInfo, openTradeMap)
@@ -303,8 +310,11 @@ async function processMessage(msg) {
     }
     else {
         data.accountObj = await Account.findOne({ acc_meta: data.acc })
-        data.brokerData = await getBrokerData(data.accountObj.server)
-        data.diff_time = Number(data.brokerData.diff_time)
+        data.diff_time = 0
+        if (data.accountObj) {
+            data.brokerData = await getBrokerData(data.accountObj.server)
+            data.diff_time = Number(data.brokerData.diff_time)
+        }
     }
     data.open_timestamp = Number(info_parts[6]) + data.diff_time
 

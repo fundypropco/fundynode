@@ -63,9 +63,9 @@ export default async (req, res) => {
                 if (['buy_limit', 'buy_stop', 'sell_limit', 'sell_stop'].includes(getUpdateDoc.side)) return 'pending'
                 return ''
             })(),
-            tick_value: Number(symbol.tick_value),
-            tick_size: Number(symbol.tick_size),
-            symbol_weight: symbol.weight,
+            tick_value: Number(symbol?.tick_value ?? 0),
+            tick_size: Number(symbol?.tick_size ?? 0),
+            symbol_weight: symbol?.weight ?? 0,
             platform: getUpdateDoc.platform
         })
         await tradeMap.save()
@@ -81,7 +81,7 @@ export default async (req, res) => {
         // #.
         // ارسال دستورات در وضعیت انتظار و وابسته به این دیتا 
         await GetUpdateService.updateWaitings(getUpdateDoc.origin_acc, getUpdateDoc.origin_ticket, data.ticket, getUpdateDoc)
-    } else {
+    } else if (getUpdateDoc) {
         const account = await Account.findOne({ acc: getUpdateDoc.origin_acc, server: getUpdateDoc.origin_server })
         if (account && account.copiers?.length == 1) {
             if (getUpdateDoc.platform == 'metatrader') {
