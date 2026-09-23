@@ -43,6 +43,7 @@ export default async (req, res) => {
     const getUpdate = new GetUpdate({
         server: data.server,
         acc: data.acc,
+        origin_acc: data.magic,
         handler: 40,
         status: 'pending',
         message: `${data.acc_cluster},40,${message},${Math.floor(Date.now() / 1000)},${keyid}`,
