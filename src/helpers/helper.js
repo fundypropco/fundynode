@@ -744,6 +744,7 @@ export function normalizeSymbol(symbol) {
 }
 
 export function getOrderSide(side) {
+    side = side.toUpperCase()
     if (side === 'BUY') {
         return 'buy'
     } else if (side === 'BUYLIMIT') {
