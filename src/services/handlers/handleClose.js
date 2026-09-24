@@ -40,7 +40,7 @@ export default async (req, res, reqLog) => {
         response = {
             status: 'success',
             data: {
-                keyid: data?.keyid
+                keyid: result?.keyid
             }
         }
     } else if (data.acc_type === 'master') {
