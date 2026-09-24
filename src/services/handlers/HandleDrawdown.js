@@ -1,4 +1,5 @@
 import Account from '../../models/Account.js'
+import logger from "../../helpers/logger.js"
 
 export default async (req, res) => {
 
