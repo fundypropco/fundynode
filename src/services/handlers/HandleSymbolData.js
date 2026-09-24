@@ -17,7 +17,7 @@ export default async (req, res) => {
     const getUpdate = new GetUpdate({
         server: data.server,
         acc: data.acc,
-        origin_acc: data.acc,
+        origin_acc: data.magic,
         handler: data.handler,
         status: 'pending',
         message: `${data.acc_cluster},${data.handler},${data.server}_$_${message},${Math.floor(Date.now() / 1000)},${keyid}`,
@@ -40,6 +40,7 @@ function processMessage(msg) {
     const msg_parts = msg.split(',')
     data.acc_cluster = msg_parts[0]
     data.acc = Number(data.acc_cluster.split('_')[0])
+    data.magic = Number(data.acc_cluster.split('_')[1])
     data.handler = 301
     data.timestamp = Number(msg_parts[3])
     data.datetime = formatDateUTC(data.timestamp)
