@@ -17,6 +17,7 @@ export default async (req, res) => {
     const getUpdate = new GetUpdate({
         server: data.server,
         acc: data.acc,
+        origin_acc: data.acc,
         handler: data.handler,
         status: 'pending',
         message: `${data.acc_cluster},${data.handler},${data.server}_$_${message},${Math.floor(Date.now() / 1000)},${keyid}`,
