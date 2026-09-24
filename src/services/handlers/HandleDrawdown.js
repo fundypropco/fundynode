@@ -28,6 +28,27 @@ export default async (req, res) => {
         })
     }
 
+
+    try {
+        await axios.post(
+            "https://panel.fundyprop.com/api/drawdown",
+            { acc_src: data.magic },
+            {
+                timeout: 10000,
+                headers: {
+                    //Authorization: `Bearer ${process.env.LARAVEL_SYNC_TOKEN}`,
+                    'X-API-Key': process.env.FUNDYPANEL_API_KEY,
+                    'Content-Type': "application/json"
+                }
+            }
+        )
+    } catch (err) {
+        logger.error(`[Drawdown] failed: ${err}`)
+        logger.error(err.code)
+        logger.error(err.response?.status)
+        logger.error(err.response?.data)
+    }
+
     // #.
     // ارسال پاسخ عملیات موفقیت آمیز
     res.send({
