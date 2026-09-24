@@ -11,6 +11,7 @@ export default async (req, res, reqLog) => {
     // #.
     //پردازش پیام ورودی
     const data = await processMessage(req.body.message)
+    let response
 
     if (data.acc_type === 'user' && !data.accountObj) {
         return res.send({
@@ -31,6 +32,16 @@ export default async (req, res, reqLog) => {
         } else {
             // اگر پارشیال کلوز باشد 
             result = await processPartial(data)
+        }
+
+
+        // #.
+        // ارسال پاسخ و ذخیره لاگ درصورت لزوم
+        response = {
+            status: 'success',
+            data: {
+                keyid: data?.keyid
+            }
         }
     } else if (data.acc_type === 'master') {
 
@@ -58,15 +69,17 @@ export default async (req, res, reqLog) => {
                 event: "closed",
                 data: [openTradeMap.toObject()]
             })
-        }
-    }
 
-    // #.
-    // ارسال پاسخ و ذخیره لاگ درصورت لزوم
-    const response = {
-        status: 'success',
-        data: {
-            keyid: result?.keyid
+
+            // #.
+            // ارسال پاسخ و ذخیره لاگ درصورت لزوم
+            response = {
+                status: 'success',
+                data: {
+                    acc_type: data.acc_type,
+                    trade: openTradeMap?.ticket_dist ?? '',
+                }
+            }
         }
     }
 
@@ -234,10 +247,12 @@ async function processMessage(msg) {
     data.side = getOrderSide(info_parts[5])
     data.closed_vol = Number(info_parts[6])
     data.closed_swap = Number(info_parts[7])
-    data.closed_commission = Number(info_parts[8])
-    data.closed_profit = Number(info_parts[9])
-    data.magic = Number(info_parts[10])
-    data.acc_fp = Number(info_parts[11] || 0)
+    data.closed_swap_final = Number(info_parts[8])
+    data.closed_commission = Number(info_parts[9])
+    data.closed_commission_final = Number(info_parts[10])
+    data.closed_profit = Number(info_parts[11])
+    data.magic = Number(info_parts[12])
+    data.acc_fp = Number(info_parts[13] || 0)
     data.platform = 'metatrader'
 
     if (data.acc_fp) {
@@ -269,7 +284,9 @@ async function processMessage(msg) {
                 closed_price,
                 closed_timestamp,
                 closed_swap,
+                closed_swap_final,
                 closed_commission,
+                closed_commission_final,
                 closed_profit,
                 open_ticket,
                 open_vol,
@@ -281,7 +298,9 @@ async function processMessage(msg) {
                 closed_price: Number(closed_price),
                 closed_timestamp: Number(closed_timestamp) + data.diff_time,
                 closed_swap: Number(closed_swap),
+                closed_swap_final: Number(closed_swap_final),
                 closed_commission: Number(closed_commission),
+                closed_commission_final: Number(closed_commission_final),
                 closed_profit: Number(closed_profit),
                 open_ticket: Number(open_ticket),
                 open_vol: Number(open_vol),
