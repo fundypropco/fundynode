@@ -47,7 +47,7 @@ export default async (req, res, reqLog) => {
 
         const tradeMaps = await TradeMap.find({
             acc_dist: data.acc,
-            ticket_dist: data.ticket,
+            ticket_dist: data.closed_ticket,
         })
 
         const openTradeMap = tradeMaps.find(t => t.status === 'open')
@@ -69,16 +69,16 @@ export default async (req, res, reqLog) => {
                 event: "closed",
                 data: [openTradeMap.toObject()]
             })
+        }
 
-
-            // #.
-            // ارسال پاسخ و ذخیره لاگ درصورت لزوم
-            response = {
-                status: 'success',
-                data: {
-                    acc_type: data.acc_type,
-                    trade: openTradeMap?.ticket_dist ?? '',
-                }
+        // #.
+        // ارسال پاسخ و ذخیره لاگ درصورت لزوم
+        // پاسخ در هر حالت ارسال میشود حتی اگر معامله باز متناظر پیدا نشود
+        response = {
+            status: 'success',
+            data: {
+                acc_type: data.acc_type,
+                trade: openTradeMap?.ticket_dist ?? '',
             }
         }
     }

@@ -113,10 +113,15 @@ acc,501,NEW CLOSE_&_ticket_&_close_price_&_close_time_&_symbol_&_type_&_vol_&_sw
 | 10 | magic |
 | 11 | acc_fp |
 
-- `extra == '-1234'` ⇒ `acc_type='master'`: خود Master بسته‌شدن تیکت `ticket` را گزارش داده؛ فقط سمت dist در TradeMap بسته می‌شود.
+- `extra == '-1234'` ⇒ `acc_type='master'`: خود Master بسته‌شدن تیکت را گزارش داده؛ فقط سمت dist در TradeMap با `(acc_dist=acc, ticket_dist=closed_ticket, status='open')` بسته می‌شود. **چیدمان فیلدها در این حالت فرق دارد:**
+  ```
+  master_acc_originAcc_c,501,NEW CLOSE_&_ticket_&_close_price_&_close_time_&_symbol_&_type_&_vol_&_swap_&_swap_final_&_commission_&_commission_final_&_profit_&_magic_&_acc_fp,timestamp,-1234
+  ```
+  - `close_time` باید مثل بقیه پیام‌ها **میلی‌ثانیه** باشد (نسخه‌های قبلی EA Master به‌اشتباه ثانیه می‌فرستادند و قرار است در سمت متاتریدر اصلاح شود)؛ `diff_time` در این مسیر اعمال نمی‌شود.
+  - پاسخ همیشه: `{status:'success', data:{acc_type:'master', trade: ticket_dist | ''}}` (`''` یعنی معامله باز متناظر پیدا نشد).
 - در غیر این صورت `acc_type='user'`؛ اگر `extra != -1` آیتم partial با `closed_ticket == ticket` جستجو می‌شود (همان فرمت 500).
 
-پاسخ: `{status:'success', data:{keyid}}`
+پاسخ (کاربر): `{status:'success', data:{keyid}}`
 
 ### 502 — NEW MODIFY (`handleModify.js`)
 ```

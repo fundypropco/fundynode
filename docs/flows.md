@@ -62,7 +62,7 @@ MT دمو / پنل ──500──► processMessage ──► partial? ──no
 - `OK DELETE` (حذف پندینگ): فقط `closed_timestamp` پارس می‌شود؛ ⚠ چون رکورد `pending` است و فقط `open` جستجو می‌شود، TradeMap به‌روز نمی‌شود.
 
 ### ۲-۳. گزارش خود Master (`extra == -1234`)
-بسته شدن مستقیم روی Master (مثلاً SL/TP): TradeMap با `(acc_dist=acc, ticket_dist=ticket, status='open')` بسته و sync `closed` می‌شود. دستوری ساخته نمی‌شود.
+بسته شدن مستقیم روی Master (مثلاً SL/TP): TradeMap با `(acc_dist=acc, ticket_dist=closed_ticket, status='open')` بسته می‌شود (`close_*_dist`, `profit_dist`, `swap_dist`, `swap_final`, `commission_dist`, `commission_final`) و sync `closed` می‌شود. دستوری ساخته نمی‌شود. زمان بستن باید میلی‌ثانیه از EA برسد و `diff_time` اعمال نمی‌شود. اگر معامله باز پیدا نشود (مثلاً قبلاً با 996 بسته شده) باز هم پاسخ `success` با `trade: ''` برمی‌گردد.
 
 ---
 

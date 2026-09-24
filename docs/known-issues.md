@@ -8,10 +8,9 @@
 
 | # | | محل | مشکل | اثر |
 |---|---|---|---|---|
-| 6 | 🔴 | `handleClose.js` (مسیر master، `-1234`) | `data.closed_swap_final` و `data.closed_commission_final` در `processMessage` پارس نمی‌شوند | `swap_final`/`commission_final` برای بستن‌های مستقیم Master پر نمی‌شود — اندیس این فیلدها در پیام EA باید مشخص شود |
-| 12 | 🟡 | `handleClose.js` (مسیر master) | crash با `acc_fp = 0` رفع شد، ولی در این مسیر `diff_time` بروکر Master اعمال نمی‌شود (برخلاف 996) | زمان بستن ممکن است با اختلاف ساعت بروکر ذخیره شود |
+| — | | — | فعلاً موردی باز نیست | |
 
-## ب) اصلاح‌شده در branch `claude/fix-handler-bugs`
+## ب) اصلاح‌شده
 
 - #1 `HandleUsage`: `ram` → `data.ram`
 - #2، #3 `HandleSymbolData`: import مدل `Symbol` و حذف `output` تعریف‌نشده
@@ -22,7 +21,9 @@
 - #9 `HandleResNewOrder`: شاخه خطا فقط وقتی سند GetUpdate پیدا شده اجرا می‌شود
 - #10 `HandleResNewOrder`: نبود نماد Master دیگر مانع ساخت TradeMap نمی‌شود (`tick_value/tick_size/weight = 0`)
 - #11 `prepareModifyData`: null-check روی سند سفارش اولیه
-- #12 (بخش crash) مسیر master در 501 با `acc_fp = 0` دیگر crash نمی‌کند
+- #12 (بخش crash) مسیر master در 501 با `acc_fp = 0` دیگر crash نمی‌کند؛ عدم اعمال `diff_time` در این مسیر طبق تصمیم کاربر عمدی است
+- #6 پارس `swap_final/commission_final` مسیر master (commit کاربر `ecacd5c`)
+- مسیر master در 501: جستجوی TradeMap با `data.ticket` (همیشه undefined) به جای `data.closed_ticket` انجام می‌شد ⇒ هیچ معامله‌ای بسته نمی‌شد و چون `response` فقط داخل `if` مقدار می‌گرفت، بدنه پاسخ خالی بود (branch `claude/fix-master-close-response`). ارسال زمان بستن به‌صورت ثانیه از سمت EA Master گزارش شده و قرار است در متاتریدر اصلاح شود
 
 ## ج) جریان‌های ناقص (پاسخ‌های غیرفعال)
 
