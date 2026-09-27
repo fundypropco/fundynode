@@ -66,7 +66,6 @@
 - handler های مسیریابی‌نشده: `HandleOpenTrades` (400)، `HandleNewData` (504 — به فیلدهای حذف‌شده Account اشاره می‌کند)، `handleResCheckTradeMap` (970)، `HandleResOpenPendingOrder` (975)، `handleResPartialClose` (978)، `handleResBulkClose` (979)، `HandleResCloseAllOrigin` (980)، `HandleResCloseMagic` (974 — متغیرهای `vol`/`symbol` تعریف‌نشده دارد).
 - `AccountService.js`: همه توابع کامنت شده؛ فقط `test` خالی export می‌شود، ولی handler های غیرفعال هنوز `bulkClose/closeAll` را صدا می‌زنند.
 - `helper.js`: `getCopyTradeParams`، `getOrderVol` (فرمول `vol_factor > 1` تقسیم بر 100 دارد — مشکوک)، `getWiderSl/Tp` (فراخوانی‌ها کامنت شده).
-- `isOrderPossible` بعد از `return` اولیه.
 - `schedules/cron.js` (import نامعتبر `setBrokersDiff` و `'../helpers/logger'` بدون `.js`)، `schedules/test.js`، `job.getOpenTradesProfit` (از `ACTION_HANDLER.OPEN_TRADES_PROFIT` تعریف‌نشده استفاده می‌کند)، `seeders/seed.js`.
 - `/test-queue` job `run-seeders` می‌سازد که worker پردازش نمی‌کند.
 - فیلد `datetime` در `GetUpdateService.create` در اسکیما نیست و ذخیره نمی‌شود.

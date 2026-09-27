@@ -6,6 +6,11 @@ import { getBrokerData } from '../../boot/cache.js'
 import logger from '../../helpers/logger.js'
 import RequestLog from '../../models/RequestLog.js'
 import TradeMapService from '../TradeMapService.js'
+import AccReportService from '../AccReportService.js'
+
+// #.
+// اگر گزارش لحظه ای حساب (42) در ردیس نباشد، سفارش بدون بررسی موجودی پذیرفته شود یا نه
+const ALLOW_ORDER_WITHOUT_ACC_REPORT = true
 
 export default async (req, res, reqLog) => {
 
@@ -103,7 +108,7 @@ async function processNewOrder(data) {
 
                     // #.
                     // امکان پذیر بودن سفارش
-                    const isPossible = isOrderPossible(account, copier, localData)
+                    const isPossible = await isOrderPossible(account, copier, localData)
 
                     if (isPossible.status) {
                         // #
@@ -244,32 +249,59 @@ async function sendForCheck(account) {
     await account.save()
 }
 
-function isOrderPossible(account, copier, data) {
+async function isOrderPossible(account, copier, data) {
     const result = {}
     result.status = true
-    return result
 
-    const freeEq = account.initial + copier.profit_bl + copier.profit_eq - account.drawdown
+    // #.
+    // آخرین وضعیت لحظه ای حساب (پیام 42 از Master) ؛ acc همان magic است
+    const report = await AccReportService.get(account.acc)
 
-    if (freeEq < 0) {
+    if (!report) {
+        // #.
+        // اگر در ۲ دقیقه اخیر گزارشی از حساب نیامده باشد امکان بررسی نیست
+        if (ALLOW_ORDER_WITHOUT_ACC_REPORT) {
+            logger.warn(`[isOrderPossible] no acc report for ${account.acc} (copier ${copier.acc}) / order allowed without check`)
+            return result
+        }
         result.status = false
-        result.description = [`free equity is negative / ${freeEq}`]
+        result.description = [`account report is not available for ${account.acc}`]
         return result
     }
 
-    const commission = Math.abs(data.symbol_b.commission_max * (data.vol / data.symbol_b.vol_min))
-    const spread_value = data.vol * data.symbol_b.tick_value * (data.symbol_b.spread_avg_5 / data.symbol_b.point)
-    const margin = data.symbol_b.margin * (data.vol / data.symbol_b.vol_min)
-    const minEq = commission + (2 * spread_value) + margin
+    const symbol = data.symbol_b
+    const lots = symbol.vol_min > 0 ? data.vol / symbol.vol_min : data.vol
 
-    if (freeEq > minEq) {
-        result.status = true
-    } else {
+    // #.
+    // هزینه های سفارش روی حساب Master (سخت گیرانه تر از حساب واقعی):
+    // کمیسیون با بیشترین نرخ ، دو برابر اسپرد میانگین و مارجین لازم
+    const commission = Math.abs((symbol.commission_max || 0) * lots)
+    const spread_value = symbol.point > 0 ? Math.abs(data.vol * (symbol.tick_value || 0) * ((symbol.spread_avg_5 || 0) / symbol.point)) : 0
+    const margin = Math.abs((symbol.margin || 0) * lots)
+    const cost = commission + (2 * spread_value)
+
+    // #.
+    // ۱. پس از کسر هزینه ها و مارجین سفارش ، ایکوئیتی نباید به حد دراودان برسد
+    const freeEq = report.equity - account.drawdown
+    if (freeEq <= cost + margin) {
         result.status = false
-        result.description = [`free equity is not enough / ${freeEq} <= ${minEq}`]
+        result.description = [`free equity is not enough / ${round2(freeEq)} <= ${round2(cost + margin)}`]
+        return result
+    }
+
+    // #.
+    // ۲. فری مارجین باید برای مارجین سفارش به علاوه هزینه ها کافی باشد
+    if (report.free_margin <= cost + margin) {
+        result.status = false
+        result.description = [`free margin is not enough / ${round2(report.free_margin)} <= ${round2(cost + margin)}`]
+        return result
     }
 
     return result
+}
+
+function round2(n) {
+    return Math.round(n * 100) / 100
 }
 
 async function processMessage(msg) {

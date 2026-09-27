@@ -47,6 +47,8 @@ services:
       - REDIS_PORT=6379
       - BALE_NOTIF_BOT_CHANNEL_ID=${BALE_NOTIF_BOT_CHANNEL_ID}
       - BALE_NOTIF_BOT_TOKEN=${BALE_NOTIF_BOT_TOKEN}
+      - FUNDYPANEL_API_KEY=${FUNDYPANEL_API_KEY}
+      - FUNDYPANEL_ACC_REPORT_URL=${FUNDYPANEL_ACC_REPORT_URL}
     depends_on:
       mongo:
         condition: service_healthy

@@ -21,6 +21,20 @@
 
 ---
 
+## Redis
+
+علاوه بر صف BullMQ و شمارنده‌های cluster:
+
+| کلید | نوع | محتوا |
+|---|---|---|
+| `acc_report:{magic}` | string (JSON) با TTL ۲ دقیقه | آخرین گزارش 42: `{acc, master_acc, free_margin, used_margin, equity, balance, timestamp, received_at}` |
+| `acc_reports:index` | sorted set | member = magic ، score = timestamp آخرین گزارش؛ برای پیدا کردن همه حساب‌ها بدون SCAN. عضوهایی که کلیدشان منقضی شده در `getAll` پاک می‌شوند. |
+| `lock:acc_report_sync` | string با TTL ۱۰ ثانیه | قفل تک‌نسخه‌ای حلقه ارسال به پنل در worker |
+
+دسترسی فقط از طریق `src/services/AccReportService.js` (`save` / `get(acc)` / `getAll()`)؛ چون در Redis است همه پروسس‌های PM2 cluster و worker داده یکسان می‌بینند.
+
+---
+
 ## Account (`accounts`)
 حساب کاربر (مبدا). توسط FundyPanel/دستی ساخته می‌شود؛ FundyNode آن را ایجاد نمی‌کند (جز کد مرده 504).
 

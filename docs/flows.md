@@ -31,11 +31,16 @@ MT دمو / پنل ──500──► processMessage ──► partial? ──no
 2. **اعتبار نماد** (`isValidSymbols` در `helper.js`):
    - اگر حساب `server` و `acc_meta` دارد (متاتریدر دمو): `symbol_a` = Symbol(`account.server`, `symbol`) و `symbol_b` = Symbol(`copier.server`, `title = symbol_a.title`) — تبدیل نماد بین دو بروکر از طریق `title`.
    - وگرنه (پنل): `symbol_b` = Symbol(`copier.server`, `symbol`) و `symbol_a = symbol_b` (پنل نام نماد بروکر Master را می‌فرستد).
-3. **امکان سفارش** (`isOrderPossible`): فعلاً همیشه `true` (بعد از `return` اولیه، محاسبه free equity کد مرده است).
+3. **امکان سفارش** (`isOrderPossible`): آخرین گزارش 42 حساب از Redis (`AccReportService.get(account.acc)`) خوانده می‌شود:
+   - اگر گزارشی نباشد (EA در ۲ دقیقه اخیر 42 نفرستاده) → با ثابت `ALLOW_ORDER_WITHOUT_ACC_REPORT` (فعلاً `true`) سفارش بدون بررسی پذیرفته و یک `warn` لاگ می‌شود.
+   - هزینه سفارش روی نماد Master (`symbol_b`)، با `lots = vol / vol_min`: `commission = |commission_max × lots|` ، `spread_value = vol × tick_value × (spread_avg_5 / point)` ، `margin = margin × lots`.
+   - شرط ۱: `equity − drawdown > commission + 2×spread_value + margin` وگرنه `free equity is not enough`.
+   - شرط ۲: `free_margin > commission + 2×spread_value + margin` وگرنه `free margin is not enough`.
+   - در صورت رد، مثل نماد نامعتبر، برای حساب دارای `acc_meta` دستور `CLOSE_ORIGIN (23)` ساخته می‌شود.
 4. `GetUpdateService.prepareOrderData` → سند `get_updates` با `status='pending'`:
    - `handler = ACTION_HANDLER[type]` ، `vol` = همان حجم مبدا (کپی ۱:۱؛ `vol_factor` استفاده نمی‌شود) ، `sl/tp` = همان مبدا (`getWiderSl/Tp` کامنت شده) ، `magic = account.acc` ، `slippage = 50`
    - فیلدهای `origin_*` اطلاعات سمت کاربر را نگه می‌دارند.
-5. اگر نماد نامعتبر بود و حساب `acc_meta` دارد → دستور `CLOSE_ORIGIN (23)` تا معامله روی MT دمو بسته شود.
+5. اگر نماد نامعتبر بود یا سفارش ممکن نبود و حساب `acc_meta` دارد → دستور `CLOSE_ORIGIN (23)` تا معامله روی MT دمو بسته شود.
 
 پاسخ: `message` شامل `| order processed for copier X |` یا دلیل رد؛ `data.keyid` = keyid آخرین سند ساخته‌شده.
 
@@ -137,6 +142,26 @@ POST /api/admin/seed-broker-symbols-data/:server ──► دستور 11 برا�
 
 - POST به `https://panel.fundyprop.com/api/sync-trade` با `{event, data:[tradeMap]}` و هدر `X-API-Key: FUNDYPANEL_API_KEY`، timeout ۱۰ ثانیه.
 - خطا فقط لاگ می‌شود (بدون retry). لاراول می‌تواند با `/api/tradingroom/sync-*` داده را pull کند.
+
+### ۱۰-۱. وضعیت لحظه‌ای حساب‌ها (42 → Redis → FundyPanel)
+```
+EA Master ──42 هر ثانیه──► HandleAccReport ──► Redis (acc_report:{magic}, TTL 2m)
+                                                   │
+worker.js ─ startAccReportSync (هر ۱ ثانیه، فقط یک worker با قفل Redis) ─┘──► POST FUNDYPANEL_ACC_REPORT_URL
+```
+- حلقه در `src/schedules/accReportSync.js` است (نه BullMQ)؛ اجرای بعدی فقط بعد از پایان قبلی (بدون همپوشانی).
+- قفل `lock:acc_report_sync` (۱۰ ثانیه، هر تیک تمدید) تضمین می‌کند حتی با چند worker فقط یکی ارسال کند؛ اگر آن worker بمیرد، دیگری حداکثر پس از ۱۰ ثانیه ادامه می‌دهد.
+- اگر `FUNDYPANEL_ACC_REPORT_URL` خالی باشد ارسال غیرفعال است. API پنل هنوز ساخته نشده و آدرس فعلی فرضی است.
+- بدنه (هدر `X-API-Key: FUNDYPANEL_API_KEY`، timeout ۵ ثانیه):
+```json
+{ "sent_at": 1790502064154,
+  "accounts": [ { "acc": 342, "status": "trading", "online": true, "master_acc": 1006135456,
+                  "equity": 1300, "balance": 1250, "free_margin": 5000, "used_margin": 350,
+                  "timestamp": 1790502050779, "age_ms": 1375 } ] }
+```
+  - `accounts` = اجتماع حساب‌های دارای گزارش زنده در Redis و حساب‌های `status='trading'` در Mongo. حساب trading بدون گزارش با `online=false` و مقادیر `null` می‌آید؛ حساب دارای گزارش که trading نیست `status=null` دارد.
+  - `age_ms` = فاصله زمان دریافت گزارش در سرور تا زمان ارسال.
+  - اگر لیست خالی باشد چیزی ارسال نمی‌شود. خطا retry ندارد (تیک بعدی داده تازه را می‌فرستد)؛ لاگ خطا فقط اولین بار و هر ۶۰ خطای پیاپی.
 
 ## ۱۱. جریان پنل (Trading Room)
 1. پنل پیام 500/501/502 را با `acc_fp` می‌فرستد (acc = کد حساب کاربر در پراپ).

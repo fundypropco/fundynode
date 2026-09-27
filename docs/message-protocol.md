@@ -54,6 +54,7 @@
 | کد | نام | handler | فعال؟ |
 |---|---|---|---|
 | 41 | DRAWDOWN (Master اعلام می‌کند تریدر دراودان خورده) | HandleDrawdown | ✅ |
+| 42 | ACC REPORT (وضعیت لحظه‌ای حساب، هر ثانیه) | HandleAccReport | ✅ |
 | 300 | USAGE (CPU/RAM سرور EA) | HandleUsage | ✅ |
 | 301 | REQUEST SYMBOL RATES | HandleSymbolData | ✅ |
 | 302 | REQUEST PROFILE | HandleRequestProfile | ✅ |
@@ -145,6 +146,18 @@ master_acc_x_y,41,DRAWDOWN_&_magic_&_user_name_&_lane_&_mode_&_reason_&_eq_real_
 - فعلاً فقط `magic` استفاده می‌شود؛ بقیه فیلدها و رکوردهای بعد از `_@_` پارس نمی‌شوند.
 - اثر: `Account` با `{acc: magic, "copiers.acc": master}` → `status='failed'`، `copy=false`، و `copy=false` برای **همه** copier ها.
 - پاسخ: `{status:'success'}` یا `{status:'error', message:'Account Not Found!!!'}`.
+
+### 42 — ACC REPORT (`HandleAccReport.js`)
+```
+master_magic_cluster,42,X0_&_X1_&_X2_&_X3_&_free_margin_&_used_margin_&_equity_&_balance_&_...,timestamp_ms,-2
+```
+- فرستنده: EA حساب **Master**، برای هر حساب تریدر **هر ثانیه یک بار**.
+- بخش اول با `_`: i=0 شماره Master ، i=1 `magic` = `Account.acc` تریدر.
+- از `info` فقط i=4..7 استفاده می‌شود: `free_margin`، `used_margin`، `equity`، `balance`. (X0..X3 و بعد از X7 فعلاً پارس نمی‌شوند.)
+- `timestamp` (یکی مانده به آخر) میلی‌ثانیه است و زمان خود گزارش است.
+- اعتبارسنجی: اگر magic یا یکی از ۴ عدد یا timestamp نامعتبر باشد → `{status:'error', message:'Wrong Message Format!!!'}`؛ اگر بیش از **۱۰ ثانیه** از timestamp گذشته باشد → `{status:'error', message:'Stale Report!!!'}` و ذخیره نمی‌شود.
+- اثر: ذخیره در Redis (نه Mongo) با انقضای ۲ دقیقه؛ فقط اگر timestamp از گزارش موجود جدیدتر باشد (اسکریپت Lua اتمیک). جزئیات کلیدها در [data-models.md](data-models.md#redis).
+- پاسخ: `{status:'success'}`.
 
 ### 300 — USAGE
 ```

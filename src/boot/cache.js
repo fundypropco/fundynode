@@ -31,8 +31,10 @@ export async function getBrokerData(server) {
 
 export async function getLogRuleData(handler) {
 
-    if (logRulesData && logRulesData[handler] && logRulesData_expire && Date.now() < logRulesData_expire) {
-        return logRulesData[handler]
+    // #.
+    // اعتبار کش فقط به زمان انقضا وابسته است؛ در غیر این صورت برای handler هایی که LogRule ندارند (مثل 42 که هر ثانیه می آید) هر بار از دیتابیس خوانده میشد
+    if (logRulesData && logRulesData_expire && Date.now() < logRulesData_expire) {
+        return logRulesData[handler] || false
     }
 
     const logRules = await LogRule.find().lean()

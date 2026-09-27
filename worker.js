@@ -3,6 +3,7 @@ import boot from './src/boot/index.js'
 import getRedis from "./src/boot/redis.js";
 import logger from "./src/helpers/logger.js"
 import { checkTradeMap } from "./src/schedules/job.js";
+import startAccReportSync from "./src/schedules/accReportSync.js";
 
 await boot()
 const redis = await getRedis()
@@ -32,3 +33,7 @@ const worker = new Worker("app-queue",
         concurrency: 5
     }
 )
+
+// #.
+// ارسال وضعیت لحظه ای حسابها (پیام 42) به FundyPanel هر ثانیه ؛ حلقه جدا از صف BullMQ
+startAccReportSync()

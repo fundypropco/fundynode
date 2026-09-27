@@ -44,7 +44,7 @@ FundyNode یکی از چند پروژه سامانه پراپ‌تریدینگ F
 | `app` (کانتینر `fundynode`) | dev: `nodemon app.js` / prod: `pm2-runtime ecosystem.config.cjs` (cluster، `instances: max`) | سرور Express روی پورت 3000 |
 | `worker` (کانتینر `fundyworker`) | dev: `nodemon worker.js` / prod: PM2 fork، ۱ instance | BullMQ Worker روی صف `app-queue`، concurrency=5 |
 | `mongo` (`my-mongo`) | mongo:8 | dev بدون auth روی پورت میزبان 27117؛ prod با `MONGO_INITDB_ROOT_*` |
-| `redis` (`my-redis`) | redis:8 | صف BullMQ و شمارنده‌های cluster |
+| `redis` (`my-redis`) | redis:8 | صف BullMQ، شمارنده‌های cluster و وضعیت لحظه‌ای حساب‌ها (42) |
 | `nginx` (فقط prod) | nginx:alpine | پورت 80 → `app:3000` |
 
 ### ترتیب بوت (`src/index.js`)
@@ -89,6 +89,7 @@ FundyNode یکی از چند پروژه سامانه پراپ‌تریدینگ F
   - حساب‌هایی با `copy: true` و `check_time >= now` را پیدا می‌کند، برای هر کدام دستور `CHECK_TRADES (30)` می‌سازد و `check_time = 0` می‌کند.
   - سپس `TradeMapCheck` های اعلان‌نشده را به ربات بله می‌فرستد.
   - چون `sendForCheck` (تنها جایی که `check_time` را تنظیم می‌کند) در handler ها کامنت شده و پاسخ 970 هم در کنترلر غیرفعال است، این job فعلاً عملاً کاری انجام نمی‌دهد.
+- `worker.js` همچنین حلقه `startAccReportSync` (`src/schedules/accReportSync.js`) را اجرا می‌کند: هر ثانیه وضعیت حساب‌ها را به FundyPanel می‌فرستد (جزئیات در [flows.md](flows.md#۱۰-۱-وضعیت-لحظه‌ای-حساب‌ها-42--redis--fundypanel)).
 - `src/schedules/cron.js` و `test.js` استفاده نمی‌شوند.
 
 ## ۶. لاگ

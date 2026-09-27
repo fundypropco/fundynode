@@ -40,8 +40,8 @@ docker compose up -d --build          # توسعه: app روی localhost:5000 ،
 ./deploy.sh                           # production (docker-compose.prod.yml + بکاپ قبل از استقرار)
 ```
 
-- `app.js` → سرور HTTP (`src/index.js`) ؛ `worker.js` → پردازشگر صف BullMQ (فقط job `checkTradeMap`)
-- متغیرهای محیطی: `MONGO_URI`, `REDIS_HOST`, `REDIS_PORT`, `APP_PORT`, `FUNDYPANEL_API_KEY`, `BALE_NOTIF_BOT_TOKEN`, `BALE_NOTIF_BOT_CHANNEL_ID`, `MONGO_INITDB_*` (نمونه: `.envsample`)
+- `app.js` → سرور HTTP (`src/index.js`) ؛ `worker.js` → پردازشگر صف BullMQ (job `checkTradeMap`) + حلقه ارسال وضعیت حساب‌ها به پنل هر ثانیه (`src/schedules/accReportSync.js`)
+- متغیرهای محیطی: `MONGO_URI`, `REDIS_HOST`, `REDIS_PORT`, `APP_PORT`, `FUNDYPANEL_API_KEY`, `FUNDYPANEL_ACC_REPORT_URL` (خالی = ارسال وضعیت حساب‌ها غیرفعال), `BALE_NOTIF_BOT_TOKEN`, `BALE_NOTIF_BOT_CHANNEL_ID`, `MONGO_INITDB_*` (نمونه: `.envsample`)
 - لاگ‌ها: `logs/app.log` (pino، سطح `warn`، زمان تهران)
 
 ## نقشه کد
@@ -53,6 +53,7 @@ docker compose up -d --build          # توسعه: app روی localhost:5000 ،
 | `src/routes/` + `src/controllers/` | `spider` (EA ها)، `tradingroom` (پنل)، `admin` (seed و گزارش)، `telegram` |
 | `src/services/handlers/` | **قلب پروژه**: یک فایل برای هر نوع پیام. الگو: `processMessage()` پارس → منطق → `res.send` |
 | `src/services/GetUpdateService.js` | ساخت/به‌روزرسانی دستورها در صف `get_updates` و توابع `prepare*Data` |
+| `src/services/AccReportService.js` | آخرین وضعیت لحظه‌ای حساب‌ها (پیام 42) در Redis با TTL ۲ دقیقه: `get(acc)` / `getAll()` |
 | `src/services/TradeMapService.js` | ارسال رویداد TradeMap به لاراول (`created/modified/updated/closed`) |
 | `src/helpers/helper.js` | `makeMsgForHandler` (ساخت پیام خروجی)، `getMqlError`، تاریخ، `isValidSymbols`، `normalizeSymbol` |
 | `src/helpers/constant.js` | `ACTION_HANDLER` کدهای دستور خروجی |
@@ -70,7 +71,7 @@ docker compose up -d --build          # توسعه: app روی localhost:5000 ،
 
 ## نکات حیاتی که نباید فراموش شوند
 
-1. **handler های فعال** فقط آنهایی هستند که در `switch` فایل `src/controllers/spider.js` کامنت نشده‌اند (41, 300, 301, 302, 399, 401, 500, 501, 502, 999, 998, 997, 996, 995, 994, 993, 992, 977, 960, 987, 989). فایل‌های handler دیگر فعلاً کد مرده‌اند.
+1. **handler های فعال** فقط آنهایی هستند که در `switch` فایل `src/controllers/spider.js` کامنت نشده‌اند (41, 42, 300, 301, 302, 399, 401, 500, 501, 502, 999, 998, 997, 996, 995, 994, 993, 992, 977, 960, 987, 989). فایل‌های handler دیگر فعلاً کد مرده‌اند.
 2. `GetUpdates/:acc` بر اساس **`origin_acc`** فیلتر می‌کند (نه `acc`) و فقط دستورهای `pending` با عمر **کمتر از ۶۰ ثانیه** را برمی‌گرداند. دستور تا رسیدن پاسخ `pending` می‌ماند، پس ممکن است چند بار تحویل شود؛ `keyid` (همان `update_id`) شناسه یکتای آن است.
 3. `updateStatus` دستور را با `{acc, handler, keyid}` پیدا می‌کند؛ اگر سندی `handler` نداشته باشد هیچ‌وقت به‌روز نمی‌شود.
 4. `keyid = Date.now() % 1e9` است و برای هر copier یکی اضافه می‌شود — یکتایی تضمین‌شده نیست.
@@ -78,4 +79,5 @@ docker compose up -d --build          # توسعه: app روی localhost:5000 ،
 6. `diff_time` هر بروکر (میلی‌ثانیه، گرد شده به ۳۰ دقیقه) به زمان‌های متاتریدر اضافه می‌شود تا همه زمان‌ها یکسان شوند؛ از 401 (sample trade) پر می‌شود.
 7. پیام‌هایی که `acc_fp` دارند از **پنل** آمده‌اند: `platform='panel'`، حساب با `acc` پیدا می‌شود و `diff_time=0`. در غیر این صورت از **متاتریدر دمو** آمده‌اند و حساب با `acc_meta` پیدا می‌شود.
 8. در سمت `_src` (کاربر) و `_dist` (Master) فیلدهای TradeMap جدا هستند؛ `*_final` (مثل `commission_final`, `swap_final`) مقادیر محاسبه‌شده شرکت روی Master هستند.
-9. هیچ endpoint ای احراز هویت ندارد (از جمله `/api/admin/*`).
+9. آخرین equity / free margin هر حساب (از پیام 42) را از `AccReportService.get(account.acc)` بخوان، نه از Mongo؛ `isOrderPossible` از همین استفاده می‌کند.
+10. هیچ endpoint ای احراز هویت ندارد (از جمله `/api/admin/*`).
