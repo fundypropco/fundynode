@@ -67,7 +67,7 @@ const accountSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['trading', 'passed', 'failed', 'stopped'],
+        enum: ['trading', 'passed', 'failed', 'stopped', 'withdrawn'],
         index: true,
         default: 'stopped'
     },

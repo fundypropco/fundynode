@@ -64,6 +64,8 @@ const setAccStatus = asyncHandler(async (req, res) => {
     account.status = req.body.status
     if (account.status !== 'trading') {
         account.copy = false
+    } else if (account.status === 'trading') {
+        account.copy = true
     }
     account.save()
 
