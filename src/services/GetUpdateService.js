@@ -1,6 +1,6 @@
 import GetUpdate from "../models/GetUpdate.js"
 import Symbol from "../models/Symbol.js"
-import { formatDate, formatDateUTC, getMqlError, getWiderSl, getWiderTp, makeMsgForHandler } from "../helpers/helper.js"
+import { formatDate, formatDateUTC, getMqlError, getOrderVol, makeMsgForHandler } from "../helpers/helper.js"
 import { ACTION_HANDLER } from "../helpers/constant.js"
 
 const create = async (data) => {
@@ -162,7 +162,7 @@ const prepareOrderData = async (account, copier, data) => {
     perparedData.symbol = data.symbol_b.symbol
     perparedData.symbol_title = data.symbol_a.title
     perparedData.side = data.side
-    perparedData.vol = data.vol
+    perparedData.vol = getOrderVol(copier.vol_factor, data.vol)
     perparedData.sl = data.sl // perparedData.platform === 'metatrader' ? getWiderSl(data.symbol_b, perparedData.side, Number(data.sl)) : data.sl
     perparedData.tp = data.tp // perparedData.platform === 'metatrader' ? getWiderTp(data.symbol_b, perparedData.side, Number(data.tp)) : data.tp
     perparedData.slippage = 50

@@ -688,14 +688,14 @@ export function getWiderTp(symbolObj, side, tp) {
     return ntp
 }
 
-export function getOrderVol(accountObj, copierObj, originSymbol, originVol) {
+export function getOrderVol(volFactor, originVol) {
     let finalVol = originVol
-    if (copierObj.vol_factor === 1) {
+    if (volFactor === 1) {
         //todo: براساس اختلاف ارزش پیپ محاسبه شود
-    } else if (copierObj.vol_factor < 1) {
-        finalVol = Math.floor(copierObj.vol_factor * originVol * 100) / 100
-    } else if (copierObj.vol_factor > 1) {
-        finalVol = Math.floor(copierObj.vol_factor * originVol) / 100
+    } else if (volFactor < 1) {
+        finalVol = Math.floor(volFactor * originVol * 10000) / 100
+    } else if (volFactor > 1) {
+        finalVol = Math.floor(volFactor * originVol) / 100
     }
     return finalVol
 }
