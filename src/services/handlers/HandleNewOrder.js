@@ -7,6 +7,7 @@ import logger from '../../helpers/logger.js'
 import RequestLog from '../../models/RequestLog.js'
 import TradeMapService from '../TradeMapService.js'
 import AccReportService from '../AccReportService.js'
+import { toMasterUnits } from '../../helpers/copierAmounts.js'
 
 // #.
 // اگر گزارش لحظه ای حساب (42) در ردیس نباشد، سفارش بدون بررسی موجودی پذیرفته شود یا نه
@@ -291,7 +292,8 @@ async function isOrderPossible(account, copier, data) {
 
     // #.
     // ۱. پس از کسر هزینه ها و مارجین سفارش ، ایکوئیتی نباید به حد دراودان برسد
-    const freeEq = report.equity - account.drawdown
+    // ایکوئیتی گزارش خام Master است (سنت در حساب سنتی) ⇒ حد دراودان هم به همان واحد
+    const freeEq = report.equity - toMasterUnits(account.drawdown, copier.cent)
     if (freeEq <= cost + margin) {
         result.status = false
         result.description = [`free equity is not enough / ${round2(freeEq)} <= ${round2(cost + margin)}`]

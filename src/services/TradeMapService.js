@@ -2,6 +2,7 @@ import TradeMap from "../models/TradeMap.js"
 import logger from "../helpers/logger.js"
 import axios from "axios"
 import md5 from 'md5';
+import { toPanelTrade } from "../helpers/copierAmounts.js"
 
 const sync = async ({ event, data }) => {
     try {
@@ -9,7 +10,9 @@ const sync = async ({ event, data }) => {
 
         await axios.post(
             "https://panel.fundyprop.com/api/sync-trade",
-            { event, data },
+            // #.
+            // مقادیر حساب Master (سنتی / ضریب حجم) به مقیاس کاربر تبدیل می‌شوند ؛ ر.ک. helpers/copierAmounts.js
+            { event, data: data.map(toPanelTrade) },
             {
                 timeout: 10000,
                 headers: {

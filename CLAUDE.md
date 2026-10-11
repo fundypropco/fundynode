@@ -78,6 +78,6 @@ docker compose up -d --build          # توسعه: app روی localhost:5000 ،
 5. پیام‌های ورودی قدیمی‌تر از ۶۰ ثانیه رد می‌شوند (`Expired Message`) — مقایسه با `Date.now()` میلی‌ثانیه‌ای است.
 6. `diff_time` هر بروکر (میلی‌ثانیه، گرد شده به ۳۰ دقیقه) به زمان‌های متاتریدر اضافه می‌شود تا همه زمان‌ها یکسان شوند؛ از 401 (sample trade) پر می‌شود.
 7. پیام‌هایی که `acc_fp` دارند از **پنل** آمده‌اند: `platform='panel'`، حساب با `acc` پیدا می‌شود و `diff_time=0`. در غیر این صورت از **متاتریدر دمو** آمده‌اند و حساب با `acc_meta` پیدا می‌شود.
-8. در سمت `_src` (کاربر) و `_dist` (Master) فیلدهای TradeMap جدا هستند؛ `*_final` (مثل `commission_final`, `swap_final`) مقادیر محاسبه‌شده شرکت روی Master هستند.
-9. آخرین equity / free margin هر حساب (از پیام 42) را از `AccReportService.get(account.acc)` بخوان، نه از Mongo؛ `isOrderPossible` از همین استفاده می‌کند.
+8. در سمت `_src` (کاربر) و `_dist` (Master) فیلدهای TradeMap جدا هستند؛ `*_final` (مثل `commission_final`, `swap_final`) مقادیر محاسبه‌شده شرکت روی Master هستند. در Mongo همه این‌ها **عدد خام EA** می‌مانند (سنت در حساب سنتی)؛ تبدیل به مقیاس کاربر (`vol_factor` ، `cent` ، `*_user` ، `profit_final`) فقط هنگام ارسال به پنل در `src/helpers/copierAmounts.js` (ر.ک. docs/data-models.md › TradeMap).
+9. آخرین equity / free margin هر حساب (از پیام 42) را از `AccReportService.get(account.acc)` بخوان، نه از Mongo؛ `isOrderPossible` از همین استفاده می‌کند. این مقادیر **خام** Master هستند ⇒ هر مبلغ دلاری حساب کاربر (drawdown ، initial) قبل از مقایسه با `toMasterUnits(amount, copier.cent)` به واحد Master برود؛ تبدیل بالانس/ایکوئیتی برای پنل فقط در `accReportSync`.
 10. هیچ endpoint ای احراز هویت ندارد (از جمله `/api/admin/*`).

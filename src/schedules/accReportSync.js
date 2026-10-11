@@ -4,6 +4,7 @@ import getRedis from '../boot/redis.js'
 import logger from '../helpers/logger.js'
 import Account from '../models/Account.js'
 import AccReportService from '../services/AccReportService.js'
+import { findCopier, toUserBalance } from '../helpers/copierAmounts.js'
 
 // #.
 // ارسال وضعیت لحظه ای حسابها به FundyPanel هر ثانیه یک بار
@@ -36,15 +37,26 @@ async function acquireLock(redis) {
 
 // #.
 // ساخت داده ارسالی: حسابهایی که گزارش زنده در ردیس دارند + حسابهای در حال ترید (حتی بدون گزارش)
+// بالانس و ایکوئیتی حساب Master اینجا (فقط در داده ارسالی) به مقیاس کاربر تبدیل می‌شوند ؛ گزارش ردیس خام می‌ماند
+// چون isOrderPossible با ایکوئیتی واقعی Master کار می‌کند. یک کوئری برای همه حسابها (همان کوئری قبلی با چند فیلد بیشتر)
 export async function buildAccReportPayload() {
-    const [reports, tradingAccounts] = await Promise.all([
-        AccReportService.getAll(),
-        Account.find({ status: 'trading' }, { acc: 1, status: 1, _id: 0 }).lean()
-    ])
+    const reports = await AccReportService.getAll()
+    const reportAccs = Object.keys(reports).map(Number)
 
+    const accountDocs = await Account.find(
+        { $or: [{ status: 'trading' }, { acc: { $in: reportAccs } }] },
+        { acc: 1, status: 1, initial: 1, 'copiers.acc': 1, 'copiers.copy': 1, 'copiers.vol_factor': 1, 'copiers.cent': 1, created_at: 1, _id: 0 }
+    ).sort({ created_at: 1 }).lean()
+
+    // #.
+    // هر شماره حساب ممکن است چند رکورد داشته باشد (set-acc رکورد قبلی را stopped می‌کند) ⇒ تازه‌ترین رکورد برای تبدیل
     const statusByAcc = {}
-    for (const account of tradingAccounts) {
-        statusByAcc[account.acc] = account.status
+    const accountByAcc = {}
+    for (const account of accountDocs) {
+        accountByAcc[account.acc] = account
+        if (account.status === 'trading') {
+            statusByAcc[account.acc] = account.status
+        }
     }
 
     const accs = new Set([...Object.keys(reports), ...Object.keys(statusByAcc)])
@@ -52,15 +64,17 @@ export async function buildAccReportPayload() {
 
     const accounts = [...accs].map(acc => {
         const report = reports[acc]
+        const account = accountByAcc[acc]
+        const copier = findCopier(account, report?.master_acc)
         return {
             acc: Number(acc),
             status: statusByAcc[acc] ?? null,
             online: !!report,
             master_acc: report?.master_acc ?? null,
-            equity: report?.equity ?? null,
-            balance: report?.balance ?? null,
-            free_margin: report?.free_margin ?? null,
-            used_margin: report?.used_margin ?? null,
+            equity: report ? toUserBalance(report.equity, account?.initial, copier) : null,
+            balance: report ? toUserBalance(report.balance, account?.initial, copier) : null,
+            open_trades: report?.open_trades ?? null,
+            closed_trades: report?.closed_trades ?? null,
             timestamp: report?.timestamp ?? null,
             age_ms: report ? now - report.received_at : null,
         }

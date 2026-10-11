@@ -1,4 +1,5 @@
 import mongoose from "mongoose"
+import { userAmounts } from "../helpers/copierAmounts.js"
 
 const tradeMapSchema = new mongoose.Schema({
     server_src: {
@@ -156,6 +157,31 @@ const tradeMapSchema = new mongoose.Schema({
         default: 0
     },
 
+    // #.
+    // ضریب حجم و واحد copier در لحظه ساخت معامله (از Account.copiers) ؛ رکوردهای قدیمی ندارند (⇐ 1 و غیرسنتی)
+    // ر.ک. helpers/copierAmounts.js
+    vol_factor: {
+        type: Number
+    },
+    cent: {
+        type: Boolean
+    },
+    // #.
+    // مقادیر دلاری روی Master (مقدار خام EA تقسیم بر ۱۰۰ در حساب سنتی) ؛ با هر save از روی فیلدهای خام حساب می‌شوند
+    // فیلدهای _dist و commission_final و swap_final در Mongo همان عدد خام EA می‌مانند
+    profit_user: {
+        type: Number,
+        default: 0
+    },
+    swap_user: {
+        type: Number,
+        default: 0
+    },
+    commission_user: {
+        type: Number,
+        default: 0
+    },
+
     symbol_title: {
         type: String
     },
@@ -205,6 +231,12 @@ const tradeMapSchema = new mongoose.Schema({
     }
 });
 
+
+// #.
+// همه مسیرهای ثبت سود/سواپ/کمیسیون با save هستند ⇒ مقادیر user همیشه با مقادیر خام هماهنگ می‌مانند
+tradeMapSchema.pre('save', function () {
+    Object.assign(this, userAmounts(this))
+})
 
 tradeMapSchema.index({ acc_src: 1, ticket_src: 1, acc_dist: 1, ticket_dist: 1 })
 tradeMapSchema.index({ acc_src: 1, ticket_src: 1 })

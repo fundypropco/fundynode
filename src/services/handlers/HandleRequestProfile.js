@@ -2,6 +2,7 @@ import { formatDateUTC, makeID } from '../../helpers/helper.js'
 import Account from '../../models/Account.js'
 import GetUpdate from '../../models/GetUpdate.js'
 import TradeMap from '../../models/TradeMap.js'
+import { findCopier, toMasterUnits } from '../../helpers/copierAmounts.js'
 
 export default async (req, res) => {
 
@@ -25,19 +26,27 @@ export default async (req, res) => {
 
     const keyid = makeID()
 
+    // #.
+    // بالانس اولیه و حد دراودان به واحد حساب Master: حساب سنتی ⇒ ضربدر ۱۰۰ (EA با بالانس/ایکوئیتی سنتی مقایسه می‌کند)
+    // data.acc همان حساب Master است که پروفایل را خواسته
+    const copier = findCopier(account, data.acc)
+    const initial = toMasterUnits(account.initial, copier?.cent)
+    const drawdown = toMasterUnits(account.drawdown, copier?.cent)
+    const maxLoss = toMasterUnits(account.initial - account.drawdown, copier?.cent)
+
     const message = [
         account.username,
         account.commission_rate,
         account.swap_rate,
-        account.drawdown,
+        drawdown,
         0,
         data.magic,
         data.server,
         last_close_time,
-        account.initial,
-        account.initial - account.drawdown,
-        account.initial,
-        account.initial - account.drawdown,
+        initial,
+        maxLoss,
+        initial,
+        maxLoss,
     ].join('_&_');
 
     const getUpdate = new GetUpdate({

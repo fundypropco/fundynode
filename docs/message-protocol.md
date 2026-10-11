@@ -149,11 +149,13 @@ master_acc_x_y,41,DRAWDOWN_&_magic_&_user_name_&_lane_&_mode_&_reason_&_eq_real_
 
 ### 42 — ACC REPORT (`HandleAccReport.js`)
 ```
-master_magic_cluster,42,X0_&_X1_&_X2_&_X3_&_free_margin_&_used_margin_&_equity_&_balance_&_...,timestamp_ms,-2
+master_magic_cluster,42,X0_&_X1_&_X2_&_X3_&_free_margin_&_used_margin_&_equity_&_balance_&_open_trades_&_closed_trades_&_...,timestamp_ms,-2
 ```
 - فرستنده: EA حساب **Master**، برای هر حساب تریدر **هر ثانیه یک بار**.
 - بخش اول با `_`: i=0 شماره Master ، i=1 `magic` = `Account.acc` تریدر.
-- از `info` فقط i=4..7 استفاده می‌شود: `free_margin`، `used_margin`، `equity`، `balance`. (X0..X3 و بعد از X7 فعلاً پارس نمی‌شوند.)
+- از `info` فقط i=4..9 استفاده می‌شود: `free_margin`، `used_margin`، `equity`، `balance`، `open_trades` (i=8)، `closed_trades` (i=9). (X0..X3 و بعد از X9 فعلاً پارس نمی‌شوند.)
+- `open_trades` / `closed_trades` (2026-10-11) تعداد معاملات باز/بسته حساب Master هستند؛ **اختیاری**: EA قدیمی که آنها را ندارد یا مقدار نامعتبر ⇒ `null` (گزارش رد نمی‌شود).
+- همه مقادیر **خام** حساب Master ذخیره می‌شوند (سنت در حساب سنتی) چون `isOrderPossible` به همین عددها نیاز دارد؛ تبدیل به مقیاس کاربر فقط در داده ارسالی به پنل (`accReportSync`) انجام می‌شود.
 - `timestamp` (یکی مانده به آخر) میلی‌ثانیه است و زمان خود گزارش است.
 - اعتبارسنجی: اگر magic یا یکی از ۴ عدد یا timestamp نامعتبر باشد → `{status:'error', message:'Wrong Message Format!!!'}`؛ اگر بیش از **۱۰ ثانیه** از timestamp گذشته باشد → `{status:'error', message:'Stale Report!!!'}` و ذخیره نمی‌شود.
 - اثر: ذخیره در Redis (نه Mongo) با انقضای ۲ دقیقه؛ فقط اگر timestamp از گزارش موجود جدیدتر باشد (اسکریپت Lua اتمیک). جزئیات کلیدها در [data-models.md](data-models.md#redis).
@@ -175,6 +177,7 @@ acc_cluster,301,REQUEST SYMBOL RATES_&_server_&_commission_rate_&_swap_rate_&_CY
 acc_cluster,302,REQUEST PROFILE_&_server_&_magic_&_CYCLE n,timestamp,-2
 ```
 `magic` = acc کاربر (Account.acc). پاسخ به‌صورت دستور خروجی 40. تأیید دریافت با 960.
+`acc` (قبل از اولین `_`) = حساب Master درخواست‌کننده ⇒ copier همان شماره (یا اولین copier فعال) تعیین می‌کند حساب سنتی است یا نه (پایین، دستور 40).
 
 ## ۴. پاسخ‌های Master / EA
 
@@ -216,6 +219,7 @@ acc_cluster,302,REQUEST PROFILE_&_server_&_magic_&_CYCLE n,timestamp,-2
 
 - **40 (PROFILE SET)** — `HandleRequestProfile.js`:
   `{acc_cluster},40,{username}_&_{commission_rate}_&_{swap_rate}_&_{drawdown}_&_0_&_{magic}_&_{server}_&_{last_close_time}_&_{initial}_&_{initial-drawdown}_&_{initial}_&_{initial-drawdown},{unix-s},{keyid}`
+  - **copier سنتی** (`copiers[].cent`، 2026-10-11): `drawdown` ، `initial` و `initial-drawdown` (هر دو بار) **ضربدر ۱۰۰** به واحد حساب Master (سنت) می‌روند، با دو رقم اعشار (`helpers/copierAmounts.toMasterUnits`). حساب استاندارد بدون تغییر. مبنا فیلد `cent` است نه `vol_factor < 1` (تصمیم کاربر؛ همان قاعده حجم کپی).
 - **301 (SYMBOL RATES)** — `HandleSymbolData.js`:
   `{acc_cluster},301,{server}_$_{symbol_&_commission_&_swap}_@_...,{unix-s},{keyid}`
 

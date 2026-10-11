@@ -27,7 +27,7 @@
 
 | کلید | نوع | محتوا |
 |---|---|---|
-| `acc_report:{magic}` | string (JSON) با TTL ۲ دقیقه | آخرین گزارش 42: `{acc, master_acc, free_margin, used_margin, equity, balance, timestamp, received_at}` |
+| `acc_report:{magic}` | string (JSON) با TTL ۲ دقیقه | آخرین گزارش 42 (مقادیر **خام** Master): `{acc, master_acc, free_margin, used_margin, equity, balance, open_trades, closed_trades, timestamp, received_at}` |
 | `acc_reports:index` | sorted set | member = magic ، score = timestamp آخرین گزارش؛ برای پیدا کردن همه حساب‌ها بدون SCAN. عضوهایی که کلیدشان منقضی شده در `getAll` پاک می‌شوند. |
 | `lock:acc_report_sync` | string با TTL ۱۰ ثانیه | قفل تک‌نسخه‌ای حلقه ارسال به پنل در worker |
 
@@ -129,7 +129,9 @@ waiting ──(updateWaitings بعد از باز شدن مقصد)──► pendi
 |---|---|
 | سمت کاربر (`_src`) | `server, acc, ticket, symbol, vol, open_price, open_time, open_timestamp, sl, tp, close_price, close_time, close_timestamp, magic, comment, commission, swap, profit` |
 | سمت Master (`_dist`) | همان فیلدها با پسوند `_dist` (ایندکس روی `close_timestamp_dist`) |
-| مقادیر شرکت | `commission_final`, `swap_final` — محاسبه‌شده در Master (از 996 / 999) |
+| مقادیر شرکت | `commission_final`, `swap_final` — محاسبه‌شده در Master (از 996 / 999) ؛ **عدد خام EA** (سنت در حساب سنتی) |
+| ضریب copier (2026-10-11) | `vol_factor` و `cent` همان copier در لحظه ساخت معامله (`HandleResNewOrder` از `Account.copiers` ؛ پارشیال/پندینگ از TradeMap مادر). رکوردهای قدیمی ندارند ⇒ مثل حساب استاندارد با ضریب ۱ (پر کردن: `tools/backfill-trademap-vol-factor.mjs`) |
+| مقادیر کاربر (2026-10-11) | `profit_user` ⇐ `profit_dist` ، `swap_user` ⇐ `swap_final` ، `commission_user` ⇐ `commission_final` ، هر کدام تقسیم بر ۱۰۰ در حساب سنتی (دو رقم اعشار) = **دلار واقعی روی Master**. با hook `pre('save')` از روی فیلدهای خام حساب می‌شوند |
 | نماد | `symbol_title`, `symbol_weight`, `tick_value`, `tick_size` |
 | وضعیت | `status`: `open, closed, pending, canceled, deleted` · `side` · `closing_type`: `single, partial, bulk, magic, all, none` · `partial_code` (گروه‌بندی تکه‌های partial) · `platform` |
 | `created_at` | |
@@ -137,7 +139,12 @@ waiting ──(updateWaitings بعد از باز شدن مقصد)──► pendi
 ایندکس‌ها: `{acc_src, ticket_src, acc_dist, ticket_dist}`, `{acc_src, ticket_src}`, `{acc_src, acc_dist, status}`, `{acc_dist, ticket_dist}`.
 
 - ساخته می‌شود در: `HandleResNewOrder` (و در کد غیرفعال: partial / open pending).
-- `profit_final` در commit `3e4c08c` حذف شد.
+- `profit_final` در commit `3e4c08c` حذف شد و در Mongo برنگشت؛ فقط در داده ارسالی به پنل ساخته می‌شود (پایین).
+- **⚠️ فیلدهای `_dist` و `commission_final`/`swap_final` در Mongo همیشه عدد خام EA هستند** (کمیسیون تجمیعی پارشیال‌ها با عدد تجمیعی EA مقایسه می‌شود و `vol_dist` حجم دستورهای پندینگ/پارشیال روی Master است). تبدیل به مقیاس کاربر فقط در `helpers/copierAmounts.toPanelTrade` هنگام ارسال به پنل (`TradeMapService.sync` ، `sync-acc-trades` ، `sync-all-trades`):
+  - `vol_dist` ÷ units (۴ رقم اعشار) ؛ `profit_dist` ، `swap_dist` ، `commission_dist` ÷ units (۲ رقم) — units = ۱۰۰ برای copier سنتی ، وگرنه ۱
+  - `profit_user` ، `swap_user` ، `commission_user` (بالا)
+  - `profit_final` ، `swap_final` ، `commission_final` = `Z_user × (1 / vol_factor)` (۲ رقم) = دلار به اندازه معامله کاربر
+  - حساب استاندارد با `vol_factor = 1` ⇒ همه مقادیر همان قبلی و `Z_user = Z_final`
 - در `/api/admin/trade-map/:accSrc` سمت src با نام `sender` و سمت dist با نام `mother` نمایش داده می‌شود.
 
 ---

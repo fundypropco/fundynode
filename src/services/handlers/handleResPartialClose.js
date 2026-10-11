@@ -86,6 +86,8 @@ export default async (req, res) => {
                 magic_dist: data.magic,
                 comment_dist: data.comment,
                 commission_dist: new_commission_dist,
+                vol_factor: openTradeMap.vol_factor,
+                cent: openTradeMap.cent,
 
                 symbol_title: openTradeMap.symbol_title,
                 symbol_weight: openTradeMap.symbol_weight,

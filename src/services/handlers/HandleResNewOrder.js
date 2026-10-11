@@ -6,6 +6,7 @@ import { formatDateUTC, getMqlError, makeID } from "../../helpers/helper.js"
 import { getBrokerData } from "../../boot/cache.js"
 import AccountService from "../AccountService.js"
 import TradeMapService from '../TradeMapService.js'
+import { copierFactors, findCopier } from '../../helpers/copierAmounts.js'
 
 export default async (req, res) => {
 
@@ -23,6 +24,11 @@ export default async (req, res) => {
         const brokerData = await getBrokerData(getUpdateDoc.server)
         const diff_time = Number(brokerData.diff_time)
         const symbol = await Symbol.findOne({ server: getUpdateDoc.server, symbol: getUpdateDoc.symbol })
+
+        // #.
+        // ضریب حجم و واحد (سنتی) همان copier که سفارش روی آن باز شد ؛ برای تبدیل مقادیر مالی به مقیاس کاربر
+        const originAccount = await Account.findLast({ acc: getUpdateDoc.origin_acc }).select('copiers').lean()
+        const factors = copierFactors(findCopier(originAccount, data.acc))
 
         // #.
         // مپ کردن اکانت و تیکت های مرجع و کپی کننده 
@@ -55,6 +61,8 @@ export default async (req, res) => {
             comment_dist: data.comment,
             commission_dist: data.commission,
             commission_final: data.commission_final,
+            vol_factor: factors.vol_factor,
+            cent: factors.cent,
 
             symbol_title: getUpdateDoc.symbol_title,
             side: getUpdateDoc.side,

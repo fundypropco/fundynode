@@ -156,11 +156,18 @@ worker.js ─ startAccReportSync (هر ۱ ثانیه، فقط یک worker با �
 ```json
 { "sent_at": 1790502064154,
   "accounts": [ { "acc": 342, "status": "trading", "online": true, "master_acc": 1006135456,
-                  "equity": 1300, "balance": 1250, "free_margin": 5000, "used_margin": 350,
+                  "equity": 1300, "balance": 1250, "open_trades": 2, "closed_trades": 41,
                   "timestamp": 1790502050779, "age_ms": 1375 } ] }
 ```
   - `accounts` = اجتماع حساب‌های دارای گزارش زنده در Redis و حساب‌های `status='trading'` در Mongo. حساب trading بدون گزارش با `online=false` و مقادیر `null` می‌آید؛ حساب دارای گزارش که trading نیست `status=null` دارد.
   - `age_ms` = فاصله زمان دریافت گزارش در سرور تا زمان ارسال.
+  - **از 2026-10-11:** `free_margin` / `used_margin` به پنل نمی‌روند (در Redis برای `isOrderPossible` می‌مانند) و به جایشان `open_trades` / `closed_trades` (پیام 42 i=8/9 ، نامعلوم ⇒ `null`).
+  - **`balance` و `equity` به مقیاس کاربر تبدیل می‌شوند** (`helpers/copierAmounts.toUserBalance`):
+    `initial + (مقدار خام − initial × units) / (units × vol_factor)` با دو رقم اعشار ؛ units = ۱۰۰ برای copier سنتی.
+    مثال: initial 1000 ، سنتی ، `vol_factor` 0.5 ، ایکوئیتی خام 99000 سنت ⇒ `980`. حساب استاندارد با ضریب ۱ ⇒ همان عدد خام.
+    فرمول متن درخواست کاربر قدر مطلق داشت؛ با علامت پیاده شد (وگرنه ضرر کاربر سود نمایش داده می‌شد).
+  - چرا اینجا و نه در پنل یا هنگام ذخیره 42: Redis باید خام بماند (`isOrderPossible`)، و worker همین حالا هر ثانیه یک کوئری Mongo روی حساب‌ها می‌زند؛
+    همان کوئری با فیلدهای `initial` و `copiers` (و حساب‌های دارای گزارش) کافی است ⇒ بدون کوئری اضافه. copier = همان `master_acc` گزارش ، وگرنه اولین copier فعال ؛ برای حسابی با چند رکورد، تازه‌ترین رکورد.
   - اگر لیست خالی باشد چیزی ارسال نمی‌شود. خطا retry ندارد (تیک بعدی داده تازه را می‌فرستد)؛ لاگ خطا فقط اولین بار و هر ۶۰ خطای پیاپی.
 
 ## ۱۱. جریان پنل (Trading Room)

@@ -48,6 +48,8 @@ export default async (req, res) => {
                 server_dist: deletedTradeMap.server_dist,
                 symbol_dist: deletedTradeMap.symbol_dist,
                 vol_dist: deletedTradeMap.vol_dist,
+                vol_factor: deletedTradeMap.vol_factor,
+                cent: deletedTradeMap.cent,
                 sl_dist: deletedTradeMap.sl_dist,
                 tp_dist: deletedTradeMap.tp_dist,
                 open_price_dist: data.open_price,

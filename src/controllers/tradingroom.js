@@ -3,6 +3,7 @@ import Account from '../models/Account.js'
 import GetUpdate from "../models/GetUpdate.js"
 import Symbol from '../models/Symbol.js'
 import TradeMap from "../models/TradeMap.js"
+import { toPanelTrade } from "../helpers/copierAmounts.js"
 
 
 const getUpdates = asyncHandler(async (req, res) => {
@@ -17,11 +18,12 @@ const getUpdates = asyncHandler(async (req, res) => {
 
 const syncAllTrades = asyncHandler(async (req, res) => {
 
-    const results = await TradeMap.find({ created_at: { $gte: req.body.from_timestamp } }).sort('created_at')
+    const results = await TradeMap.find({ created_at: { $gte: req.body.from_timestamp } }).sort('created_at').lean()
 
     res.send({
         status: 'success',
-        results: results
+        // #. مقادیر Master به مقیاس کاربر (مثل sync-trade)
+        results: results.map(toPanelTrade)
     })
 })
 
@@ -32,7 +34,8 @@ const syncAccTrades = asyncHandler(async (req, res) => {
 
     res.send({
         status: 'success',
-        results: results,
+        // #. مقادیر Master به مقیاس کاربر (مثل sync-trade)
+        results: results.map(toPanelTrade),
         data: account
     })
 })

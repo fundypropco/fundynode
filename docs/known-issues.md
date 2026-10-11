@@ -20,6 +20,7 @@
 - #8، #13 حساب ناشناخته در 500/501(کاربر)/502/302 → پاسخ `{status:'error', message:'Account Not Found!!!'}` به جای HTTP 500
 - #36 `tradingroom.setAccStatus`: `account.save()` بدون `await` بود ⇒ پاسخ قبل از پایان نوشتن می‌رفت و پنل تغییر وضعیت خودش را روی نوشتن ناتمام commit می‌کرد (2026-10-11)
 - #35 `copiers[].vol_factor` در هیچ مسیر فعالی خوانده نمی‌شد (`getOrderVol` کد مرده بود) ⇒ 2026-10-11 کاربر آن را در `GetUpdateService.prepareOrderData` وصل کرد؛ تبدیل واحد حساب سنتی هم از حدس روی `vol_factor` به فیلد صریح `copiers[].cent` منتقل شد (data-models)
+- #39 `isOrderPossible` ایکوئیتی **خام** Master (سنت در حساب سنتی) را با `account.drawdown` (دلار) مقایسه می‌کرد ⇒ روی Master سنتی چک «ایکوئیتی آزاد تا حد دراودان» عملا بی‌اثر بود؛ حالا حد دراودان با `toMasterUnits(drawdown, copier.cent)` به همان واحد برده می‌شود (2026-10-11 ، تایید کاربر)
 - #38 `isOrderPossible` کمیسیون/اسپرد/مارجین را با **حجم کاربر** و **نماد copier** حساب می‌کرد ⇒ روی Master سنتی هزینه ۱۰۰ برابر کمتر برآورد می‌شد و محافظ عملا بی‌اثر بود؛ حالا با حجم واقعی copier (`data.copier_vol`) کار می‌کند (2026-10-11)
 - #9 `HandleResNewOrder`: شاخه خطا فقط وقتی سند GetUpdate پیدا شده اجرا می‌شود
 - #10 `HandleResNewOrder`: نبود نماد Master دیگر مانع ساخت TradeMap نمی‌شود (`tick_value/tick_size/weight = 0`)
