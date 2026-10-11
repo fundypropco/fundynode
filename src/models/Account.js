@@ -81,6 +81,13 @@ const accountSchema = new mongoose.Schema({
     }
 })
 
+// #.
+// تازه‌ترین رکورد یک حساب؛ شماره حساب باید یکتا باشد ولی ساخت حساب از پنل (set-acc) رکورد قبلی همان
+// شماره حساب را فقط stopped می‌کند و پاک نمی‌کند ⇒ هر جست‌وجو باید رکورد فعال (تازه‌ترین) را بردارد
+accountSchema.statics.findLast = function (filter) {
+    return this.findOne(filter).sort({ created_at: -1, _id: -1 })
+}
+
 accountSchema.index({ acc: 1, "copiers.acc": 1 })
 accountSchema.index({ copy: 1, check_time: 1 })
 

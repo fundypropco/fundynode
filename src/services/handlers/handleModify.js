@@ -14,10 +14,10 @@ export default async (req, res) => {
     // #.
     // پیدا کردن اکانت مربوط به عملیات دریافتی 
     if (data.acc_fp !== -1) {
-        account = await Account.findOne({ acc: data.acc })
+        account = await Account.findLast({ acc: data.acc })
         platform = 'panel'
     } else {
-        account = await Account.findOne({ acc_meta: data.acc })
+        account = await Account.findLast({ acc_meta: data.acc })
         platform = 'metatrader'
     }
 

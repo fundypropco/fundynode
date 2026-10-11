@@ -8,7 +8,7 @@
 
 | # | | محل | مشکل | اثر |
 |---|---|---|---|---|
-| — | | — | فعلاً موردی باز نیست | |
+| 35 | 🔴 | `HandleNewOrder` / `helper.getOrderVol` | `copiers[].vol_factor` در هیچ مسیر فعالی خوانده نمی‌شود (`getOrderVol` کد مرده است) | از 2026-10-11 پنل برای حساب‌های اقتصادی `vol_factor` کمتر از ۱ می‌فرستد (= تقسیم سود، حداقل 0.5) ولی نود حجم کامل را روی حساب Master کپی می‌کند |
 
 ## ب) اصلاح‌شده
 
@@ -18,6 +18,7 @@
 - #5 `handleClose`: import `RequestLog` و پاس دادن `reqLog` از کنترلر (لاگ پاسخ 501 کامل می‌شود)
 - #7 `HandleNewOrder.processPartial`: کمیسیون از `partialInfo.closed_commission` خوانده می‌شود
 - #8، #13 حساب ناشناخته در 500/501(کاربر)/502/302 → پاسخ `{status:'error', message:'Account Not Found!!!'}` به جای HTTP 500
+- #36 `tradingroom.setAccStatus`: `account.save()` بدون `await` بود ⇒ پاسخ قبل از پایان نوشتن می‌رفت و پنل تغییر وضعیت خودش را روی نوشتن ناتمام commit می‌کرد (2026-10-11)
 - #9 `HandleResNewOrder`: شاخه خطا فقط وقتی سند GetUpdate پیدا شده اجرا می‌شود
 - #10 `HandleResNewOrder`: نبود نماد Master دیگر مانع ساخت TradeMap نمی‌شود (`tick_value/tick_size/weight = 0`)
 - #11 `prepareModifyData`: null-check روی سند سفارش اولیه
@@ -65,8 +66,8 @@
 
 - handler های مسیریابی‌نشده: `HandleOpenTrades` (400)، `HandleNewData` (504 — به فیلدهای حذف‌شده Account اشاره می‌کند)، `handleResCheckTradeMap` (970)، `HandleResOpenPendingOrder` (975)، `handleResPartialClose` (978)، `handleResBulkClose` (979)، `HandleResCloseAllOrigin` (980)، `HandleResCloseMagic` (974 — متغیرهای `vol`/`symbol` تعریف‌نشده دارد).
 - `AccountService.js`: همه توابع کامنت شده؛ فقط `test` خالی export می‌شود، ولی handler های غیرفعال هنوز `bulkClose/closeAll` را صدا می‌زنند.
-- `helper.js`: `getCopyTradeParams`، `getOrderVol` (فرمول `vol_factor > 1` تقسیم بر 100 دارد — مشکوک)، `getWiderSl/Tp` (فراخوانی‌ها کامنت شده).
+- `helper.js`: `getCopyTradeParams`، `getOrderVol` (فرمول `vol_factor > 1` تقسیم بر 100 دارد — مشکوک؛ ر.ک. #35)، `getWiderSl/Tp` (فراخوانی‌ها کامنت شده).
 - `schedules/cron.js` (import نامعتبر `setBrokersDiff` و `'../helpers/logger'` بدون `.js`)، `schedules/test.js`، `job.getOpenTradesProfit` (از `ACTION_HANDLER.OPEN_TRADES_PROFIT` تعریف‌نشده استفاده می‌کند)، `seeders/seed.js`.
 - `/test-queue` job `run-seeders` می‌سازد که worker پردازش نمی‌کند.
 - فیلد `datetime` در `GetUpdateService.create` در اسکیما نیست و ذخیره نمی‌شود.
-- `Account.status` و `Account.copiers[].vol_factor` در منطق استفاده نمی‌شوند.
+- `Account.copiers[].vol_factor` در منطق استفاده نمی‌شود (#35). `Account.status` از 2026-10-08 با `set-acc-status` نوشته می‌شود و `copy` را عوض می‌کند، ولی خود `status` در مسیر کپی خوانده نمی‌شود.

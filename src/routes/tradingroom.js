@@ -9,5 +9,6 @@ router.post('/sync-acc-trades/:acc', tradingroomController.syncAccTrades)
 router.post('/sync-symbols', tradingroomController.syncSymbols)
 router.get('/get-acc/:acc', tradingroomController.getAcc)
 router.post('/set-acc-status/:acc', tradingroomController.setAccStatus)
+router.post('/set-acc', tradingroomController.setAcc)
 
 export default router

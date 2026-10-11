@@ -36,7 +36,7 @@
 ---
 
 ## Account (`accounts`)
-حساب کاربر (مبدا). توسط FundyPanel/دستی ساخته می‌شود؛ FundyNode آن را ایجاد نمی‌کند (جز کد مرده 504).
+حساب کاربر (مبدا). از 2026-10-11 با `POST /api/tradingroom/set-acc` از پنل ساخته می‌شود (قبلاً دستی؛ کد مرده 504 هم هست).
 
 | فیلد | نوع | پیش‌فرض | توضیح |
 |---|---|---|---|
@@ -46,7 +46,7 @@
 | `server` | String | `''` | سرور بروکر حساب کاربر |
 | `initial` | Number | | بالانس اولیه |
 | `drawdown` | Number | 0 | **حداقل اکوئیتی مجاز به دلار** (مثلاً 950) — نه درصد |
-| `commission_rate`, `swap_rate` | Number | 0 | در پروفایل 40 ارسال می‌شود |
+| `commission_rate`, `swap_rate` | Number | 0 | در پروفایل 40 ارسال می‌شود؛ از پنل (`plan_configs`، پیش‌فرض 30 و 0) می‌آیند |
 | `copy` | Boolean | false | کپی برای کل حساب فعال است؟ |
 | `copiers[]` | زیرسند | `[]` | `{acc, server, copy, vol_factor=1}` — حساب‌های Master مقصد |
 | `status` | enum | `stopped` | `trading / passed / failed / stopped` (در کد استفاده نمی‌شود) |
@@ -56,6 +56,12 @@
 ایندکس‌ها: `acc`, `acc_meta`, `server`, `status`, `{acc, copiers.acc}`, `{copy, check_time}`.
 
 جستجوی حساب: متاتریدر → `{acc_meta}` ، پنل → `{acc}`.
+
+⚠️ **یک شماره حساب می‌تواند چند رکورد داشته باشد** ولی فقط تازه‌ترین رکورد فعال است: `set-acc` رکورد تازه می‌سازد و
+رکورد قبلی همان `acc` را (اگر `trading` و `copy` بود) `stopped` + `copy=false` می‌کند و پاک نمی‌کند (تاریخچه).
+پس جست‌وجوی حساب باید با `Account.findLast(filter)` باشد (`findOne` + `sort({created_at:-1, _id:-1})`) نه `findOne` خالی —
+در `tradingroom` (هر سه endpoint حساب) و `HandleNewOrder` / `handleClose` / `handleModify` / `HandleResNewOrder` / `HandleRequestProfile` همین‌طور است.
+کد مرده (`HandleNewData` 504 ، `handleResCheckTradeMap`) هنوز `findOne` خالی دارد.
 
 ---
 

@@ -268,11 +268,11 @@ async function processMessage(msg) {
 
     if (data.acc_fp) {
         data.platform = 'panel'
-        data.accountObj = await Account.findOne({ acc: data.acc })
+        data.accountObj = await Account.findLast({ acc: data.acc })
         data.diff_time = 0
     }
     else {
-        data.accountObj = await Account.findOne({ acc_meta: data.acc })
+        data.accountObj = await Account.findLast({ acc_meta: data.acc })
         data.diff_time = 0
         if (data.accountObj) {
             data.brokerData = await getBrokerData(data.accountObj.server)

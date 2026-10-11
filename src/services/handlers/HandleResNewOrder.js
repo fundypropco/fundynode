@@ -82,7 +82,7 @@ export default async (req, res) => {
         // ارسال دستورات در وضعیت انتظار و وابسته به این دیتا 
         await GetUpdateService.updateWaitings(getUpdateDoc.origin_acc, getUpdateDoc.origin_ticket, data.ticket, getUpdateDoc)
     } else if (getUpdateDoc) {
-        const account = await Account.findOne({ acc: getUpdateDoc.origin_acc, server: getUpdateDoc.origin_server })
+        const account = await Account.findLast({ acc: getUpdateDoc.origin_acc, server: getUpdateDoc.origin_server })
         if (account && account.copiers?.length == 1) {
             if (getUpdateDoc.platform == 'metatrader') {
                 const getUpdateData = await GetUpdateService.prepareCloseOriginData(account, {
