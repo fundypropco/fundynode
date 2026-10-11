@@ -1,6 +1,6 @@
 import Account from '../../models/Account.js'
 import GetUpdateService from "../GetUpdateService.js"
-import { isValidSymbols, makeID, getOrderSide, formatDateUTC } from '../../helpers/helper.js'
+import { isValidSymbols, makeID, getOrderSide, formatDateUTC, getOrderVol } from '../../helpers/helper.js'
 import TradeMap from '../../models/TradeMap.js'
 import { getBrokerData } from '../../boot/cache.js'
 import logger from '../../helpers/logger.js'
@@ -105,6 +105,11 @@ async function processNewOrder(data) {
                     localData.symbol_a = validatedSymbolData.symbol_a
                     localData.symbol_b = validatedSymbolData.symbol_b
                     localData.description = validatedSymbolData.description
+
+                    // #.
+                    // حجم واقعی سفارش روی حساب copier (ضریب حجم + واحد حساب سنتی) ؛
+                    // هم چک مارجین و هم دستور خروجی با همین عدد کار می‌کنند
+                    localData.copier_vol = getOrderVol(copier.vol_factor, localData.vol, copier.cent)
 
                     // #.
                     // امکان پذیر بودن سفارش
@@ -269,14 +274,18 @@ async function isOrderPossible(account, copier, data) {
         return result
     }
 
+    // #.
+    // نماد و حجم هر دو سمت copier هستند؛ با حجم کاربر محاسبه می‌شد و روی حساب سنتی
+    // هزینه و مارجین ۱۰۰ برابر کمتر برآورد می‌شد
     const symbol = data.symbol_b
-    const lots = symbol.vol_min > 0 ? data.vol / symbol.vol_min : data.vol
+    const vol = data.copier_vol ?? data.vol
+    const lots = symbol.vol_min > 0 ? vol / symbol.vol_min : vol
 
     // #.
     // هزینه های سفارش روی حساب Master (سخت گیرانه تر از حساب واقعی):
     // کمیسیون با بیشترین نرخ ، دو برابر اسپرد میانگین و مارجین لازم
     const commission = Math.abs((symbol.commission_max || 0) * lots)
-    const spread_value = symbol.point > 0 ? Math.abs(data.vol * (symbol.tick_value || 0) * ((symbol.spread_avg_5 || 0) / symbol.point)) : 0
+    const spread_value = symbol.point > 0 ? Math.abs(vol * (symbol.tick_value || 0) * ((symbol.spread_avg_5 || 0) / symbol.point)) : 0
     const margin = Math.abs((symbol.margin || 0) * lots)
     const cost = commission + (2 * spread_value)
 

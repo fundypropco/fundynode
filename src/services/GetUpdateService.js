@@ -162,7 +162,8 @@ const prepareOrderData = async (account, copier, data) => {
     perparedData.symbol = data.symbol_b.symbol
     perparedData.symbol_title = data.symbol_a.title
     perparedData.side = data.side
-    perparedData.vol = getOrderVol(copier.vol_factor, data.vol)
+    /* حجم copier یک بار در HandleNewOrder حساب و همان‌جا هم اعتبارسنجی مارجین شده است */
+    perparedData.vol = data.copier_vol ?? getOrderVol(copier.vol_factor, data.vol, copier.cent)
     perparedData.sl = data.sl // perparedData.platform === 'metatrader' ? getWiderSl(data.symbol_b, perparedData.side, Number(data.sl)) : data.sl
     perparedData.tp = data.tp // perparedData.platform === 'metatrader' ? getWiderTp(data.symbol_b, perparedData.side, Number(data.tp)) : data.tp
     perparedData.slippage = 50

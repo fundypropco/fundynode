@@ -7,6 +7,7 @@ import express from 'express'
 import mongoose from 'mongoose'
 import Account from '../src/models/Account.js'
 import tradingroomRouter from '../src/routes/tradingroom.js'
+import { getOrderVol } from '../src/helpers/helper.js'
 
 const URI = 'mongodb://127.0.0.1:27117/fundynode_setacc_test'
 let pass = 0, fail = 0
@@ -36,7 +37,7 @@ const get = async (path) => (await fetch(`http://127.0.0.1:5055/api/tradingroom$
 const payload = (over = {}) => ({
     acc: 394326, acc_meta: 0, server: '', initial: 3000, drawdown: 2850,
     commission_rate: 30, swap_rate: 0, username: '18972',
-    copiers: [{ acc: 91424119, server: 'LiteFinance-MT5-Demo', copy: true, vol_factor: 1 }],
+    copiers: [{ acc: 91424119, server: 'LiteFinance-MT5-Demo', copy: true, vol_factor: 1, cent: false }],
     ...over
 })
 
@@ -52,8 +53,8 @@ check('status success', r.status, 'success')
 const doc = await Account.findOne({ acc: 394326 }).lean()
 check('record fields', [doc.acc, doc.acc_meta, doc.server, doc.initial, doc.drawdown, doc.commission_rate, doc.swap_rate, doc.copy, doc.status, doc.username, doc.check_time],
     [394326, 0, '', 3000, 2850, 30, 0, true, 'trading', '18972', 0])
-check('copier fields', [doc.copiers.length, doc.copiers[0].acc, doc.copiers[0].server, doc.copiers[0].copy, doc.copiers[0].vol_factor],
-    [1, 91424119, 'LiteFinance-MT5-Demo', true, 1])
+check('copier fields', [doc.copiers.length, doc.copiers[0].acc, doc.copiers[0].server, doc.copiers[0].copy, doc.copiers[0].vol_factor, doc.copiers[0].cent],
+    [1, 91424119, 'LiteFinance-MT5-Demo', true, 1, false])
 check('created_at set (ms)', doc.created_at > 1.7e12, true)
 check('stopped count 0', r.stopped, 0)
 
@@ -85,6 +86,24 @@ console.log('== 6) حساب دیگر دست نمی‌خورد ==')
 await post('/set-acc', payload({ acc: 394327, username: '18984' }))
 await post('/set-acc', payload({ acc: 394326, initial: 1000 }))
 check('other acc still trading + copy', await Account.countDocuments({ acc: 394327, status: 'trading', copy: true }), 1)
+
+console.log('== 7) فیلد cent حساب سنتی ==')
+r = await post('/set-acc', payload({ acc: 394328, copiers: [{ acc: 91424121, server: 'Broker-Cent', copy: true, vol_factor: 0.6, cent: true }] }))
+check('cent stored on the copier', (await Account.findLast({ acc: 394328 }).lean()).copiers[0].cent, true)
+await post('/set-acc', payload({ acc: 394329 }))
+check('default false when the panel does not send it', (await Account.findLast({ acc: 394329 }).lean()).copiers[0].cent, false)
+
+console.log('== 8) حجم سفارش روی copier (getOrderVol) ==')
+// اندازه اقتصادی همیشه = ضریب × حجم کاربر ؛ حساب سنتی فقط واحد را عوض می‌کند (۱ لات سنتی = ۰.۰۱ استاندارد)
+check('pro standard: 0.1 -> 0.1', getOrderVol(1, 0.1, false), 0.1)
+check('pro cent: 0.1 -> 10 (= 0.1 std)', getOrderVol(1, 0.1, true), 10)
+check('eco 60% cent: 0.1 -> 6 (= 0.06 std)', getOrderVol(0.6, 0.1, true), 6)
+check('eco 60% standard: 0.1 -> 0.06', getOrderVol(0.6, 0.1, false), 0.06)
+check('eco 50% cent: 2 -> 100 (= 1 std)', getOrderVol(0.5, 2, true), 100)
+check('eco 100% cent (factor 1): 0.1 -> 10, no longer skipped', getOrderVol(1, 0.1, true), 10)
+check('factor > 1 standard: 2 x 0.1 -> 0.2 (was 0)', getOrderVol(2, 0.1, false), 0.2)
+check('missing factor -> unchanged', getOrderVol(undefined, 0.1, false), 0.1)
+check('floors to 2 decimals', getOrderVol(0.45, 0.077, false), 0.03)
 
 console.log(`RESULT: ${pass} passed, ${fail} failed`)
 await mongoose.connection.db.dropDatabase()

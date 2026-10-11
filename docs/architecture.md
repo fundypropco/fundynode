@@ -72,7 +72,7 @@ FundyNode یکی از چند پروژه سامانه پراپ‌تریدینگ F
 | POST | `/api/tradingroom/sync-symbols` | `tradingroom.syncSymbols` | همه اسناد Symbol |
 | GET | `/api/tradingroom/get-acc/:acc` | `tradingroom.getAcc` | تازه‌ترین رکورد Account آن شماره حساب |
 | POST | `/api/tradingroom/set-acc-status/:acc` | `tradingroom.setAccStatus` | `{status}` ⇒ وضعیت تازه‌ترین رکورد (غیر `trading` ⇒ `copy=false` ، `trading` ⇒ `copy=true`) |
-| POST | `/api/tradingroom/set-acc` | `tradingroom.setAcc` | **ساخت حساب از پنل** (فرم درخواست حساب ادمین): رکورد تازه `trading`+`copy` و متوقف کردن رکورد فعال قبلی همان `acc` |
+| POST | `/api/tradingroom/set-acc` | `tradingroom.setAcc` | **ساخت حساب از پنل** (فرم درخواست حساب ادمین): رکورد تازه `trading`+`copy` و متوقف کردن رکورد فعال قبلی همان `acc` ؛ بدنه: `acc, acc_meta, server, initial, drawdown, commission_rate, swap_rate, username, copiers[{acc, server, copy, vol_factor, cent}]` |
 | POST | `/api/admin/seed-symbol-alias` | admin | upsert لیست نمادهای مجاز (فارکس، فلزات، کریپتو) |
 | POST | `/api/admin/seed-log-rules` | admin | upsert قوانین لاگ درخواست |
 | POST | `/api/admin/seed-broker-symbols/:server` | admin | دستور `BROKER_SYMBOLS (13)` برای بروکر (`all` / `old` / نام سرور) |

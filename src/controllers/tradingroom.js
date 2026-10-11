@@ -121,7 +121,8 @@ const setAcc = asyncHandler(async (req, res) => {
             acc: Number(copier.acc),
             server: String(copier.server ?? ''),
             copy: copier.copy !== false,
-            vol_factor: Number(copier.vol_factor) || 1
+            vol_factor: Number(copier.vol_factor) || 1,
+            cent: copier.cent === true
         })),
         check_time: 0
     })

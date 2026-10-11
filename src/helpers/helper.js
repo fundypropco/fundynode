@@ -688,16 +688,20 @@ export function getWiderTp(symbolObj, side, tp) {
     return ntp
 }
 
-export function getOrderVol(volFactor, originVol) {
-    let finalVol = originVol
-    if (volFactor === 1) {
-        //todo: براساس اختلاف ارزش پیپ محاسبه شود
-    } else if (volFactor < 1) {
-        finalVol = Math.floor(volFactor * originVol * 10000) / 100
-    } else if (volFactor > 1) {
-        finalVol = Math.floor(volFactor * originVol) / 100
-    }
-    return finalVol
+// #.
+// حجم سفارش روی حساب copier:
+//   ۱) ضریب حجم (vol_factor) اعمال می‌شود — حساب اقتصادی کمتر از ۱ ، حرفه‌ای ۱
+//   ۲) اگر حساب مقصد سنتی باشد (copier.cent) حجم ضربدر ۱۰۰ می‌شود چون ۱ لات سنتی = ۰.۰۱ لات استاندارد
+// مثال: کاربر ۰.۱ لات ، سهم سود ۶۰٪ ، Master سنتی ⇒ ۰.۰۶ لات استاندارد = ۶ لات سنتی
+// خروجی تا دو رقم اعشار به پایین گرد می‌شود (حجم مجاز متاتریدر)
+//todo: اختلاف ارزش پیپ دو نماد هم در محاسبه بیاید
+export function getOrderVol(volFactor, originVol, isCent = false) {
+    const factor = Number(volFactor) || 1
+    const vol = Number(originVol) || 0
+
+    const finalVol = factor * vol * (isCent ? 100 : 1)
+
+    return Math.floor(finalVol * 100) / 100
 }
 
 export async function isValidSymbols(accountObj, copierObj, data) {
