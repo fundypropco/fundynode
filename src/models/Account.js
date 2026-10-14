@@ -70,6 +70,23 @@ const accountSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    // #.
+    // قاعده ترید در خبر از کانفیگ حساب در پنل (set-acc و set-acc-news؛ helpers/newsRule.js)
+    // news_trading = false ⇒ باز کردن معامله از متاتریدر کاربر در بازه خبر بسته است ؛ پیش‌فرض true (حساب‌های قدیمی بدون محدودیت)
+    news_trading: {
+        type: Boolean,
+        default: true
+    },
+    // فاصله مجاز ترید قبل از شروع و بعد از پایان خبر (دقیقه)
+    news_gap_minutes: {
+        type: Number,
+        default: 0
+    },
+    // درجه‌های اهمیت خبرهایی که فاصله دارند: high ، medium ، low ، holiday
+    news_impacts: {
+        type: [String],
+        default: []
+    },
     copiers: {
         type: [copierSchema],
         default: []

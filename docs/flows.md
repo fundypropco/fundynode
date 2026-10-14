@@ -183,3 +183,12 @@ worker.js ─ startAccReportSync (هر ۱ ثانیه، فقط یک worker با �
 **فعال:** تشخیص دراودان در EA حساب Master انجام می‌شود و با پیام **41** (`HandleDrawdown.js`) به FundyNode اطلاع داده می‌شود؛ FundyNode حساب تریدر (`acc = magic` و متصل به آن Master) را `status='failed'` و `copy=false` (روی حساب و همه copier ها) می‌کند. از این به بعد `processNewOrder` برای این حساب `| Account Is Disabled |` برمی‌گرداند. بستن معاملات باز در این مسیر با FundyNode نیست.
 
 **غیرفعال (کد قدیمی):** کد مرده در `AccountService.js` (کامنت‌شده)، `HandleOpenTrades.js` (400) و `HandleNewData.js` (504): محاسبه `profit_bl/profit_eq` هر copier، گزارش روزانه `AccountReport`، و در صورت رسیدن اکوئیتی به `drawdown`: `BULK_CLOSE` روی Master + `copy=false` + `CLOSE_ALL_ORIGIN`/`CLOSE_MAGIC`. فیلدهای `profit_bl/profit_eq` از اسکیمای copier حذف شده‌اند، پس فعال‌سازی مجدد نیاز به بازطراحی دارد.
+
+## قاعده ترید در خبر برای سفارش متاتریدر کاربر (2026-10-14، branch `claude/news-trading-rule`)
+
+- پنل (FundyPanel) سفارش‌های FP Trader را خودش در بازه خبر رد می‌کند؛ ولی معامله‌ای که کاربر مستقیم از متاتریدر خودش (`acc_meta`) باز می‌کند فقط از نود می‌گذرد (KI-38 پنل).
+- `HandleNewOrder` ⇒ `isOrderPossible`: اول، فقط برای `data.platform === 'metatrader'`، `findNewsBlock(account, symbol_a.title)` ؛ بسته ⇒ `status=false` با توضیح `news trading is not allowed on this account / ...` ⇒ مثل بقیه موارد ناممکن معامله مبدا بسته می‌شود (`prepareCloseOriginData`، فقط وقتی `acc_meta` هست).
+- سفارش‌های `platform = 'panel'` چک نمی‌شوند: پنل خودش چک کرده و Limit/Stop پنل که قبل از بازه ثبت شده باید داخل بازه هم فعال شود (تصمیم صاحب پروژه).
+- داده: فیلدهای خبر Account (از `set-acc` / `set-acc-news`) و مجموعه `forex_news` (از `set-news`) — data-models.
+- **مبنای زمان فقط UTC:** `start` یونیکس میلی‌ثانیه و زمان معامله `Date.now()` سرور هنگام رسیدن سفارش؛ ساعت بروکر (open_timestamp) و TZ پروسه نقشی ندارند.
+- تست: `node tools/news-rule-test.mjs` (مونگوی توسعه 27117، دیتابیس جدا که آخر کار پاک می‌شود) — با `TZ=Asia/Tehran` و `TZ=America/New_York` هم 18/18.

@@ -48,6 +48,9 @@
 | `drawdown` | Number | 0 | **حداقل اکوئیتی مجاز به دلار** (مثلاً 950) — نه درصد |
 | `commission_rate`, `swap_rate` | Number | 0 | در پروفایل 40 ارسال می‌شود؛ از پنل (`plan_configs`، پیش‌فرض 30 و 0) می‌آیند |
 | `copy` | Boolean | false | کپی برای کل حساب فعال است؟ |
+| `news_trading` | Boolean | true | ترید در تایم اخبار مجاز است؟ (2026-10-14، از کانفیگ پنل با `set-acc` / `set-acc-news`) ؛ پیش‌فرض true ⇒ حساب‌های قدیمی بدون محدودیت |
+| `news_gap_minutes` | Number | 0 | فاصله مجاز ترید قبل از شروع و بعد از پایان خبر (دقیقه، حداکثر 240) |
+| `news_impacts` | [String] | `[]` | درجه‌های اهمیت خبرهایی که فاصله دارند: `high` ، `medium` ، `low` ، `holiday` |
 | `copiers[]` | زیرسند | `[]` | `{acc, server, copy, vol_factor=1, cent=false}` — حساب‌های Master مقصد (پایین) |
 | `status` | enum | `stopped` | `trading / passed / failed / stopped` (در کد استفاده نمی‌شود) |
 | `check_time` | Number | 0 | زمان درخواست بررسی صحت کپی (عملاً استفاده نمی‌شود) |
@@ -91,6 +94,21 @@
 کد مرده (`HandleNewData` 504 ، `handleResCheckTradeMap`) هنوز `findOne` خالی دارد.
 
 ---
+
+## ForexNews (`forex_news`) — اخبار اقتصادی ساعت‌دار ۷ روز (2026-10-14)
+از پنل با `POST /api/tradingroom/set-news` (دکمه «ارسال به FundyNode» صفحه اخبار ادمین) ؛ هر ارسال کل مجموعه را جایگزین می‌کند.
+
+| فیلد | نوع | توضیح |
+|---|---|---|
+| `news_id` | Number | شناسه خبر در پنل (`forex_news.id`) |
+| `currency` | String | نماد ارز (USD ، EUR ، ... ؛ `ALL` = همه نمادها) |
+| `title` | String | |
+| `impact` | String | `high` / `medium` / `low` / `holiday` (ایندکس) |
+| `start` | Number | زمان شروع، یونیکس **میلی‌ثانیه** UTC (ایندکس) |
+| `duration` | Number | طول خبر به دقیقه (0 = لحظه‌ای) |
+| `symbols` | [String] | نمادهای اضافه همین ارز از تنظیمات تریدینگ روم پنل (مثلا US30 برای USD) |
+
+قاعده (`src/helpers/newsRule.js` ، `findNewsBlock`): حساب با `news_trading = false` از `start − gap` تا `start + duration + gap` روی نمادی که `title` آن کد ارز را دارد یا در `symbols` است (ALL ⇒ همه) معامله باز نمی‌کند ؛ فقط درجه‌های `news_impacts`.
 
 ## GetUpdate (`get_updates`) — صف دستور
 

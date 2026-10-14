@@ -8,6 +8,7 @@ import RequestLog from '../../models/RequestLog.js'
 import TradeMapService from '../TradeMapService.js'
 import AccReportService from '../AccReportService.js'
 import { toMasterUnits } from '../../helpers/copierAmounts.js'
+import { findNewsBlock, newsBlockDescription } from '../../helpers/newsRule.js'
 
 // #.
 // اگر گزارش لحظه ای حساب (42) در ردیس نباشد، سفارش بدون بررسی موجودی پذیرفته شود یا نه
@@ -258,6 +259,20 @@ async function sendForCheck(account) {
 async function isOrderPossible(account, copier, data) {
     const result = {}
     result.status = true
+
+    // #.
+    // قاعده ترید در خبر: معامله‌ای که کاربر از متاتریدر خودش باز کرده (platform = metatrader) در بازه خبر ⇒ ناممکن
+    // (مثل بقیه موارد ناممکن، معامله مبدا بسته می‌شود). سفارش‌های پنل را خود پنل چک کرده و Limit/Stop پنل که قبل از بازه
+    // ثبت شده باید داخل بازه هم فعال شود (تصمیم صاحب پروژه) ⇒ برای platform = panel چک نمی‌شود
+    if (data.platform === 'metatrader') {
+        const symbolTitle = data.symbol_a?.title || data.symbol
+        const block = await findNewsBlock(account, symbolTitle)
+        if (block) {
+            result.status = false
+            result.description = [newsBlockDescription(block, symbolTitle)]
+            return result
+        }
+    }
 
     // #.
     // آخرین وضعیت لحظه ای حساب (پیام 42 از Master) ؛ acc همان magic است

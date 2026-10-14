@@ -4,6 +4,7 @@ import GetUpdate from "../models/GetUpdate.js"
 import Symbol from '../models/Symbol.js'
 import TradeMap from "../models/TradeMap.js"
 import { toPanelTrade } from "../helpers/copierAmounts.js"
+import ForexNews from '../models/ForexNews.js'
 
 
 const getUpdates = asyncHandler(async (req, res) => {
@@ -118,6 +119,8 @@ const setAcc = asyncHandler(async (req, res) => {
         drawdown: Number(req.body.drawdown) || 0,
         commission_rate: Number(req.body.commission_rate) || 0,
         swap_rate: Number(req.body.swap_rate) || 0,
+        // #. قاعده ترید در خبر (پنل قدیمی که نمی‌فرستد ⇒ بدون محدودیت)
+        ...newsRuleFields(req.body),
         copy: true,
         status: 'trading',
         copiers: copiers.map(copier => ({
@@ -138,6 +141,78 @@ const setAcc = asyncHandler(async (req, res) => {
 })
 
 
+// #.
+// فیلدهای قاعده ترید در خبر از بدنه درخواست پنل ؛ news_trading نیامده ⇒ true (بدون محدودیت)
+const NEWS_IMPACTS = ['high', 'medium', 'low', 'holiday']
+function newsRuleFields(body) {
+    const impacts = Array.isArray(body.news_impacts) ? body.news_impacts : String(body.news_impacts ?? '').split(',')
+    return {
+        news_trading: body.news_trading === undefined || body.news_trading === null ? true : (body.news_trading === true || body.news_trading === 1 || body.news_trading === '1' || body.news_trading === 'true'),
+        news_gap_minutes: Math.max(0, Math.min(240, Number(body.news_gap_minutes) || 0)),
+        news_impacts: NEWS_IMPACTS.filter(i => impacts.map(x => String(x).trim()).includes(i))
+    }
+}
+
+// #.
+// تغییر قاعده ترید در خبر حساب موجود (ادمین پنل ، صفحه جزئیات حساب) روی تازه‌ترین رکورد همان شماره حساب
+const setAccNews = asyncHandler(async (req, res) => {
+
+    const account = await Account.findLast({ acc: req.params.acc })
+    if (!account) {
+        return res.send({
+            status: 'error',
+            message: 'Account Not Found!!!'
+        })
+    }
+
+    Object.assign(account, newsRuleFields(req.body))
+    await account.save()
+
+    res.send({
+        status: 'success',
+        data: {
+            acc: account.acc,
+            news_trading: account.news_trading,
+            news_gap_minutes: account.news_gap_minutes,
+            news_impacts: account.news_impacts
+        }
+    })
+})
+
+// #.
+// اخبار ساعت‌دار ۷ روز جاری از پنل (دکمه «ارسال به FundyNode» صفحه اخبار اقتصادی ادمین) ؛ کل مجموعه جایگزین می‌شود
+const setNews = asyncHandler(async (req, res) => {
+
+    if (!Array.isArray(req.body.news)) {
+        return res.send({
+            status: 'error',
+            message: 'news must be an array'
+        })
+    }
+
+    const docs = req.body.news
+        .filter(n => n && Number(n.start) > 0 && NEWS_IMPACTS.includes(String(n.impact)))
+        .map(n => ({
+            news_id: Number(n.id) || 0,
+            currency: String(n.currency ?? '').toUpperCase(),
+            title: String(n.title ?? ''),
+            impact: String(n.impact),
+            start: Number(n.start),
+            duration: Math.max(0, Number(n.duration) || 0),
+            symbols: Array.isArray(n.symbols) ? n.symbols.map(s => String(s).toUpperCase()) : []
+        }))
+
+    await ForexNews.deleteMany({})
+    if (docs.length) {
+        await ForexNews.insertMany(docs)
+    }
+
+    res.send({
+        status: 'success',
+        data: { count: docs.length }
+    })
+})
+
 export default {
     getUpdates,
     syncAllTrades,
@@ -145,5 +220,7 @@ export default {
     syncSymbols,
     getAcc,
     setAccStatus,
-    setAcc
+    setAcc,
+    setAccNews,
+    setNews
 }

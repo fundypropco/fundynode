@@ -10,5 +10,8 @@ router.post('/sync-symbols', tradingroomController.syncSymbols)
 router.get('/get-acc/:acc', tradingroomController.getAcc)
 router.post('/set-acc-status/:acc', tradingroomController.setAccStatus)
 router.post('/set-acc', tradingroomController.setAcc)
+// #. قاعده ترید در خبر یک حساب و اخبار ۷ روز جاری از پنل
+router.post('/set-acc-news/:acc', tradingroomController.setAccNews)
+router.post('/set-news', tradingroomController.setNews)
 
 export default router
