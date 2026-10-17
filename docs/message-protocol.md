@@ -39,7 +39,7 @@
 | 13 | BROKER_SYMBOLS | هر حساب بروکر | 987 | HandleResBrokerSymbols | ✅ |
 | 20 | CLOSE_ALL_ORIGIN | MT کاربر | 980 | HandleResCloseAllOrigin | ❌ |
 | 21 | BULK_CLOSE | Master | 979 | handleResBulkClose | ❌ |
-| 22 | PARTIAL_CLOSE | Master | 978 | handleResPartialClose | ❌ (ولی دستورش هنوز ساخته می‌شود!) |
+| 22 | PARTIAL_CLOSE | Master | 978 | handleResPartialClose | ✅ (از 2026-10-17 ؛ قبلا غیرفعال) |
 | 23 | CLOSE_ORIGIN | MT کاربر | 977 | HandleResCloseOrigin | ✅ |
 | 25 | OPEN_PENDING_ORDER | Master | 975 | HandleResOpenPendingOrder | ❌ (دستورش ساخته می‌شود) |
 | 26 | CLOSE_MAGIC | Master | 974 | HandleResCloseMagic | ❌ |
@@ -93,6 +93,12 @@ acc,500,NEW ORDER_&_ticket_&_symbol_&_type_&_vol_&_open_price_&_open_time_&_sl_&
 closed_ticket _&_ closed_vol _&_ closed_price _&_ closed_timestamp _&_ closed_swap _&_ closed_commission _&_ closed_profit _&_ open_ticket _&_ open_vol _&_ open_price _&_ open_timestamp
 ```
 در 500 آیتمی انتخاب می‌شود که `open_ticket == ticket`؛ اگر پیدا شد پیام «سفارش جدید» نیست بلکه باقیمانده یک partial است.
+
+آیتم partial در **501 کاربر** (و FP Trader) سیزده فیلدی است (با `closed_swap_final` و `closed_commission_final` بعد از swap و commission ، همان ترتیب `handleClose.processMessage`):
+```
+closed_ticket _&_ closed_vol _&_ closed_price _&_ closed_timestamp _&_ closed_swap _&_ closed_swap_final _&_ closed_commission _&_ closed_commission_final _&_ closed_profit _&_ open_ticket _&_ open_vol _&_ open_price _&_ open_timestamp
+```
+FP Trader (2026-10-17): `{acc},501,NEW CLOSE_&_{ticket}_&_..._&_{closed_vol}_&_0_&_0_&_0_&_0_&_{acc},{ts},{ticket}_&_{closed_vol}_&_{price}_&_{time}_&_0_&_0_&_0_&_0_&_0_&_{new_ticket}_&_{rest_vol}_&_{open_price}_&_{open_time}` (تیکت باقیمانده = کد اکشن پنل). پاسخ به پنل وقتی حجم روی Master ممکن نیست: `{status:'error', message:'partial close is not possible for this volume ...'}`.
 
 پاسخ همزمان: `{status:'success', message:'| order processed for copier X | ...', data:{keyid}}` — برای پنل اگر `message` شامل `processed` نباشد `status='error'`.
 
@@ -188,6 +194,7 @@ acc_cluster,302,REQUEST PROFILE_&_server_&_magic_&_CYCLE n,timestamp,-2
 | 999..992 (open) | `OK ..._&_ticket_&_open_timestamp_&_vol_&_open_price_&_sl_&_tp_&_magic_&_comment_&_error_&_commission_&_commission_final` | `FAIL ..._&_?_&_result_code` (کد در i=2) |
 | 997 (modify) | `OK MODIFY_&_ticket_&_sl_&_tp_&_open_price` | result_code در i=2 |
 | 996 (close) | `OK CLOSE_&_ticket_&_close_price_&_close_timestamp_&_swap_&_swap_final_&_commission_&_commission_final_&_profit_&_error_&_vol_&_symbol` یا `OK DELETE_&_ticket_&_close_timestamp` | result_code در i=2 |
+| 978 (partial close) | `OK PARTIAL_&_closed_ticket_&_open_ticket_&_open_vol_&_closed_timestamp_&_close_price_&_swap_&_commission_&_profit_&_magic_&_comment_&_sl_&_tp_&_open_price_&_open_timestamp_&_closed_vol[_&_swap_final_&_commission_final]` — حجم‌ها و مبالغ خام Master ؛ `open_ticket == closed_ticket` ⇒ MT5 (کمیسیون تجمیعی) ؛ finals از 2026-10-17 (اختیاری) | `CANT PARTIAL_&_result_code` (کد در i=1) |
 | 977 (close origin) | `OK CLOSE_&_ticket_&_close_price_&_close_timestamp_&_swap_&_commission_&_profit_&_error_&_vol_&_symbol` | result_code در i=2 |
 | 987 (broker symbols) | `acc,987,S1,S2,...,Sn,timestamp,keyid` — **لیست با کاما**؛ `symbols = parts.slice(2,-2)` | — |
 | 989 (symbol data) | `contract_size_=_v_&_tick_size_=_v_&_tick_value_=_v_&_vol_step_=_v_&_vol_min_=_v_&_vol_max_=_v_&_digits_=_v_&_point_=_v` | — |

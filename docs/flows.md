@@ -80,15 +80,34 @@ MT دمو / پنل ──500──► processMessage ──► partial? ──no
 
 ---
 
-## ۴. بستن بخشی (Partial Close)
+## ۴. بستن بخشی (Partial Close) — بازنویسی 2026-10-17 (branch `claude/fp-trader-partial-orders-*`)
 
-در متاتریدر ۴ بستن بخشی یک تیکت، تیکت قدیم را می‌بندد و برای باقیمانده تیکت جدید می‌سازد. EA اطلاعات آن را در اندیس 4 پیام‌های 500 (برای تیکت جدید) یا 501 (برای تیکت بسته‌شده) می‌فرستد.
+```
+کاربر: MT4 (تیکت تازه) ──500 با آیتم partial──┐
+       MT5 / MT4       ──501 با آیتم partial──┼─► PartialCloseService.processUserPartial ──► PARTIAL_CLOSE (22) برای Master
+       FP Trader (پنل) ──501 با آیتم partial──┘        (حجم Master متناسب)                         │
+                                                                                                 ▼
+پنل ◄── sync closed (بخش بسته) + created (باقیمانده) ◄── handleResPartialClose ◄── 978 OK PARTIAL از Master
+```
 
-- در 500: آیتمی با `open_ticket == ticket` ؛ در 501: آیتمی با `closed_ticket == ticket`.
-- `processPartial` (هر دو فایل) برای هر copier: دستور `PARTIAL_CLOSE (22)` با `vol = closed_vol` و `origin_new_ticket/vol/commission`؛ `waiting` اگر TradeMap باز نیست.
-- سمت src در TradeMap: `vol_src = closed_vol` و فیلدهای بستن؛ در نسخه 500 sync `updated` هم انجام می‌شود.
-- ⚠ پاسخ 978 (`handleResPartialClose.js`) در کنترلر **غیرفعال** است؛ بنابراین بستن رکورد dist، ساخت TradeMap جدید برای باقیمانده و آزادسازی waiting ها انجام نمی‌شود.
-- ⚠ اگر EA برای یک partial هم 500 و هم 501 بفرستد، دو دستور PARTIAL_CLOSE ساخته می‌شود — باید با رفتار EA چک شود.
+- در 500: آیتمی با `open_ticket == ticket` ؛ در 501: آیتمی با `closed_ticket == ticket`. هر دو مسیر `processUserPartial` (`src/services/PartialCloseService.js`) را صدا می‌زنند (کمیسیون بخش بسته: 500 ⇐ آیتم ، 501 ⇐ فیلد اصلی پیام).
+- **حجم روی Master** (`helpers/partialClose.masterPartialVol`): `vol_dist باز × closed_vol / (closed_vol + open_vol)` گرد به پایین تا `vol_step` نماد Master — نه حجم خام کاربر (قبلا در حساب سنتی / اقتصادی حجم اشتباه بسته می‌شد). اگر معامله هنوز روی Master باز نشده (waiting) ⇒ `getOrderVol` مثل سفارش.
+- **حجم ناممکن** (تصمیم صاحب پروژه 2026-10-17):
+  - بخش بسته روی Master کمتر از `vol_min` (`skip`): پنل ⇒ رد با پیام `partial close is not possible ...` (پاسخ 501 با `status: error`) ؛ متاتریدر کاربر ⇒ کاری روی Master انجام نمی‌شود ، فقط `ticket_src/vol_src` رکورد باز به تیکت باقیمانده کاربر منتقل و sync `updated` می‌شود (warn در لاگ).
+  - باقیمانده روی Master کمتر از `vol_min` (`close`): پنل ⇒ رد ؛ متاتریدر کاربر ⇒ دستور `CLOSE (4)` برای کل Master (پاسخ 996 ، `closing_type = single`).
+- تا رسیدن 978 رکورد باز **دست نمی‌خورد**؛ اطلاعات سمت src بخش بسته (قیمت/زمان/سود/سواپ کاربر) در سند GetUpdate می‌ماند و در 978 روی بخش بسته نوشته می‌شود ⇒ اگر Master نتوانست (CANT PARTIAL) معامله باز سالم می‌ماند.
+- **پاسخ 978** (`handleResPartialClose` ، از 2026-09-22 غیرفعال بود و دوباره فعال شد):
+  - رکورد باز ⇐ بخش بسته (`status = closed` ، `closing_type = partial` ، `vol_dist = closed_vol` ، `profit_dist` ، `swap_dist` ، `swap_final`).
+  - رکورد تازه ⇐ باقیمانده: `ticket_src = origin_new_ticket` ، `ticket_dist = open_ticket` (MT5 همان تیکت) ، `vol_factor`/`cent`/`platform`/`magic_src`/`comment_src` از رکورد مادر ، `tick_value` **یک لات** (قبلا ضربدر حجم بود) و `tick_size`.
+  - هر دو `partial_code` یکسان (اولین بار `Date.now()` ؛ بستن‌های بعدی همان کد) ⇒ پنل تکه‌ها را کنار هم نشان می‌دهد.
+  - sync پنل: `closed` برای بخش بسته و `created` برای باقیمانده (هر دو با `map_id`) ، بعد آزاد کردن waiting های تیکت باقیمانده.
+- **کمیسیون** (`helpers/partialClose.splitCommission` ، برای `commission_dist` و `commission_final`):
+  - تیکت Master عوض نشده ⇒ MT5: کمیسیون گزارش‌شده تجمیعی کل پوزیشن است ؛ اختلاف با مجموع خانواده (همه رکوردهای همان `ticket_dist`) روی بخش بسته و سهم باقیمانده متناسب با حجم از رکورد باز.
+  - تیکت تازه ⇒ MT4: بخش بسته = مقدار گزارش‌شده ، باقیمانده = کمیسیون رکورد باز − گزارش (کمیسیون در بستن ⇒ 0).
+  - مجموع خانواده همیشه با گزارش EA می‌خواند و در 996 بستن نهایی همان منطق تجمیعی قبلی کار می‌کند. (منطق قبلی در MT4 کمیسیون باقیمانده را دو بار حساب می‌کرد.)
+- **finals**: EA Master از 2026-10-17 `swap_final` و `commission_final` را در انتهای 978 می‌فرستد (اندیس 16 و 17 ؛ تغییر سمت MQL با صاحب پروژه). EA قدیمی بدون آنها ⇒ `commission_final` متناسب با حجم تقسیم می‌شود و `swap_final` بخش بسته 0 (warn در لاگ).
+- ⚠ اگر EA متاتریدر 4 کاربر برای یک partial هم 500 و هم 501 بفرستد هنوز دو دستور PARTIAL_CLOSE ساخته می‌شود (known-issues #17).
+- تست: `node tools/partial-close-test.mjs` (مونگو و ردیس توسعه ؛ sync به پنل در تست جایگزین می‌شود).
 
 ---
 
@@ -137,8 +156,9 @@ POST /api/admin/seed-broker-symbols-data/:server ──► دستور 11 برا�
 |---|---|
 | `created` | HandleResNewOrder (موفق) |
 | `modified` | HandleResModify |
-| `updated` | HandleNewOrder.processPartial |
-| `closed` | HandleResClose ، handleClose (master) |
+| `updated` | PartialCloseService (بخش بسته کمتر از vol_min Master در متاتریدر کاربر: انتقال نگاشت) |
+| `closed` | HandleResClose ، handleClose (master) ، handleResPartialClose (بخش بسته partial) |
+| `created` (باقیمانده partial) | handleResPartialClose |
 
 - POST به `https://panel.fundyprop.com/api/sync-trade` با `{event, data:[tradeMap]}` و هدر `X-API-Key: FUNDYPANEL_API_KEY`، timeout ۱۰ ثانیه.
 - خطا فقط لاگ می‌شود (بدون retry). لاراول می‌تواند با `/api/tradingroom/sync-*` داده را pull کند.

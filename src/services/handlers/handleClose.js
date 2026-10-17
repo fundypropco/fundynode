@@ -5,6 +5,7 @@ import TradeMap from '../../models/TradeMap.js'
 import { getBrokerData } from '../../boot/cache.js'
 import TradeMapService from '../TradeMapService.js'
 import RequestLog from '../../models/RequestLog.js'
+import { processUserPartial } from '../PartialCloseService.js'
 
 export default async (req, res, reqLog) => {
 
@@ -42,6 +43,13 @@ export default async (req, res, reqLog) => {
             data: {
                 keyid: result?.keyid
             }
+        }
+
+        // #.
+        // بستن بخشی ناممکن برای پنل (حجم کمتر از حداقل روی Master) ⇒ خطا و پیام برای FP Trader
+        if (data.platform === 'panel' && result?.error) {
+            response.status = 'error'
+            response.message = result.error
         }
     } else if (data.acc_type === 'master') {
 
@@ -158,61 +166,9 @@ async function processClose(data) {
 }
 
 async function processPartial(data) {
-
     // #.
-    // پیدا کردن اکانت مربوط به عملیات دریافتی 
-    const account = data.accountObj
-    let createdGetUpdateDoc = {}
-
-    // #.
-    // بررسی اینکه آیا قابلیت برای این اکانت فعال هست یا نه 
-    if (account.copy) {
-
-        let keyid = makeID()
-        const partialInfo = data.partial_item
-        partialInfo.keyid = keyid
-
-        // #.
-        // بدست آوردن تیکتهای متناظر با این سفارش روی اکانتهای دیگر 
-        const tradeMaps = await TradeMap.find({ acc_src: account.acc, ticket_src: partialInfo.closed_ticket })
-
-        // #.
-        // بدست آوردن اکانتهای کپی کننده 
-        for (const copier of account.copiers) {
-            if (copier.copy) {
-                const openTradeMap = tradeMaps.find(t => t.acc_dist == copier.acc && t.status == 'open')
-                const sumCommissions = tradeMaps.reduce((s, t) => {
-                    if (t.acc_dist === copier.acc) {
-                        return s + (t.commission_src ?? 0)
-                    }
-                    return s
-                }, 0)
-                let newCommission = 0
-                if (data.closed_commission < sumCommissions) {
-                    newCommission = Math.round((data.closed_commission - sumCommissions) * 100) / 100
-                }
-                partialInfo.origin_new_commission = newCommission
-                const getUpdateData = await GetUpdateService.preparePartialCloseData(account, copier, partialInfo, openTradeMap)
-                createdGetUpdateDoc = await GetUpdateService.create(getUpdateData)
-
-                if (openTradeMap) {
-                    openTradeMap.vol_src = partialInfo.closed_vol
-                    openTradeMap.close_time_src = formatDateUTC(partialInfo.closed_timestamp)
-                    openTradeMap.close_timestamp_src = partialInfo.closed_timestamp
-                    openTradeMap.close_price_src = partialInfo.closed_price
-                    openTradeMap.swap_src = partialInfo.closed_swap
-                    openTradeMap.profit_src = partialInfo.closed_profit
-                    await openTradeMap.save()
-                }
-            }
-        }
-
-        //await sendForCheck(data.accountObj)
-    }
-
-    return {
-        keyid: createdGetUpdateDoc?.keyid
-    }
+    // منطق مشترک با 500 در PartialCloseService ؛ کمیسیون بخش بسته‌شده همان فیلد اصلی پیام 501
+    return await processUserPartial(data, data.closed_commission)
 }
 
 async function sendForCheck(account) {

@@ -151,18 +151,20 @@ waiting ──(updateWaitings بعد از باز شدن مقصد)──► pendi
 | ضریب copier (2026-10-11) | `vol_factor` و `cent` همان copier در لحظه ساخت معامله (`HandleResNewOrder` از `Account.copiers` ؛ پارشیال/پندینگ از TradeMap مادر). رکوردهای قدیمی ندارند ⇒ مثل حساب استاندارد با ضریب ۱ (پر کردن: `tools/backfill-trademap-vol-factor.mjs`) |
 | مقادیر کاربر (2026-10-11) | `profit_user` ⇐ `profit_dist` ، `swap_user` ⇐ `swap_final` ، `commission_user` ⇐ `commission_final` ، هر کدام تقسیم بر ۱۰۰ در حساب سنتی (دو رقم اعشار) = **دلار واقعی روی Master**. با hook `pre('save')` از روی فیلدهای خام حساب می‌شوند |
 | نماد | `symbol_title`, `symbol_weight`, `tick_value`, `tick_size` |
-| وضعیت | `status`: `open, closed, pending, canceled, deleted` · `side` · `closing_type`: `single, partial, bulk, magic, all, none` · `partial_code` (گروه‌بندی تکه‌های partial) · `platform` |
+| وضعیت | `status`: `open, closed, pending, canceled, deleted` · `side` · `closing_type`: `single, partial, bulk, magic, all, none` · `partial_code` (گروه‌بندی تکه‌های partial: بخش‌های بسته و باقیمانده یک معامله یک کد دارند ؛ 0 = بدون بستن بخشی) · `platform` |
 | `created_at` | |
 
 ایندکس‌ها: `{acc_src, ticket_src, acc_dist, ticket_dist}`, `{acc_src, ticket_src}`, `{acc_src, acc_dist, status}`, `{acc_dist, ticket_dist}`.
 
-- ساخته می‌شود در: `HandleResNewOrder` (و در کد غیرفعال: partial / open pending).
+- ساخته می‌شود در: `HandleResNewOrder` و `handleResPartialClose` (باقیمانده بستن بخشی ، از 2026-10-17) ؛ (در کد غیرفعال: open pending).
 - `profit_final` در commit `3e4c08c` حذف شد و در Mongo برنگشت؛ فقط در داده ارسالی به پنل ساخته می‌شود (پایین).
 - **⚠️ فیلدهای `_dist` و `commission_final`/`swap_final` در Mongo همیشه عدد خام EA هستند** (کمیسیون تجمیعی پارشیال‌ها با عدد تجمیعی EA مقایسه می‌شود و `vol_dist` حجم دستورهای پندینگ/پارشیال روی Master است). تبدیل به مقیاس کاربر فقط در `helpers/copierAmounts.toPanelTrade` هنگام ارسال به پنل (`TradeMapService.sync` ، `sync-acc-trades` ، `sync-all-trades`):
   - `vol_dist` ÷ units (۴ رقم اعشار) ؛ `profit_dist` ، `swap_dist` ، `commission_dist` ÷ units (۲ رقم) — units = ۱۰۰ برای copier سنتی ، وگرنه ۱
   - `profit_user` ، `swap_user` ، `commission_user` (بالا)
   - `profit_final` ، `swap_final` ، `commission_final` = `Z_user × (1 / vol_factor)` (۲ رقم) = دلار به اندازه معامله کاربر
   - حساب استاندارد با `vol_factor = 1` ⇒ همه مقادیر همان قبلی و `Z_user = Z_final`
+  - `map_id` = `String(_id)` (2026-10-17) ⇒ کلید یکتای `plan_trades` پنل (partial_code و تیکت‌ها در بستن بخشی عوض/تکرار می‌شوند)
+- **هم‌نامی `*_final`:** در Mongo `commission_final`/`swap_final` = مبلغ با نرخ شرکت که EA گزارش می‌کند (خام ، از profit قابل محاسبه نیست ⇒ باید ذخیره بماند) ؛ در داده ارسالی به پنل `*_final` = مبلغ به اندازه معامله کاربر. `profit_final` فقط در داده پنل ساخته می‌شود.
 - در `/api/admin/trade-map/:accSrc` سمت src با نام `sender` و سمت dist با نام `mother` نمایش داده می‌شود.
 
 ---

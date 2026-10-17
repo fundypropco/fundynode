@@ -108,8 +108,9 @@ const sendMessage = asyncHandler(async (req, res) => {
         case 977:
             return await HandleResCloseOrigin(req, res)
 
-        // case 978:
-        //     return await handleResPartialClose(req, res)
+        // #. نتیجه بستن بخشی روی Master (از 2026-09-22 غیرفعال بود ، 2026-10-17 با بازنویسی دوباره فعال شد)
+        case 978:
+            return await handleResPartialClose(req, res)
 
         // case 979:
         //     return await handleResBulkClose(req, res)

@@ -232,12 +232,16 @@ const preparePartialCloseData = async (account, copier, data, tradeMap) => {
     const perparedData = {}
 
     perparedData.handler = ACTION_HANDLER.PARTIAL_CLOSE
+    perparedData.platform = data.platform || 'metatrader'
     perparedData.server = copier.server
     perparedData.acc = copier.acc
     perparedData.ticket = tradeMap?.ticket_dist ?? -1
     perparedData.symbol = tradeMap?.symbol_dist ?? ''
     perparedData.symbol_title = tradeMap?.symbol_title ?? ''
-    perparedData.vol = data.closed_vol
+    // #.
+    // حجم بستن روی Master (واحد Master: سنتی / ضریب حجم) ؛ قبلا حجم خام کاربر فرستاده می‌شد
+    // master_vol را PartialCloseService متناسب با حجم باز Master حساب می‌کند
+    perparedData.vol = data.master_vol ?? getOrderVol(copier.vol_factor, data.closed_vol, copier.cent)
     perparedData.side = tradeMap?.side ?? 'none'
     perparedData.status = tradeMap ? 'pending' : 'waiting'
     perparedData.keyid = data.keyid++

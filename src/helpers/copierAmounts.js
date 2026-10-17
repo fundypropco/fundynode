@@ -77,6 +77,10 @@ export function toPanelTrade(tradeMap) {
 
     return {
         ...tradeMap,
+        // #.
+        // شناسه ثابت ردیف (2026-10-17) ؛ پنل plan_trades را با آن یکتا می‌کند چون partial_code و تیکت‌ها
+        // در بستن بخشی عوض / تکرار می‌شوند (کلید قبلی پنل در MT5 بخش بسته و باقیمانده را روی هم می‌نوشت)
+        map_id: tradeMap._id ? String(tradeMap._id) : null,
         vol_factor: tradeMap.vol_factor ?? null,
         vol_dist: round(Number(tradeMap.vol_dist || 0) / units, 4),
         profit_dist: round(Number(tradeMap.profit_dist || 0) / units, 2),
