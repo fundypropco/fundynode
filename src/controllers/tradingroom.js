@@ -43,7 +43,9 @@ const syncAccTrades = asyncHandler(async (req, res) => {
 
 const syncSymbols = asyncHandler(async (req, res) => {
 
-    const results = await Symbol.find()
+    // #. server (اختیاری ، 2026-10-18) ⇒ فقط نمادهای همان بروکر (دکمه «دریافت از FundyNode» صفحه نمادهای بروکر در پنل)
+    const filter = req.body?.server ? { server: String(req.body.server) } : {}
+    const results = await Symbol.find(filter)
 
     res.send({
         status: 'success',

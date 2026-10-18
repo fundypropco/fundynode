@@ -31,7 +31,7 @@ MT دمو / پنل ──500──► processMessage ──► partial? ──no
 2. **اعتبار نماد** (`isValidSymbols` در `helper.js`):
    - اگر حساب `server` و `acc_meta` دارد (متاتریدر دمو): `symbol_a` = Symbol(`account.server`, `symbol`) و `symbol_b` = Symbol(`copier.server`, `title = symbol_a.title`) — تبدیل نماد بین دو بروکر از طریق `title`.
    - وگرنه (پنل): `symbol_b` = Symbol(`copier.server`, `symbol`) و `symbol_a = symbol_b` (پنل نام نماد بروکر Master را می‌فرستد).
-3. **امکان سفارش** (`isOrderPossible`): آخرین گزارش 42 حساب از Redis (`AccReportService.get(account.acc)`) خوانده می‌شود:
+3. **امکان سفارش** (`isOrderPossible`): اول (2026-10-18) اگر `symbol_a` یا `symbol_b` با `is_tradable === false` باشد (نماد غیرفعال از پنل ادمین) ⇒ ناممکن با `trading is disabled for symbol ...` (هر دو platform). بعد آخرین گزارش 42 حساب از Redis (`AccReportService.get(account.acc)`) خوانده می‌شود:
    - اگر گزارشی نباشد (EA در ۲ دقیقه اخیر 42 نفرستاده) → با ثابت `ALLOW_ORDER_WITHOUT_ACC_REPORT` (فعلاً `true`) سفارش بدون بررسی پذیرفته و یک `warn` لاگ می‌شود.
    - هزینه سفارش روی نماد Master (`symbol_b`)، با `lots = vol / vol_min`: `commission = |commission_max × lots|` ، `spread_value = vol × tick_value × (spread_avg_5 / point)` ، `margin = margin × lots`.
    - شرط ۱: `equity − drawdown > commission + 2×spread_value + margin` وگرنه `free equity is not enough`.

@@ -11,7 +11,8 @@ const brokerSymbolsSeeder = async (serverName = 'all') => {
         const brokers = await Broker.find()
         const servers = new Set()
         for (const broker of brokers) {
-            if (!servers.has(broker.server)) {
+            // #. بروکر بدون acc حسابی برای گرفتن دستور 13 ندارد
+            if (broker.acc && !servers.has(broker.server)) {
                 servers.add(broker.server)
                 accServers.push({ acc: broker.acc, server: broker.server })
             }
@@ -60,7 +61,14 @@ const brokerSymbolsSeeder = async (serverName = 'all') => {
             accServers.push({ acc: result.acc, server: serverName })
         }
     } else {
+        // #. بروکر ناموجود یا بدون acc (قبلا خطای broker.acc روی null) ⇒ خطای قابل فهم برای ادمین پنل
         const broker = await Broker.findOne({ server: serverName })
+        if (!broker) {
+            throw new Error(`broker ${serverName} not found`)
+        }
+        if (!broker.acc) {
+            throw new Error(`broker ${serverName} has no acc`)
+        }
         accServers.push({ acc: broker.acc, server: serverName })
     }
 
@@ -86,6 +94,9 @@ const brokerSymbolsSeeder = async (serverName = 'all') => {
             await pendingGetUpdate.save()
         }
     }
+
+    // #. تعداد دستورهای ثبت / تازه‌شده (پاسخ endpoint ادمین)
+    return accServers.length
 }
 
 export default brokerSymbolsSeeder

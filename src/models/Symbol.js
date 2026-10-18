@@ -97,6 +97,13 @@ const symbolSchema = new mongoose.Schema({
         type: Number,
         default: 0,
     },
+    // #.
+    // امکان باز کردن معامله تازه روی این نماد در این بروکر (ادمین پنل ، صفحه نمادهای بروکر ؛ 2026-10-18)
+    // false ⇒ isOrderPossible سفارش تازه را رد می‌کند (بستن و ویرایش معامله‌های باز آزاد است) ؛ مقدار را فقط پنل عوض می‌کند
+    is_tradable: {
+        type: Boolean,
+        default: true
+    },
     updated_at: {
         type: String
     }

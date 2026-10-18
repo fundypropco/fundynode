@@ -178,16 +178,17 @@ waiting ──(updateWaitings بعد از باز شدن مقصد)──► pendi
 | `tick_size, contract_size, tick_value, vol_step, vol_min, vol_max, digits, point` | از 989 |
 | `weight` | از SymbolAlias (جفت‌ارز 1، فلز/کریپتو 2) |
 | `margin, leverage, spread_min/max/avg_5/avg_50/last, commission, commission_min/max, swap` | از 401 |
+| `is_tradable` | (2026-10-18) پیش‌فرض `true` ؛ فقط پنل ادمین عوض می‌کند (`set-symbols-tradable`) ؛ `false` روی بروکر کاربر یا Master ⇒ `isOrderPossible` سفارش تازه را رد می‌کند (`disabledSymbolBlock`) |
 | `updated_at` | String |
 
 ایندکس یکتا: `{server, title}` و `{server, symbol}`.
 ⚠ در 401 نام‌گذاری `$min: commission_max` و `$max: commission_min` برعکس است (کمیسیون منفی است؛ پس «بیشترین هزینه» = کوچک‌ترین عدد) — عمدی به نظر می‌رسد.
 
 ## SymbolAlias (`symbol_alias`)
-`{title (unique), alias[], weight}` — فقط نمادهایی که اینجا هستند وارد `symbols` می‌شوند.
+`{title (unique), alias[], weight}` — فقط نمادهایی که اینجا هستند وارد `symbols` می‌شوند. از 2026-10-18 مرجع آن پنل ادمین است (`set-symbol-alias` / `delete-symbol-alias` ؛ `symbolAliasSeeder` فقط مقدار اولیه).
 
 ## Broker (`brokers`)
-`{title, server (unique), acc, diff_time}` — `diff_time` میلی‌ثانیه (از 401)؛ `acc` حسابی که دستورهای 11/13 برایش فرستاده می‌شود (دستی). کش ۵ دقیقه‌ای در `boot/cache.js`.
+`{title, server (unique), acc, diff_time}` — `diff_time` میلی‌ثانیه (از 401)؛ `acc` حسابی که دستورهای 11/13 برایش فرستاده می‌شود. از 2026-10-18 `title` (= نام لاتین پنل) و `acc` را پنل ادمین می‌نویسد (`set-broker`) و 401 `title` را فقط برای بروکر تازه می‌گذارد. کش ۵ دقیقه‌ای در `boot/cache.js`.
 
 ## LogRule (`log_rules`)
 `{handler (unique), log}` — seed: همه کدهای اصلی `true`. کش ۱ دقیقه‌ای.

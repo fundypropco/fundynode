@@ -10,6 +10,7 @@ import AccReportService from '../AccReportService.js'
 import { toMasterUnits } from '../../helpers/copierAmounts.js'
 import { findNewsBlock, newsBlockDescription } from '../../helpers/newsRule.js'
 import { processUserPartial } from '../PartialCloseService.js'
+import { disabledSymbolBlock } from '../BrokerSymbolService.js'
 
 // #.
 // اگر گزارش لحظه ای حساب (42) در ردیس نباشد، سفارش بدون بررسی موجودی پذیرفته شود یا نه
@@ -203,6 +204,16 @@ async function sendForCheck(account) {
 async function isOrderPossible(account, copier, data) {
     const result = {}
     result.status = true
+
+    // #.
+    // نماد غیرفعال (ادمین پنل ، Symbol.is_tradable = false روی بروکر کاربر یا Master ؛ 2026-10-18) ⇒ سفارش تازه ناممکن
+    // پنل سفارش‌های FP Trader را خودش رد می‌کند ؛ این چک برای متاتریدر کاربر (معامله مبدا بسته می‌شود) و پشتوانه پنل است
+    const disabledBlock = disabledSymbolBlock(data.symbol_a, data.symbol_b)
+    if (disabledBlock) {
+        result.status = false
+        result.description = [disabledBlock]
+        return result
+    }
 
     // #.
     // قاعده ترید در خبر: معامله‌ای که کاربر از متاتریدر خودش باز کرده (platform = metatrader) در بازه خبر ⇒ ناممکن

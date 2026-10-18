@@ -69,7 +69,7 @@ FundyNode یکی از چند پروژه سامانه پراپ‌تریدینگ F
 | GET | `/api/tradingroom/GetUpdates/:acc/:keyid` | `tradingroom.getUpdates` | آخرین سند GetUpdate با `platform='panel'` برای آن acc و keyid (پنل وضعیت اجرای سفارشش را می‌بیند) |
 | POST | `/api/tradingroom/sync-all-trades/all` | `tradingroom.syncAllTrades` | TradeMap های با `created_at >= body.from_timestamp` |
 | POST | `/api/tradingroom/sync-acc-trades/:acc` | `tradingroom.syncAccTrades` | همه TradeMap های یک `acc_src` |
-| POST | `/api/tradingroom/sync-symbols` | `tradingroom.syncSymbols` | همه اسناد Symbol |
+| POST | `/api/tradingroom/sync-symbols` | `tradingroom.syncSymbols` | همه اسناد Symbol ؛ `body.server` (اختیاری ، 2026-10-18) ⇒ فقط همان بروکر |
 | GET | `/api/tradingroom/get-acc/:acc` | `tradingroom.getAcc` | تازه‌ترین رکورد Account آن شماره حساب |
 | POST | `/api/tradingroom/set-acc-status/:acc` | `tradingroom.setAccStatus` | `{status}` ⇒ وضعیت تازه‌ترین رکورد (غیر `trading` ⇒ `copy=false` ، `trading` ⇒ `copy=true`) |
 | POST | `/api/tradingroom/set-acc` | `tradingroom.setAcc` | **ساخت حساب از پنل** (فرم درخواست حساب ادمین): رکورد تازه `trading`+`copy` و متوقف کردن رکورد فعال قبلی همان `acc` ؛ بدنه: `acc, acc_meta, server, initial, drawdown, commission_rate, swap_rate, news_trading, news_gap_minutes, news_impacts[], username, copiers[{acc, server, copy, vol_factor, cent}]` (فیلدهای خبر از 2026-10-14 ؛ نیامده ⇒ بدون محدودیت) |
@@ -77,8 +77,16 @@ FundyNode یکی از چند پروژه سامانه پراپ‌تریدینگ F
 | POST | `/api/tradingroom/set-news` | `tradingroom.setNews` | اخبار ساعت‌دار ۷ روز از پنل `{news: [{id, currency, title, impact, start(ms), duration, symbols[]}]}` ⇒ کل `forex_news` جایگزین (2026-10-14) |
 | POST | `/api/admin/seed-symbol-alias` | admin | upsert لیست نمادهای مجاز (فارکس، فلزات، کریپتو) |
 | POST | `/api/admin/seed-log-rules` | admin | upsert قوانین لاگ درخواست |
-| POST | `/api/admin/seed-broker-symbols/:server` | admin | دستور `BROKER_SYMBOLS (13)` برای بروکر (`all` / `old` / نام سرور) |
-| POST | `/api/admin/seed-broker-symbols-data/:server` | admin | دستور `BROKER_SYMBOL_DATA (11)` برای هر نماد بروکر |
+| POST | `/api/admin/seed-broker-symbols/:server` | admin | دستور `BROKER_SYMBOLS (13)` برای بروکر (`all` / `old` / نام سرور) ؛ از 2026-10-18 `{status, data:{count}}` و بروکر ناموجود / بدون `acc` ⇒ `status:'error'` (دکمه صفحه بروکرهای پنل) |
+| POST | `/api/admin/seed-broker-symbols-data/:server` | admin | دستور `BROKER_SYMBOL_DATA (11)` برای هر نماد بروکر (همان پاسخ و خطاها) |
+| GET | `/api/admin/brokers` | admin | بروکرها با `symbols_count` و `disabled_count` (پنل ادمین ، 2026-10-18 ؛ `BrokerSymbolService`) |
+| POST | `/api/admin/set-broker` | admin | `{server, title, acc, old_server?}` upsert بروکر از پنل ؛ تغییر سرور فقط بدون حساب روی آن و با انتقال Symbol ها |
+| POST | `/api/admin/delete-broker` | admin | `{server}` حذف بروکر و Symbol هایش ؛ بروکر دارای حساب (`server` / `copiers.server`) رد |
+| GET | `/api/admin/broker-symbols/:server` | admin | سندهای کامل Symbol یک بروکر |
+| POST | `/api/admin/set-symbols-tradable` | admin | `{server, items:[{symbol, is_tradable}]}` ⇒ `{matched, missing[]}` |
+| GET | `/api/admin/symbol-aliases` | admin | راهنمای نمادها `[{title, alias[], weight}]` |
+| POST | `/api/admin/set-symbol-alias` | admin | `{title, alias[], weight, old_title?}` (اعتبارسنجی تداخل نام‌ها ؛ weight روی Symbol های همان title) |
+| POST | `/api/admin/delete-symbol-alias` | admin | `{title}` (Symbol ها می‌مانند) |
 | GET | `/api/admin/trade-map/:accSrc` | admin | نمایش TradeMap ها به شکل `sender` / `mother` |
 | POST | `/api/telegram/SendMessage` | telegram | ذخیره پیام در `telegram_messages` |
 | GET | `/api/telegram/GetUpdates` | telegram | ۲۰۰ پیام آخر |

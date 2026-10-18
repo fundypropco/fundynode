@@ -4,6 +4,7 @@ import brokerSymbolsSeeder from '../seeders/brokerSymbolsSeeder.js'
 import brokerSymbolsDataSeeder from '../seeders/brokerSymbolsDataSeeder.js'
 import logRulesSeeder from '../seeders/logRulesSeeder.js'
 import TradeMap from '../models/TradeMap.js'
+import * as BrokerSymbolService from '../services/BrokerSymbolService.js'
 
 const seedSymbolAlias = asyncHandler(async (req, res) => {
     await symbolAliasSeeder()
@@ -15,14 +16,63 @@ const seedLogRules = asyncHandler(async (req, res) => {
     res.send({ message: 'success' })
 })
 
+// #.
+// دکمه‌های صفحه بروکرهای پنل ادمین هم همین دو را صدا می‌زنند ⇒ status و تعداد ؛ بروکر ناموجود / بدون acc ⇒ status = error
+// (message = 'success' برای سازگاری با فراخوانی‌های قبلی می‌ماند)
 const seedBrokerSymbols = asyncHandler(async (req, res) => {
-    await brokerSymbolsSeeder(req.params.server)
-    res.send({ message: 'success' })
+    try {
+        const count = await brokerSymbolsSeeder(req.params.server)
+        res.send({ status: 'success', message: 'success', data: { count } })
+    } catch (err) {
+        res.send({ status: 'error', message: err.message })
+    }
 })
 
 const seedBrokerSymbolsData = asyncHandler(async (req, res) => {
-    await brokerSymbolsDataSeeder(req.params.server)
-    res.send({ message: 'success' })
+    try {
+        const count = await brokerSymbolsDataSeeder(req.params.server)
+        res.send({ status: 'success', message: 'success', data: { count } })
+    } catch (err) {
+        res.send({ status: 'error', message: err.message })
+    }
+})
+
+// #.
+// مدیریت بروکرها ، راهنمای نمادها و معامله روی نمادها از پنل ادمین (BrokerSymbolService ، 2026-10-18)
+const sendResult = (res, result) => res.send(result.ok
+    ? { status: 'success', data: result.data }
+    : { status: 'error', message: result.message })
+
+const brokers = asyncHandler(async (req, res) => {
+    res.send({ status: 'success', results: await BrokerSymbolService.listBrokers() })
+})
+
+const setBroker = asyncHandler(async (req, res) => {
+    sendResult(res, await BrokerSymbolService.setBroker(req.body))
+})
+
+const deleteBroker = asyncHandler(async (req, res) => {
+    sendResult(res, await BrokerSymbolService.deleteBroker(req.body.server))
+})
+
+const brokerSymbols = asyncHandler(async (req, res) => {
+    res.send({ status: 'success', results: await BrokerSymbolService.brokerSymbols(req.params.server) })
+})
+
+const setSymbolsTradable = asyncHandler(async (req, res) => {
+    sendResult(res, await BrokerSymbolService.setSymbolsTradable(req.body.server, req.body.items))
+})
+
+const symbolAliases = asyncHandler(async (req, res) => {
+    res.send({ status: 'success', results: await BrokerSymbolService.listSymbolAliases() })
+})
+
+const setSymbolAlias = asyncHandler(async (req, res) => {
+    sendResult(res, await BrokerSymbolService.setSymbolAlias(req.body))
+})
+
+const deleteSymbolAlias = asyncHandler(async (req, res) => {
+    sendResult(res, await BrokerSymbolService.deleteSymbolAlias(req.body.title))
 })
 
 const showTradeMap = asyncHandler(async (req, res) => {
@@ -83,5 +133,13 @@ export default {
     seedBrokerSymbols,
     seedBrokerSymbolsData,
     showTradeMap,
-    seedLogRules
+    seedLogRules,
+    brokers,
+    setBroker,
+    deleteBroker,
+    brokerSymbols,
+    setSymbolsTradable,
+    symbolAliases,
+    setSymbolAlias,
+    deleteSymbolAlias
 }

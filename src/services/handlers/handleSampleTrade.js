@@ -13,10 +13,11 @@ export default async (req, res) => {
     // بروزرسانی اطلاعات مربوط به بروکر
     const broker = await Broker.findOneAndUpdate({ server: data.server }, {
         $set: {
-            title: data.name,
             diff_time: Math.round(data.diff / 1800) * 1800 * 1000
         },
+        // #. عنوان بروکر را ادمین پنل تعیین می‌کند (set-broker ، 2026-10-18) ⇒ نام بروکر EA فقط برای بروکر تازه
         $setOnInsert: {
+            title: data.name,
             server: data.server
         }
     }, { upsert: true, new: true })

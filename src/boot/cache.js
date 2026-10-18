@@ -29,6 +29,12 @@ export async function getBrokerData(server) {
     return brokersData[server]
 }
 
+// #. بعد از ساخت / ویرایش / حذف بروکر از پنل (BrokerSymbolService) کش بروکرها همان لحظه باطل می‌شود
+export function clearBrokerCache() {
+    brokersData = null
+    brokersData_expire = null
+}
+
 export async function getLogRuleData(handler) {
 
     // #.

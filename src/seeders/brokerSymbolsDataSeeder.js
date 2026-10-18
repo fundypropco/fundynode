@@ -9,6 +9,14 @@ export default async (serverName) => {
     const symbols = await Symbol.find({ server: serverName })
     const broker = await Broker.findOne({ server: serverName })
 
+    // #. بروکر ناموجود یا بدون acc (قبلا خطای broker.acc روی null یا بی‌صدا هیچ) ⇒ خطای قابل فهم برای ادمین پنل
+    if (!broker) {
+        throw new Error(`broker ${serverName} not found`)
+    }
+    if (!broker.acc) {
+        throw new Error(`broker ${serverName} has no acc`)
+    }
+
     const serverAcc = broker.acc
 
     // # 
@@ -33,4 +41,6 @@ export default async (serverName) => {
         await Promise.all(promises)
     }
 
+    // #. تعداد نمادهایی که برایشان دستور 11 ثبت شد
+    return symbols.length
 }
