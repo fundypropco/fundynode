@@ -113,8 +113,7 @@ FundyNode یکی از چند پروژه سامانه پراپ‌تریدینگ F
 
 ## ۷. استقرار و بکاپ
 
-- `deploy.sh`: بکاپ Mongo و Redis در `./backups` (۷ نسخه آخر) → `docker compose -f docker-compose.prod.yml up -d --build` → بررسی سلامت → logrotate.
-  - توجه: اسکریپت نام کانتینر `fundy-node-prod` و آدرس `localhost:5001/health` را چک می‌کند که با compose فعلی (`fundynode` و `/healthcheck` پشت nginx روی پورت 80) هم‌خوان نیست؛ بخش health آن عملاً همیشه «منتظر» می‌ماند.
+- دپلوی: `deploy.bat` روی ویندوز (بیلد محلی ، انتقال لایه‌های تازه با تونل معکوس SSH ، بکاپ Mongo / Redis ، اجرا ، بررسی سلامت ، برگشت خودکار ؛ `versions` / `rollback`) — بدون ورود دستی به سرور و بدون build / npm روی سرور: [deployment.md](deployment.md). `deploy.sh` قدیمی 2026-10-29 حذف شد.
 - `backup.sh`: mongodump فشرده با اعتبارنامه `.env` به `/home/mongo_backups/<date>/`.
 - `restore.sh` (تعاملی) و `restore-auto.sh` (آخرین بکاپ) — `restore-auto.sh` در انتها ناقص است (مسیر مقصد `dump.rdb_` و بدون start مجدد).
 

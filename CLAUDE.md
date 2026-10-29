@@ -37,7 +37,7 @@ Node.js 22 (ESM، `"type": "module"`) · Express 5 · Mongoose 8 (MongoDB 8) · 
 
 ```bash
 docker compose up -d --build          # توسعه: app روی localhost:5000 ، debugger 9229/9230 ، mongo 27117 ، redis 6380
-./deploy.sh                           # production (docker-compose.prod.yml + بکاپ قبل از استقرار)
+deploy.bat                            # production از ویندوز: بیلد محلی + تونل SSH + بکاپ + بررسی سلامت (docs/deployment.md)
 ```
 
 - `app.js` → سرور HTTP (`src/index.js`) ؛ `worker.js` → پردازشگر صف BullMQ (job `checkTradeMap`) + حلقه ارسال وضعیت حساب‌ها به پنل هر ثانیه (`src/schedules/accReportSync.js`)
@@ -68,6 +68,7 @@ docker compose up -d --build          # توسعه: app روی localhost:5000 ،
 - [docs/message-protocol.md](docs/message-protocol.md) — فرمت دقیق همه پیام‌های ورودی/خروجی و جدول کدها
 - [docs/flows.md](docs/flows.md) — جریان‌های کسب‌وکار: سفارش جدید، بستن، پارشیال، مدیفای، waiting، کمیسیون، sync
 - [docs/data-models.md](docs/data-models.md) — کالکشن‌ها، فیلدها، وضعیت‌ها، ایندکس‌ها
+- [docs/deployment.md](docs/deployment.md) — دپلوی production با deploy.bat ، نسخه‌ها و برگشت ، کجا اینترنت لازم است
 - [docs/known-issues.md](docs/known-issues.md) — باگ‌ها، ریسک‌ها و کدهای مرده که هنگام بررسی پیدا شد
 
 ## نکات حیاتی که نباید فراموش شوند

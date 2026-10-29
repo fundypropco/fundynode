@@ -1,15 +1,27 @@
-# ----------- BUILD STAGE -------------
-FROM node:22 AS builder
+# ایمیج production در سه مرحله (stage):
+#   base : Node 22 slim + pm2                       ⇒ فقط با تغییر همین مرحله عوض می‌شود (اینترنت لازم)
+#   deps : node_modules از package-lock.json        ⇒ فقط با تغییر package.json / package-lock.json (اینترنت لازم)
+#   app  : کد پروژه                                  ⇒ هر دپلوی ؛ بدون هیچ دسترسی شبکه ساخته می‌شود
+#
+# // #. بیلد ساده (`docker build -f Dockerfile.prod .`) هر سه مرحله را پشت هم می‌سازد.
+# // #. deploy.bat مرحله‌های base و deps را یک بار به‌صورت ایمیج محلی با تگ هش (fundynode-base:<hash> ، fundynode-deps:<hash>)
+#      می‌سازد و app را با `--build-arg DEPS_IMAGE=...` روی آنها بیلد می‌کند ⇒ دپلوی تغییر کد بدون اینترنت بین‌الملل (docs/deployment.md).
 
-WORKDIR /app
-COPY package*.json ./
-RUN npm install
-COPY . .
-RUN npm prune --omit=dev
+ARG BASE_IMAGE=base
+ARG DEPS_IMAGE=deps
 
-# ----------- RUN STAGE -------------
-FROM node:22-slim
+FROM node:22-slim AS base
 WORKDIR /app
 RUN npm install -g pm2
-COPY --from=builder /app /app
+
+
+FROM ${BASE_IMAGE} AS deps
+COPY package.json package-lock.json ./
+# فقط وابستگی‌های اجرا ، دقیقا مطابق package-lock.json
+RUN npm ci --omit=dev && npm cache clean --force
+
+
+FROM ${DEPS_IMAGE} AS app
+# node_modules در .dockerignore است ⇒ COPY آن را از مرحله deps بازنویسی نمی‌کند
+COPY . .
 EXPOSE 3000

@@ -1,8 +1,9 @@
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile.prod
+    # ایمیج روی خود سرور است: deploy.bat آن را از راه تونل SSH می‌فرستد و fundy-server.sh تگ live را به نسخه فعال می‌دهد
+    # (روی سرور نه build می‌شود نه pull ای از اینترنت ؛ docs/deployment.md)
+    image: fundynode:live
+    pull_policy: never
     container_name: fundynode
     restart: always
     environment:
@@ -35,9 +36,8 @@ services:
         max-file: "3"
 
   worker:
-    build:
-      context: .
-      dockerfile: Dockerfile.prod
+    image: fundynode:live
+    pull_policy: never
     container_name: fundyworker
     restart: always
     environment:

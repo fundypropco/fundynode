@@ -1,0 +1,5 @@
+*.sh text eol=lf
+# فایل‌های دپلوی در Git Bash خوانده (source) یا به سرور لینوکسی فرستاده می‌شوند ⇒ CR نباید داشته باشند
+tools/deploy/** text eol=lf
+# فایل‌های bat با پایان خط LF در cmd گاهی goto / برچسب را درست پیدا نمی‌کنند
+*.bat text eol=crlf
