@@ -255,6 +255,14 @@ env_sorted() { env_pairs "$1" | LC_ALL=C sort -t $'\t' -k1,1; }
 # خط‌هایی که KEY=VALUE معتبر نیستند (با شماره خط)
 env_bad_lines() { awk '/^[[:space:]]*(#|$)/ {next} !/^[A-Za-z_][A-Za-z0-9_]*=/ {print "    line " NR ": " substr($0, 1, 40)}' "$1"; }
 
+# نسخه سرور و نسخه ویرایش‌شده هر دو همین‌طور یکسان‌سازی می‌شوند تا فقط تغییر واقعی دیده شود:
+# بدون CR و BOM (Notepad) و با newline در پایان خط آخر (فایل سرور بدون newline پایانی قبلا «تغییر» دیده می‌شد)
+env_normalize() {
+  tr -d '\r' < "$1" | sed '1s/^\xEF\xBB\xBF//' > "$2"
+  if [[ -s "$2" && -n "$(tail -c1 "$2")" ]]; then echo >> "$2"; fi
+  return 0
+}
+
 cmd_env() {
   require_ssh
   local cur new ans bad dup added removed changed
@@ -265,9 +273,10 @@ cmd_env() {
   chmod 700 "$tmp"
   cur="$tmp/server$SERVER_ENV_FILE"
   new="$tmp/$SERVER_ENV_FILE"
-  remote "cat '$DEPLOY_DIR/$SERVER_ENV_FILE'" > "$cur" || die "Could not read $DEPLOY_DIR/$SERVER_ENV_FILE on the server."
-  tr -d '\r' < "$cur" > "$new"
-  cp "$new" "$cur"
+  remote "cat '$DEPLOY_DIR/$SERVER_ENV_FILE'" > "$tmp/raw" || die "Could not read $DEPLOY_DIR/$SERVER_ENV_FILE on the server."
+  env_normalize "$tmp/raw" "$cur"
+  rm -f "$tmp/raw"
+  cp "$cur" "$new"
 
   say "Opening the production $SERVER_ENV_FILE (server: $TARGET:$DEPLOY_DIR) in ${FUNDY_EDITOR:-Notepad}..."
   if [[ -n "${FUNDY_EDITOR:-}" ]]; then
@@ -279,9 +288,7 @@ cmd_env() {
   read -r -p "Edit the file, SAVE it, close the editor, then press Enter here (type c to cancel): " ans
   [[ "$ans" == c || "$ans" == C ]] && die "Cancelled; nothing was changed on the server."
 
-  # پایان خط ویندوزی و BOM احتمالی Notepad حذف ، خط آخر با newline
-  tr -d '\r' < "$new" | sed '1s/^\xEF\xBB\xBF//' > "$tmp/clean"
-  [[ -n "$(tail -c1 "$tmp/clean")" ]] && echo >> "$tmp/clean"
+  env_normalize "$new" "$tmp/clean"
   mv "$tmp/clean" "$new"
 
   bad=$(env_bad_lines "$new")
