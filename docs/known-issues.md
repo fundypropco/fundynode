@@ -62,7 +62,7 @@
 | 28 | ⚪ | **هیچ endpoint ای احراز هویت ندارد**؛ `/api/admin/*` (از 2026-10-18 شامل ساخت / حذف بروکر و غیرفعال کردن نماد از پنل) و `/api/tradingroom/sync-*` (همه معاملات همه کاربران) روی پورت 80 باز هستند. هر کسی می‌تواند با `SendMessage` سفارش جعلی بسازد. |
 | 29 | ⚪ | در `docker-compose.yml` (dev) Mongo بدون رمز روی پورت میزبان 27117 و Redis روی 6380 باز است. |
 | 30 | ⚪ | middleware خطا همیشه HTTP 500 برمی‌گرداند حتی اگر `error.status` چیز دیگری باشد. |
-| 31 | 🔴 | `deploy.sh` کانتینر `fundy-node-prod` و `localhost:5001/health` را چک می‌کند که وجود ندارند (نام واقعی `fundynode`، مسیر `/healthcheck`، پشت nginx روی 80). |
+| ~~31~~ | ✅ | **deploy.sh** (نام کانتینر و مسیر health اشتباه) — برطرف 2026-10-29: `deploy.sh` حذف شد و `deploy.bat` جای آن است (docs/deployment.md) ؛ 502 پشت nginx بعد از هر دپلوی (IP قدیمی app در nginx) هم با `resolver` داکر در `nginx.conf` و بررسی درخواست از داخل nginx در دپلوی حل شد. |
 | 32 | 🔴 | `restore-auto.sh` ناقص است: فایل به `/data/dump.rdb_` کپی می‌شود و Redis/اپ دوباره start نمی‌شوند. |
 | 33 | ⚪ | `TradeMapService.sync` در خطا retry ندارد؛ اگر لاراول در دسترس نباشد رویداد از دست می‌رود (فقط pull دستی جبران می‌کند). |
 | 34 | ⚪ | `.gitignore` خود `.gitignore` و `Dockerfile*`/`docker-compose*` را ignore کرده (فایل‌های فعلی track می‌شوند ولی فایل جدید هم‌نام اضافه نمی‌شود). |

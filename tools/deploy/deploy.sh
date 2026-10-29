@@ -129,7 +129,8 @@ sync_files() {
     echo
     confirm "Apply these file changes on the server?" || die "Cancelled; nothing was changed on the server."
     for f in "${SYNC_FILES[@]}"; do
-      tr -d '\r' < "$f" | remote_in "cat > '$DEPLOY_DIR/$f.new' && mv '$DEPLOY_DIR/$f.new' '$DEPLOY_DIR/$f'"
+      # در جا نوشته می‌شود (نه mv): nginx.conf تک‌فایل bind mount است و فایل تازه با inode دیگر در کانتینر دیده نمی‌شد
+      tr -d '\r' < "$f" | remote_in "cat > '$DEPLOY_DIR/$f.new' && cat '$DEPLOY_DIR/$f.new' > '$DEPLOY_DIR/$f' && rm -f '$DEPLOY_DIR/$f.new'"
     done
   fi
 }

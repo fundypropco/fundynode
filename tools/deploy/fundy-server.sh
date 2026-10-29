@@ -22,6 +22,7 @@ LEGACY_TAG=00000000-000000-legacy
 KEEP=${FUNDY_KEEP_VERSIONS:-5}
 HEALTH_TIMEOUT=${FUNDY_HEALTH_TIMEOUT:-180}
 APP_CONTAINER=fundynode
+PROXY_CONTAINER=nginx
 OTHER_CONTAINERS=(fundyworker nginx my-mongo my-redis)
 MONGO_CONTAINER=my-mongo
 REDIS_CONTAINER=my-redis
@@ -125,6 +126,26 @@ wait_healthy() {
   done
 }
 
+# healthcheck کامپوز داخل خود app است و 502 پشت nginx را نمی‌بیند ⇒ بعد از سالم شدن app ، nginx دوباره بارگذاری
+# (nginx.conf تازه و آدرس تازه app) و یک درخواست واقعی از داخل کانتینر nginx به /healthcheck فرستاده می‌شود
+proxy_ok() {
+  [[ "$(cstate "$PROXY_CONTAINER" '{{.State.Status}}')" == running ]] || { warn "$PROXY_CONTAINER is not running"; return 1; }
+  if ! docker exec "$PROXY_CONTAINER" nginx -t >/dev/null 2>&1; then
+    warn "nginx config test failed (nginx keeps running with its previous config):"
+    docker exec "$PROXY_CONTAINER" nginx -t 2>&1 | tail -3
+    return 1
+  fi
+  docker exec "$PROXY_CONTAINER" nginx -s reload >/dev/null 2>&1 || true
+  local i
+  for i in 1 2 3 4 5 6; do
+    sleep 2
+    docker exec "$PROXY_CONTAINER" wget -qO- http://127.0.0.1/healthcheck >/dev/null 2>&1 && return 0
+  done
+  warn "The app is healthy but requests through $PROXY_CONTAINER fail (e.g. 502). Last nginx logs:"
+  docker logs --tail 5 "$PROXY_CONTAINER" 2>&1 | sed 's/^/    /'
+  return 1
+}
+
 # fundynode:live را به نسخه داده‌شده می‌برد و کانتینرها را با آن بالا می‌آورد
 switch_to() {
   local tag=$1
@@ -211,8 +232,8 @@ cmd_deploy() {
   say "[server 3/4] Starting containers with $tag..."
   switch_to "$tag"
 
-  say "[server 4/4] Waiting for the app to become healthy (up to ${HEALTH_TIMEOUT}s)..."
-  if wait_healthy; then
+  say "[server 4/4] Waiting for the app to become healthy (up to ${HEALTH_TIMEOUT}s) and checking it through nginx..."
+  if wait_healthy && proxy_ok; then
     log_event deploy "$tag"
     report_services
     prune_versions
@@ -220,13 +241,13 @@ cmd_deploy() {
     return 0
   fi
 
-  warn "Version $tag did not become healthy. Last app logs:"
+  warn "Version $tag failed the health check. Last app logs:"
   docker logs --tail 40 "$APP_CONTAINER" 2>&1 || true
   log_event failed "$tag"
   if [[ -n "$prev" && "$prev" != "$tag" ]]; then
     warn "Rolling back automatically to $prev..."
     switch_to "$prev"
-    if wait_healthy; then
+    if wait_healthy && proxy_ok; then
       log_event auto-rollback "$prev"
       report_services
       warn "Rolled back to $prev; the node is running the previous version"
@@ -264,16 +285,16 @@ cmd_rollback() {
 
   say "Rolling back $cur -> $target (MongoDB / Redis data is not rolled back)..."
   switch_to "$target"
-  if wait_healthy; then
+  if wait_healthy && proxy_ok; then
     log_event rollback "$target"
     report_services
     say "Version $target is live"
   else
-    warn "Version $target did not become healthy. Last app logs:"
+    warn "Version $target failed the health check. Last app logs:"
     docker logs --tail 40 "$APP_CONTAINER" 2>&1 || true
     warn "Switching back to $cur..."
     switch_to "$cur"
-    wait_healthy && warn "Back on $cur" || warn "$cur is not healthy either! Check the server."
+    wait_healthy && proxy_ok && warn "Back on $cur" || warn "$cur is not healthy either! Check the server."
     exit 1
   fi
 }
