@@ -8,6 +8,8 @@
 #   deploy.bat rollback [v]  برگشت به نسخه قبلی (یا نسخه v)
 #   deploy.bat status        نسخه فعلی و وضعیت کانتینرهای سرور
 #   deploy.bat check         بررسی پیش‌نیازهای سرور
+#   deploy.bat env           ویرایش .env سرور در Notepad ، نمایش نام کلیدهای عوض‌شده ، ذخیره و اعمال (با پشتیبان و برگشت خودکار)
+#   deploy.bat env undo      برگشت به .env قبلی
 #
 # مسیر داده: docker build (محلی) ⇒ push به رجیستری محلی 127.0.0.1:REGISTRY_PORT (کانتینر fundy-registry روی Docker Desktop)
 #   ⇒ ssh -R همان پورت را روی 127.0.0.1 سرور باز می‌کند ⇒ docker سرور فقط لایه‌های تازه را از همان تونل pull می‌کند.
@@ -237,10 +239,93 @@ cmd_setup() {
   say "Setup done. Deploy with: deploy.bat"
 }
 
+# ── deploy.bat env: ویرایش فایل env production ──
+# فایل سرور در پوشه موقت شخصی کاربر دانلود و در Notepad (یا FUNDY_EDITOR) باز می‌شود ؛ بعد از ذخیره فقط نام کلیدهای
+# اضافه / حذف / عوض‌شده نشان داده می‌شود (نه مقدارها) و با تائید روی سرور نوشته و کانتینرهای اپ با آن از نو ساخته می‌شوند.
+# نسخه موقت در هر حالت (حتی Ctrl+C) پاک می‌شود.
+SERVER_ENV_FILE=.env
+
+# نام کلید هر خط تعریف (توضیح و خط خالی نه) ، با تکرارها
+env_keys() { awk '/^[[:space:]]*(#|$)/ {next} { print substr($0, 1, index($0, "=") - 1) }' "$1"; }
+
+# KEY<TAB>VALUE هر کلید یک بار ؛ کلید تکراری ⇒ مقدار آخر (همان رفتار docker compose)
+env_pairs() { awk '/^[[:space:]]*(#|$)/ {next} { i = index($0, "="); v[substr($0, 1, i - 1)] = substr($0, i + 1) } END { for (k in v) print k "\t" v[k] }' "$1"; }
+env_sorted() { env_pairs "$1" | LC_ALL=C sort -t $'\t' -k1,1; }
+
+# خط‌هایی که KEY=VALUE معتبر نیستند (با شماره خط)
+env_bad_lines() { awk '/^[[:space:]]*(#|$)/ {next} !/^[A-Za-z_][A-Za-z0-9_]*=/ {print "    line " NR ": " substr($0, 1, 40)}' "$1"; }
+
+cmd_env() {
+  require_ssh
+  local cur new ans bad dup added removed changed
+  ENV_TMP=$(mktemp -d)
+  tmp=$ENV_TMP
+  # trap بعد از پایان تابع اجرا می‌شود ⇒ متغیر سراسری ENV_TMP (نه local)
+  trap 'rm -rf "${ENV_TMP:-}"' EXIT
+  chmod 700 "$tmp"
+  cur="$tmp/server$SERVER_ENV_FILE"
+  new="$tmp/$SERVER_ENV_FILE"
+  remote "cat '$DEPLOY_DIR/$SERVER_ENV_FILE'" > "$cur" || die "Could not read $DEPLOY_DIR/$SERVER_ENV_FILE on the server."
+  tr -d '\r' < "$cur" > "$new"
+  cp "$new" "$cur"
+
+  say "Opening the production $SERVER_ENV_FILE (server: $TARGET:$DEPLOY_DIR) in ${FUNDY_EDITOR:-Notepad}..."
+  if [[ -n "${FUNDY_EDITOR:-}" ]]; then
+    $FUNDY_EDITOR "$(cygpath -w "$new")" &
+  else
+    notepad.exe "$(cygpath -w "$new")" &
+  fi
+  echo
+  read -r -p "Edit the file, SAVE it, close the editor, then press Enter here (type c to cancel): " ans
+  [[ "$ans" == c || "$ans" == C ]] && die "Cancelled; nothing was changed on the server."
+
+  # پایان خط ویندوزی و BOM احتمالی Notepad حذف ، خط آخر با newline
+  tr -d '\r' < "$new" | sed '1s/^\xEF\xBB\xBF//' > "$tmp/clean"
+  [[ -n "$(tail -c1 "$tmp/clean")" ]] && echo >> "$tmp/clean"
+  mv "$tmp/clean" "$new"
+
+  bad=$(env_bad_lines "$new")
+  [[ -z "$bad" ]] || { warn "These lines are not KEY=VALUE:"; echo "$bad"; die "Nothing was changed on the server. Run deploy env again."; }
+  dup=$(env_keys "$new" | sort | uniq -d)
+  [[ -z "$dup" ]] || warn "Duplicate keys (the LAST value is used): $(echo $dup)"
+
+  # sort و join با یک ترتیب (LC_ALL=C) ؛ وگرنه join با زیرخط کلیدها «not in sorted order» می‌دهد
+  added=$(LC_ALL=C join -t $'\t' -v2 <(env_sorted "$cur") <(env_sorted "$new") | cut -f1)
+  removed=$(LC_ALL=C join -t $'\t' -v1 <(env_sorted "$cur") <(env_sorted "$new") | cut -f1)
+  changed=$(LC_ALL=C join -t $'\t' <(env_sorted "$cur") <(env_sorted "$new") | awk -F'\t' '$2 != $3 {print $1}')
+  if [[ -z "$added$removed$changed" ]]; then
+    cmp -s "$cur" "$new" && { say "No changes."; return 0; }
+    say "Only comments / blank lines changed."
+  fi
+  echo
+  [[ -n "$added" ]] && echo "    added:   $(echo $added)"
+  [[ -n "$removed" ]] && echo "    REMOVED: $(echo $removed)"
+  [[ -n "$changed" ]] && echo "    changed: $(echo $changed)   (values are not shown)"
+  echo
+  confirm "Write this $SERVER_ENV_FILE to production and restart the node containers?" || die "Cancelled; nothing was changed on the server."
+
+  upload_server_script
+  remote_in "umask 077; cat > '$DEPLOY_DIR/$SERVER_ENV_FILE.new'" < "$new" || die "Upload failed; nothing was changed."
+  remote_server env-apply || die "Applying $SERVER_ENV_FILE FAILED (see messages above)."
+}
+
+cmd_env_undo() {
+  require_ssh
+  confirm "Restore the previous production $SERVER_ENV_FILE and restart the node containers?" || die "Cancelled."
+  upload_server_script
+  remote_server env-undo || die "Restoring $SERVER_ENV_FILE FAILED (see messages above)."
+}
+
 case "${1:-deploy}" in
   deploy) cmd_deploy ;;
   setup) cmd_setup ;;
+  env)
+    case "${2:-}" in
+      '') cmd_env ;;
+      undo) cmd_env_undo ;;
+      *) die "usage: deploy.bat env [undo]" ;;
+    esac ;;
   versions|status|check) require_ssh; remote_server "$1" ;;
   rollback) shift; require_ssh; remote_server rollback "$@" || die "Rollback failed." ;;
-  *) die "usage: deploy.bat [deploy | setup | versions | rollback [version] | status | check]" ;;
+  *) die "usage: deploy.bat [deploy | setup | versions | rollback [version] | status | check | env [undo]]" ;;
 esac

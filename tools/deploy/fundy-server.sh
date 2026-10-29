@@ -307,11 +307,89 @@ cmd_status() {
   tail -n 5 "$STATE/history" 2>/dev/null | sed 's/^/    /' || true
 }
 
+# ── فایل env production (deploy.bat env) ──
+# پیش از هر تغییر نسخه پشتیبان در .deploy/env-backups (۱۰ تای آخر ، فقط root) ؛ فقط کانتینرهای اپ از نو ساخته می‌شوند
+ENV_FILE=.env
+ENV_BACKUPS="$STATE/env-backups"
+APP_SERVICES=(app worker)
+
+recreate_apps() {
+  compose up -d --no-deps --force-recreate "${APP_SERVICES[@]}" >"$STATE/compose.log" 2>&1 \
+    || { cat "$STATE/compose.log"; warn "docker compose up reported an error"; }
+}
+
+# محتوای فایل داده‌شده در جای ENV_FILE نوشته می‌شود (در جا ، همان inode و دسترسی 600)
+write_env() {
+  umask 077
+  cat "$1" > "$ENV_FILE"
+  chmod 600 "$ENV_FILE"
+}
+
+# $1 = فایل env تازه که روی سرور است ؛ ناسالم بالا آمدن اپ ⇒ فایل قبلی برمی‌گردد
+apply_env_file() {
+  local src=$1 backup
+  mkdir -p "$ENV_BACKUPS"
+  chmod 700 "$ENV_BACKUPS"
+  backup="$ENV_BACKUPS/$ENV_FILE.$(date +%Y%m%d-%H%M%S)"
+  cp -p "$ENV_FILE" "$backup"
+  chmod 600 "$backup"
+  # فقط ۱۰ نسخه پشتیبان آخر
+  ls -1t "$ENV_BACKUPS"/"$ENV_FILE".* 2>/dev/null | tail -n +11 | xargs -r rm -f
+  write_env "$src"
+  rm -f "$src"
+
+  if ! compose config -q >"$STATE/env.log" 2>&1; then
+    cat "$STATE/env.log"
+    write_env "$backup"
+    rm -f "$backup"
+    die "docker compose could not read the new $ENV_FILE; the previous file was restored and nothing was restarted."
+  fi
+
+  say "Recreating ${APP_SERVICES[*]} with the new $ENV_FILE..."
+  recreate_apps
+  if wait_healthy && proxy_ok; then
+    log_event env "$ENV_FILE"
+    report_services
+    say "New $ENV_FILE is live (previous copy: $backup)"
+    return 0
+  fi
+  warn "The app failed the health check with the new $ENV_FILE. Last app logs:"
+  docker logs --tail 40 "$APP_CONTAINER" 2>&1 || true
+  warn "Restoring the previous $ENV_FILE..."
+  write_env "$backup"
+  # پشتیبان همین تلاش با فایل برگشته یکی است ⇒ حذف تا env undo بعدی به تغییر موفق قبلی برگردد
+  rm -f "$backup"
+  recreate_apps
+  wait_healthy && proxy_ok && warn "Previous $ENV_FILE restored; the node runs as before" || warn "The app is not healthy with the previous $ENV_FILE either! Check the server."
+  log_event env-failed "$ENV_FILE"
+  exit 1
+}
+
+cmd_env_apply() {
+  lock
+  [[ -s "$ENV_FILE.new" ]] || die "$APP_DIR/$ENV_FILE.new was not uploaded."
+  apply_env_file "$ENV_FILE.new"
+}
+
+# برگشت به نسخه پشتیبان آخر (خود برگشت هم پشتیبان می‌گیرد ⇒ دوباره undo یعنی برگشت به حالت قبل از undo)
+cmd_env_undo() {
+  lock
+  local last
+  last=$(ls -1t "$ENV_BACKUPS"/"$ENV_FILE".* 2>/dev/null | head -1 || true)
+  [[ -n "$last" ]] || die "There is no backup of $ENV_FILE yet."
+  say "Restoring $ENV_FILE from $(basename "$last")..."
+  umask 077
+  cp "$last" "$ENV_FILE.new"
+  apply_env_file "$ENV_FILE.new"
+}
+
 case "${1:-}" in
   check) cmd_check ;;
   deploy) shift; cmd_deploy "$@" ;;
   versions) cmd_versions ;;
   rollback) shift; cmd_rollback "$@" ;;
   status) cmd_status ;;
-  *) die "usage: $0 check | deploy <tag> <port> | versions | rollback [tag] | status" ;;
+  env-apply) cmd_env_apply ;;
+  env-undo) cmd_env_undo ;;
+  *) die "usage: $0 check | deploy <tag> <port> | versions | rollback [tag] | status | env-apply | env-undo" ;;
 esac

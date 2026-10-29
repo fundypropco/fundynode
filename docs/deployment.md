@@ -19,6 +19,24 @@
 تنظیمات در `tools/deploy/deploy.conf` (سرور `5.75.192.70` ، پورت SSH `22` ، کاربر). `DEPLOY_DIR` خالی ⇒ پوشه پروژه از برچسب
 `com.docker.compose.project.working_dir` کانتینر در حال اجرای `fundynode` پیدا می‌شود.
 
+## فایل env production (`deploy.bat env`)
+
+| دستور | کار |
+|---|---|
+| `deploy.bat env` | ویرایش `.env` **سرور** در Notepad ؛ بعد از ذخیره ، نام کلیدهای اضافه / حذف / عوض‌شده (بدون مقدار) و تائید y/N ، نوشتن روی سرور و ساخت دوباره `app` و `worker` ؛ ناسالم (یا خطا پشت nginx) ⇒ فایل قبلی خودکار برمی‌گردد |
+| `deploy.bat env undo` | برگشت به `.env` قبلی (پشتیبان آخر) |
+
+- `.env` production فقط روی سرور است ؛ `.env` محلی (توسعه) روی production اثری ندارد و `deploy.bat` معمولی آن را نمی‌فرستد.
+- **کلید تازه فقط وقتی به برنامه می‌رسد که در `docker-compose.prod.yml` زیر `environment:` سرویس `app` (و اگر لازم است `worker`) با
+  `- NEW_KEY=${NEW_KEY}` آمده باشد** ؛ compose این پروژه متغیرها را تک‌تک می‌دهد (env_file ندارد). ترتیب: کلید با `deploy env` روی سرور ،
+  خط compose در ریپو ، بعد `deploy` (compose را خودش می‌فرستد).
+- فایل در پوشه موقت شخصی دانلود ، در Notepad (یا `FUNDY_EDITOR`) باز و بعد از Enter بررسی می‌شود: CR / BOM حذف ، هر خط `KEY=VALUE` یا توضیح ،
+  کلید تکراری فقط هشدار (مقدار آخر). پوشه موقت در هر حالت پاک می‌شود.
+- سرور (`fundy-server.sh env-apply`): قفل مشترک با دپلوی ⇒ پشتیبان در `.deploy/env-backups/` (۱۰ تای آخر ، دسترسی 600) ⇒ نوشتن در جا با
+  دسترسی 600 ⇒ `docker compose config` ⇒ `up -d --no-deps --force-recreate app worker` ⇒ سلامت app و درخواست از داخل nginx ⇒ ناسالم ⇒ فایل قبلی.
+- mongo / redis / nginx ری‌استارت نمی‌شوند. عوض کردن `MONGO_INITDB_ROOT_*` رمز واقعی Mongo را عوض نمی‌کند (فقط بار اول با volume خالی) ؛
+  آزمون: رمز اشتباه ⇒ app سالم بالا نیامد ⇒ فایل قبلی برگشت.
+
 ## چطور کار می‌کند
 
 ```
@@ -71,6 +89,8 @@
 سرور جعلی `docker:dind` + sshd (شبکه و daemon جدا ⇒ pull واقعا از تونل) با استک قدیمی (compose با `build:`) در حال اجرا:
 setup (پیدا شدن خودکار پوشه پروژه) ، اولین دپلوی (adopt legacy ، diff compose ، بکاپ Mongo با auth و Redis) ، دپلوی تغییر یک خطی
 (۴۸ ثانیه) ، versions ، rollback (۱۶ ثانیه) ، اپ خراب (throw در app.js ⇒ unhealthy ⇒ برگشت خودکار ، حدود ۱:۴۵ به خاطر interval سی ثانیه‌ای healthcheck).
+`deploy env`: تغییر `FUNDYPANEL_API_KEY` + کلید تازه (مقدار تازه در کانتینر ، دسترسی 600 ، پشتیبان) ، خط نامعتبر (رد بدون تغییر) ،
+رمز Mongo اشتباه (برگشت خودکار ، ۱:۳۷) ، `env undo` ؛ Notepad واقعی دستی آزموده نشد.
 
 ## عیب‌یابی
 

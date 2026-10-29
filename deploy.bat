@@ -1,6 +1,6 @@
 @echo off
 rem FundyNode deploy: build here, send only changed layers to the server over SSH, start, health-check, auto-rollback.
-rem Usage: deploy.bat [deploy ^| setup ^| versions ^| rollback [version] ^| status ^| check]   (docs/deployment.md)
+rem Usage: deploy.bat [deploy ^| setup ^| versions ^| rollback [version] ^| status ^| check ^| env [undo]]   (docs/deployment.md)
 setlocal
 cd /d "%~dp0"
 
