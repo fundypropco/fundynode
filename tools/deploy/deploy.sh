@@ -309,11 +309,21 @@ cmd_env() {
   [[ -n "$removed" ]] && echo "    REMOVED: $(echo $removed)"
   [[ -n "$changed" ]] && echo "    changed: $(echo $changed)   (values are not shown)"
   echo
-  confirm "Write this $SERVER_ENV_FILE to production and restart the node containers?" || die "Cancelled; nothing was changed on the server."
+  # a: همین الان با ری‌استارت کانتینرها ؛ s: فقط ذخیره ، دپلوی بعدی (کد تازه‌ای که این کلید را لازم دارد) با یک ری‌استارت اعمالش می‌کند
+  echo "    [a] apply now: write it and restart the node containers"
+  echo "    [s] save only: write it without restarting; the next deploy.bat applies it (one restart for new code + new keys)"
+  read -r -p "Choose a / s, anything else cancels: " ans
+  local mode
+  case "$ans" in
+    a|A) mode="" ;;
+    s|S) mode="--save-only" ;;
+    *) die "Cancelled; nothing was changed on the server." ;;
+  esac
 
   upload_server_script
   remote_in "umask 077; cat > '$DEPLOY_DIR/$SERVER_ENV_FILE.new'" < "$new" || die "Upload failed; nothing was changed."
-  remote_server env-apply || die "Applying $SERVER_ENV_FILE FAILED (see messages above)."
+  remote_server env-apply $mode || die "Applying $SERVER_ENV_FILE FAILED (see messages above)."
+  [[ -z "$mode" ]] || say "Now run deploy.bat to apply it together with your code."
 }
 
 cmd_env_undo() {

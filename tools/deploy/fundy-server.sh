@@ -230,7 +230,10 @@ cmd_deploy() {
 
   prev=$(current_tag)
   say "[server 3/4] Starting containers with $tag..."
+  [[ -f "$ENV_PENDING" ]] && say "The $ENV_FILE saved at $(cat "$ENV_PENDING") is applied with this deploy"
   switch_to "$tag"
+  # کانتینرهای تازه env فعلی را خوانده‌اند (در برگشت خودکار هم)
+  rm -f "$ENV_PENDING"
 
   say "[server 4/4] Waiting for the app to become healthy (up to ${HEALTH_TIMEOUT}s) and checking it through nginx..."
   if wait_healthy && proxy_ok; then
@@ -301,6 +304,7 @@ cmd_rollback() {
 
 cmd_status() {
   say "live version: $(current_tag)"
+  [[ -f "$ENV_PENDING" ]] && warn "$ENV_FILE saved at $(cat "$ENV_PENDING") is not applied yet (next deploy applies it)"
   compose ps --format 'table {{.Name}}\t{{.State}}\t{{.Status}}'
   echo
   say "last events:"
@@ -311,6 +315,8 @@ cmd_status() {
 # پیش از هر تغییر نسخه پشتیبان در .deploy/env-backups (۱۰ تای آخر ، فقط root) ؛ فقط کانتینرهای اپ از نو ساخته می‌شوند
 ENV_FILE=.env
 ENV_BACKUPS="$STATE/env-backups"
+# فایل env ذخیره‌شده با «فقط ذخیره» که هنوز روی کانتینرها اعمال نشده (زمان ذخیره)
+ENV_PENDING="$STATE/env-pending"
 APP_SERVICES=(app worker)
 
 recreate_apps() {
@@ -326,8 +332,9 @@ write_env() {
 }
 
 # $1 = فایل env تازه که روی سرور است ؛ ناسالم بالا آمدن اپ ⇒ فایل قبلی برمی‌گردد
+# $2 = --save-only ⇒ فقط بررسی و ذخیره ، بدون ری‌استارت ؛ دپلوی بعدی کانتینرها را با آن می‌سازد (یک ری‌استارت به‌جای دو)
 apply_env_file() {
-  local src=$1 backup
+  local src=$1 mode=${2:-} backup
   mkdir -p "$ENV_BACKUPS"
   chmod 700 "$ENV_BACKUPS"
   backup="$ENV_BACKUPS/$ENV_FILE.$(date +%Y%m%d-%H%M%S)"
@@ -345,9 +352,17 @@ apply_env_file() {
     die "docker compose could not read the new $ENV_FILE; the previous file was restored and nothing was restarted."
   fi
 
+  if [[ "$mode" == --save-only ]]; then
+    date '+%Y-%m-%d %H:%M:%S' > "$ENV_PENDING"
+    log_event env-saved "$ENV_FILE"
+    say "New $ENV_FILE saved; the running containers still use the previous values until the next deploy (previous copy: $backup)"
+    return 0
+  fi
+
   say "Recreating ${APP_SERVICES[*]} with the new $ENV_FILE..."
   recreate_apps
   if wait_healthy && proxy_ok; then
+    rm -f "$ENV_PENDING"
     log_event env "$ENV_FILE"
     report_services
     say "New $ENV_FILE is live (previous copy: $backup)"
@@ -368,7 +383,7 @@ apply_env_file() {
 cmd_env_apply() {
   lock
   [[ -s "$ENV_FILE.new" ]] || die "$APP_DIR/$ENV_FILE.new was not uploaded."
-  apply_env_file "$ENV_FILE.new"
+  apply_env_file "$ENV_FILE.new" "${1:-}"
 }
 
 # برگشت به نسخه پشتیبان آخر (خود برگشت هم پشتیبان می‌گیرد ⇒ دوباره undo یعنی برگشت به حالت قبل از undo)
@@ -389,7 +404,7 @@ case "${1:-}" in
   versions) cmd_versions ;;
   rollback) shift; cmd_rollback "$@" ;;
   status) cmd_status ;;
-  env-apply) cmd_env_apply ;;
+  env-apply) shift; cmd_env_apply "$@" ;;
   env-undo) cmd_env_undo ;;
-  *) die "usage: $0 check | deploy <tag> <port> | versions | rollback [tag] | status | env-apply | env-undo" ;;
+  *) die "usage: $0 check | deploy <tag> <port> | versions | rollback [tag] | status | env-apply [--save-only] | env-undo" ;;
 esac
