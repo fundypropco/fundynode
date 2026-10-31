@@ -56,3 +56,4 @@ docker-compose*
 # ----------------------------
 backups/*
 !backups/.gitkeep
+!tools/backup/docker-compose.*.yml

@@ -1,0 +1,40 @@
+# نمایش یک بک‌آپ روی کامپیوتر توسعه (backup.bat view) — هیچ ربطی به Mongo توسعه (my-mongo) یا production ندارد.
+# دیتابیس این استک موقتی است: هر view آن را از صفر می‌سازد و backup.bat stop کاملش را پاک می‌کند.
+# بدون رمز چون فقط روی 127.0.0.1 باز است.
+name: fundynode-backup-viewer
+
+services:
+  mongo:
+    # هم‌نسخه mongo در docker-compose.prod.yml
+    image: mongo:8
+    container_name: fundynode-backup-mongo
+    ports:
+      - "127.0.0.1:27118:27017"
+    healthcheck:
+      test: [ "CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')" ]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+  redis:
+    # هم‌نسخه redis در docker-compose.prod.yml ؛ فقط فایل بک‌آپ را می‌خواند و چیزی ذخیره نمی‌کند
+    image: redis:8
+    container_name: fundynode-backup-redis
+    command: [ "redis-server", "--save", "", "--appendonly", "no" ]
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 2s
+      timeout: 5s
+      retries: 60
+
+  rediscommander:
+    image: ghcr.io/joeferner/redis-commander:0.9.1
+    container_name: fundynode-backup-rediscommander
+    environment:
+      - REDIS_HOSTS=backup:redis:6379:0
+      - NOSAVE=true
+    ports:
+      - "127.0.0.1:8092:8081"
+    depends_on:
+      redis:
+        condition: service_healthy
