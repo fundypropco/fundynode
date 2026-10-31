@@ -1,6 +1,6 @@
 @echo off
-rem FundyNode database backup: dump the production MongoDB into backups\ and open any backup in MongoDB Compass.
-rem Usage: backup.bat [new ^| list ^| view [number or file name] ^| stop]   (docs/deployment.md)
+rem FundyNode backups: production MongoDB and Redis into backups, viewable in MongoDB Compass and Redis Commander.
+rem Usage: backup.bat [mongo ^| redis ^| list ^| view [number or file name] ^| stop]   (docs/deployment.md)
 setlocal
 cd /d "%~dp0"
 

@@ -37,7 +37,8 @@ Node.js 22 (ESM، `"type": "module"`) · Express 5 · Mongoose 8 (MongoDB 8) · 
 ```bash
 docker compose up -d --build          # توسعه: app روی localhost:5000 ، debugger 9229/9230 ، mongo 27117 ، redis 6380
 deploy.bat                            # production از ویندوز: بیلد محلی + تونل SSH + بکاپ + بررسی سلامت (docs/deployment.md)
-backup.bat                            # بک‌آپ Mongo سرور در backups/ با تاریخ تا ثانیه ؛ list ، view (باز کردن در Compass) ، stop
+backup.bat                            # بک‌آپ Mongo سرور در backups/ با تاریخ تا ثانیه ؛ redis ، list ، view (Compass / Redis Commander) ، stop
+live.bat mongo                        # داده زنده production با تونل SSH: Compass ؛ live.bat redis: Redis Commander (هر تغییر واقعی است)
 ```
 
 - `app.js` → سرور HTTP (`src/index.js`) ؛ `worker.js` → پردازشگر صف BullMQ (job `checkTradeMap`) + حلقه ارسال وضعیت حساب‌ها به پنل هر ثانیه (`src/schedules/accReportSync.js`)
