@@ -5,8 +5,7 @@
 
 ## قوانین کاری (مهم)
 
-- **هیچ تغییری مستقیم روی `main` نرود.** همه تغییرات روی یک branch/worktree انجام می‌شود، کاربر آن را بازبینی می‌کند و خودش merge می‌کند.
-- بدون درخواست صریح، commit/push نکن.
+- **هیچ تغییری مستقیم روی `main` نرود.** هر تسک روی branch جدای خودش (worktree) انجام و commit می‌شود؛ کاربر آن را با `main` مقایسه و خودش merge می‌کند. commit روی branch خودت در worktree تائیدیه نمی‌خواهد؛ push فقط با درخواست صریح.
 - زبان گفتگو و کامنت‌های کد **فارسی** است؛ نام متغیرها و توابع انگلیسی. سبک کامنت‌گذاری موجود (`// #.` + توضیح فارسی) را حفظ کن.
 - پروژه تست خودکار ندارد (`npm test` خالی است). بعد از تغییر، مسیر پیام را دستی دنبال کن و نتیجه را صادقانه گزارش کن.
 - پیش از تغییر در یک handler، فرمت پیام آن را در [docs/message-protocol.md](docs/message-protocol.md) چک کن؛ طرف MQL (اکسپرت متاتریدر) در این ریپو نیست و هر تغییر فرمت باید با آن هماهنگ شود.
@@ -38,6 +37,7 @@ Node.js 22 (ESM، `"type": "module"`) · Express 5 · Mongoose 8 (MongoDB 8) · 
 ```bash
 docker compose up -d --build          # توسعه: app روی localhost:5000 ، debugger 9229/9230 ، mongo 27117 ، redis 6380
 deploy.bat                            # production از ویندوز: بیلد محلی + تونل SSH + بکاپ + بررسی سلامت (docs/deployment.md)
+backup.bat                            # بک‌آپ Mongo سرور در backups/ با تاریخ تا ثانیه ؛ list ، view (باز کردن در Compass) ، stop
 ```
 
 - `app.js` → سرور HTTP (`src/index.js`) ؛ `worker.js` → پردازشگر صف BullMQ (job `checkTradeMap`) + حلقه ارسال وضعیت حساب‌ها به پنل هر ثانیه (`src/schedules/accReportSync.js`)

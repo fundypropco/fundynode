@@ -49,3 +49,5 @@ tmp
 # ----------------------------
 Dockerfile*
 docker-compose*
+# بک‌آپ دیتابیس (backup.bat) نباید وارد ایمیج شود (Dockerfile.prod همه پوشه را COPY می‌کند)
+backups
