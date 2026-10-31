@@ -50,3 +50,10 @@ tmp
 # ----------------------------
 Dockerfile*
 docker-compose*
+
+# ----------------------------
+# بک‌آپ دیتابیس (backup.bat) ؛ داده واقعی ، فقط خود پوشه در git است
+# ----------------------------
+backups/*
+!backups/.gitkeep
+!tools/backup/docker-compose.*.yml

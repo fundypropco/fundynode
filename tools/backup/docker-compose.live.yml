@@ -1,0 +1,13 @@
+# رابط گرافیکی روی Redis زنده production (live.bat redis) — از تونل SSH همان پنجره به سرور وصل می‌شود.
+# فقط روی 127.0.0.1 باز است. host.docker.internal از داخل کانتینر همان تونل روی ویندوز است.
+name: fundynode-live
+
+services:
+  rediscommander:
+    image: ghcr.io/joeferner/redis-commander:0.9.1
+    container_name: fundynode-live-redis
+    environment:
+      - REDIS_HOSTS=LIVE:host.docker.internal:16380:0
+      - NOSAVE=true
+    ports:
+      - "127.0.0.1:8091:8081"

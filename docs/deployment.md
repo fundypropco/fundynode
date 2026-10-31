@@ -40,6 +40,53 @@
 - mongo / redis / nginx ری‌استارت نمی‌شوند. عوض کردن `MONGO_INITDB_ROOT_*` رمز واقعی Mongo را عوض نمی‌کند (فقط بار اول با volume خالی) ؛
   آزمون: رمز اشتباه ⇒ app سالم بالا نیامد ⇒ فایل قبلی برگشت.
 
+## بک‌آپ و داده زنده (`backup.bat` ، `live.bat`)
+
+| دستور | کار |
+|---|---|
+| `backup.bat` (یا دوبار کلیک) | بک‌آپ تازه از MongoDB **سرور** در `backups/fundynode_mongo_YYYY-MM-DD_HH-MM-SS.archive.gz` |
+| `backup.bat redis` | بک‌آپ تازه از Redis سرور در `backups/fundynode_redis_YYYY-MM-DD_HH-MM-SS.rdb` |
+| `backup.bat list` | فهرست بک‌آپ‌ها ، جدیدترین اول |
+| `backup.bat view` | انتخاب از فهرست (Enter = جدیدترین) ؛ Mongo در Compass روی `mongodb://127.0.0.1:27118/?directConnection=true` و Redis در Redis Commander http://127.0.0.1:8092 |
+| `backup.bat view 3` یا `view <نام فایل>` | همان ، برای یک نسخه مشخص |
+| `backup.bat stop` | خاموش کردن نمایشگرها و پاک کردن کامل دیتابیس موقت آنها (فایل بک‌آپ می‌ماند) |
+| `live.bat mongo` | **داده زنده:** تونل SSH و باز کردن Compass روی Mongo سرور (دیدن و ویرایش) |
+| `live.bat redis` | **داده زنده:** تونل SSH و Redis Commander محلی http://127.0.0.1:8091 روی Redis سرور (دیدن ، ویرایش ، حذف کلید) |
+| `live.bat stop` | جمع کردن نمایشگر اگر پنجره قبلی بدون Enter بسته شده باشد |
+
+این پروژه فایل آپلودی ندارد ؛ `backup.bat files` فقط در FundyPanel است.
+
+### داده زنده (`live.bat`)
+
+- **هر تغییری همان لحظه روی داده واقعی است** و هیچ undo ای ندارد ؛ قبل از تغییر مهم `backup.bat` بگیرید.
+- اتصال تا وقتی پنجره باز است برقرار می‌ماند ؛ Enter یا Ctrl+C تونل را کامل می‌بندد.
+- روی سرور پورتی باز نمی‌شود: `ssh -L` مستقیم به IP کانتینر روی شبکه داکر سرور می‌رود (`127.0.0.1:27119` Mongo ، `127.0.0.1:16380` Redis). اعتبارنامه Mongo هر بار از env
+  کانتینر خوانده و فقط به Compass داده می‌شود ؛ این اسکریپت جایی ذخیره‌اش نمی‌کند و چاپش هم نمی‌کند.
+- Redis production رمز ندارد و Redis Commander فقط روی 127.0.0.1 است.
+
+### کلیدهای Redis در Redis Commander
+
+- کلیدهای خودمان: `acc_report:<acc>` (TTL دو دقیقه) ، `acc_reports:index` ، `lock:acc_report_sync` ، `spider_<acc>`. درخت با «:» تا می‌شود.
+- پوشه `bull` صف BullMQ است (چارچوب) ؛ دست نزنید.
+- `acc_report:*` را worker هر ثانیه از نو می‌نویسد ، پس ویرایش آن زود از بین می‌رود.
+- Redis Commander (مجوز MIT ، ایمیج `ghcr.io/joeferner/redis-commander`) انتخاب شد ؛ Redis Insight مجوز SSPL دارد و پذیرش شرایط استفاده می‌خواهد.
+
+### بک‌آپ
+
+- پیش‌نیاز: همان کلید دپلوی (`deploy.bat setup`) ؛ برای `view` هم Docker Desktop. تنظیمات از `tools/deploy/deploy.conf`.
+- **روی سرور چیزی عوض نمی‌شود:** `mongodump --archive --gzip` از راه SSH مستقیم به فایل محلی می‌آید ؛ اعتبارنامه از env خود کانتینر `my-mongo`.
+  `fundy-server.sh` لازم نیست ، پس بدون دپلوی کار می‌کند. `backup.bat` هرگز چیزی را به سرور برنمی‌گرداند.
+- Redis: `redis-cli --rdb` مثل یک replica عکس کامل می‌گیرد (BGSAVE پشت صحنه ، سرور نمی‌ایستد). خروجی در `/tmp` داخل کانتینر ساخته ، فرستاده و همان‌جا پاک می‌شود ،
+  چون `--rdb -` نشانگر ۴۰ بایتی EOF را هم در خروجی جا می‌گذارد.
+- فقط دیتابیس برنامه (`MONGO_INITDB_DATABASE`) بک‌آپ می‌شود ، نه کاربران `admin`.
+- **یکدستی:** MySQL با `--single-transaction` یک عکس از یک لحظه می‌گیرد. `mongodump` کالکشن‌ها را یکی‌یکی می‌خواند و سرور Mongo تکی است ، پس `--oplog` (که فقط روی replica set کار می‌کند)
+  در دسترس نیست: معامله‌ای که وسط بک‌آپ ثبت شود ممکن است در کالکشنی که دیرتر خوانده شد باشد و در کالکشنی که زودتر خوانده شد نباشد. برای یکدستی کامل: Mongo با replica set تک‌عضوی + `--oplog`.
+- فایل اول `.partial` است و فقط اگر SSH بدون خطا تمام شود و سالم باشد نام نهایی می‌گیرد (Mongo: `gzip -t` و امضای آرشیو ؛ Redis: امضای ابتدا و بایت پایان فایل) ؛ وگرنه پاک می‌شود.
+- `view` با `tools/backup/docker-compose.viewer.yml` (پروژه جدا `fundynode-backup-viewer` ، `mongo:8` و `redis:8` هم‌نسخه production + Redis Commander) هر بار همان نوع را از صفر می‌سازد
+  ⇒ همیشه فقط همان یک نسخه دیده می‌شود ؛ ربطی به `my-mongo` و `my-redis` توسعه ندارد. بدون رمز و فقط روی 127.0.0.1. Compass پیدا نشود ⇒ نشانی چاپ می‌شود تا دستی وصل شوید.
+- پوشه `backups/` در `.gitignore` و `.dockerignore` است (فقط `.gitkeep` در git ؛ `Dockerfile.prod` همه پوشه را COPY می‌کند) و چیزی خودکار از آن پاک نمی‌شود.
+- **بک‌آپ داده واقعی است** و رمزنگاری نشده ؛ جای دیگری نفرستید.
+
 ## چطور کار می‌کند
 
 ```
@@ -95,8 +142,13 @@ setup (پیدا شدن خودکار پوشه پروژه) ، اولین دپلو�
 `deploy env`: تغییر `FUNDYPANEL_API_KEY` + کلید تازه (مقدار تازه در کانتینر ، دسترسی 600 ، پشتیبان) ، خط نامعتبر (رد بدون تغییر) ،
 رمز Mongo اشتباه (برگشت خودکار ، ۱:۳۷) ، `env undo` ؛ Notepad واقعی دستی آزموده نشد.
 
+`backup.bat` و `live.bat` (2026-10-31) روی سرور جعلی dind + sshd با رمز Mongo دارای `$ " / : @` و فاصله: بک‌آپ Mongo و Redis و `view` ، خروجی بریده و کانتینر خاموش (فایلی نماند) ؛
+اتصال Compass با احراز هویت از لاگ Mongo ، نوشتن از تونل با mongosh ، بسته شدن کامل با Enter و `kill -INT` ، پورت اشغال ، تونل یتیم با `live.bat stop`. **بستن پنجره با X ، Ctrl+C واقعی کیبورد و ویرایش از داخل خود Compass دستی آزموده نشد.**
+
 ## عیب‌یابی
 
+- `live.bat`: `administratively prohibited` ⇒ `AllowTcpForwarding` روی سرور بسته است (باید `yes` باشد ؛ `remote` برای این تونل کافی نیست).
+- `live.bat`: `Port … is already in use` ⇒ پنجره live دیگری باز است یا تونلی جا مانده ⇒ `live.bat stop`.
 - `Cannot log in … with the deploy key` ⇒ `deploy.bat setup`.
 - `Could not find the project folder on the server` ⇒ کانتینر `fundynode` روشن نیست ؛ `DEPLOY_DIR` را در deploy.conf بنویسید.
 - `MongoDB backup failed` ⇒ چیزی عوض نشده ؛ `docker logs my-mongo` و فضای دیسک.
