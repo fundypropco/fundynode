@@ -2,6 +2,7 @@ import Account from '../models/Account.js'
 import Broker from '../models/Broker.js'
 import Symbol from '../models/Symbol.js'
 import SymbolAlias from '../models/SymbolAlias.js'
+import TradingControl from '../models/TradingControl.js'
 import { clearBrokerCache } from '../boot/cache.js'
 
 // #.
@@ -23,6 +24,53 @@ export function disabledSymbolBlock(...symbols) {
     return s ? `trading is disabled for symbol ${s.title} (${s.symbol}) on broker ${s.server}` : null
 }
 
+// #.
+// کلید انجام معامله از پنل ادمین (2026-11-01): کلی (TradingControl) یا بروکر Master (Broker.trading_enabled) خاموش ⇒ متن رد سفارش ؛ آزاد ⇒ null
+// کش درون حافظه ای نداریم: چند پروسه PM2 داریم و خاموش کردن باید همان لحظه روی همه اثر کند (فقط هنگام سفارش تازه خوانده می شود)
+export async function tradingControlBlock(masterServer) {
+    const control = await TradingControl.findOne({ key: 'global' }).lean()
+    if (control?.trading_enabled === false) {
+        return 'trading is disabled by admin'
+    }
+    const broker = await Broker.findOne({ server: masterServer }).select('trading_enabled').lean()
+    return broker?.trading_enabled === false ? `trading is disabled by admin on broker ${masterServer}` : null
+}
+
+// #. وضعیت فعلی کلید کلی و کلید بروکرها (مقایسه با پنل)
+export async function getTradingControl() {
+    const control = await TradingControl.findOne({ key: 'global' }).lean()
+    const brokers = await Broker.find().sort({ server: 1 }).select('server trading_enabled').lean()
+    return {
+        trading_enabled: control?.trading_enabled !== false,
+        brokers: brokers.map(b => ({ server: b.server, trading_enabled: b.trading_enabled !== false }))
+    }
+}
+
+// #.
+// پنل منبع این کلیدهاست و همیشه کل وضعیت را می فرستد: { trading_enabled , brokers: [{ server , trading_enabled }] }
+// بروکری که در نود نیست رد نمی شود و در missing برمی گردد
+export async function setTradingControl(body = {}) {
+    const toBool = v => v === true || v === 1 || v === '1' || v === 'true'
+    if (body.trading_enabled === undefined || body.trading_enabled === null) return fail('trading_enabled is required')
+    if (body.brokers !== undefined && !Array.isArray(body.brokers)) return fail('brokers must be an array')
+
+    await TradingControl.findOneAndUpdate(
+        { key: 'global' },
+        { $set: { trading_enabled: toBool(body.trading_enabled) } },
+        { upsert: true, setDefaultsOnInsert: true }
+    )
+
+    const missing = []
+    for (const item of body.brokers ?? []) {
+        const server = String(item?.server ?? '').trim()
+        if (!server) continue
+        const result = await Broker.updateOne({ server }, { $set: { trading_enabled: toBool(item.trading_enabled) } })
+        if (!result.matchedCount) missing.push(server)
+    }
+
+    return { ok: true, data: { ...(await getTradingControl()), missing } }
+}
+
 // #. بروکری که حسابی (حساب کاربر یا Master) رویش ساخته شده قابل حذف یا تغییر سرور نیست
 export async function brokerInUse(server) {
     return Boolean(await Account.exists({ $or: [{ server }, { 'copiers.server': server }] }))
@@ -39,6 +87,7 @@ export async function listBrokers() {
         server: b.server,
         acc: b.acc ?? null,
         diff_time: b.diff_time ?? null,
+        trading_enabled: b.trading_enabled !== false,
         symbols_count: countMap.get(b.server)?.total ?? 0,
         disabled_count: countMap.get(b.server)?.disabled ?? 0
     }))

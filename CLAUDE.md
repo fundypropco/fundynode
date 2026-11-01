@@ -56,7 +56,7 @@ live.bat mongo                        # داده زنده production با تون
 | `src/services/GetUpdateService.js` | ساخت/به‌روزرسانی دستورها در صف `get_updates` و توابع `prepare*Data` |
 | `src/services/AccReportService.js` | آخرین وضعیت لحظه‌ای حساب‌ها (پیام 42) در Redis با TTL ۲ دقیقه: `get(acc)` / `getAll()` |
 | `src/services/TradeMapService.js` | ارسال رویداد TradeMap به لاراول (`created/modified/updated/closed`) |
-| `src/services/BrokerSymbolService.js` | مدیریت بروکرها ، راهنمای نمادها (SymbolAlias) و `Symbol.is_tradable` از پنل ادمین (`/api/admin/*` ، 2026-10-18) ؛ `disabledSymbolBlock` در `isOrderPossible` |
+| `src/services/BrokerSymbolService.js` | مدیریت بروکرها ، راهنمای نمادها (SymbolAlias) و `Symbol.is_tradable` از پنل ادمین (`/api/admin/*` ، 2026-10-18) ؛ `disabledSymbolBlock` و کلید انجام معامله `tradingControlBlock` (کلی `TradingControl` یا `Broker.trading_enabled` ، 2026-11-01) در `isOrderPossible` |
 | `src/helpers/helper.js` | `makeMsgForHandler` (ساخت پیام خروجی)، `getMqlError`، تاریخ، `isValidSymbols`، `normalizeSymbol` |
 | `src/helpers/constant.js` | `ACTION_HANDLER` کدهای دستور خروجی |
 | `src/models/` | اسکیماهای Mongoose — شرح کامل در [docs/data-models.md](docs/data-models.md) |

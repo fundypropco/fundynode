@@ -84,6 +84,8 @@ FundyNode یکی از چند پروژه سامانه پراپ‌تریدینگ F
 | POST | `/api/admin/delete-broker` | admin | `{server}` حذف بروکر و Symbol هایش ؛ بروکر دارای حساب (`server` / `copiers.server`) رد |
 | GET | `/api/admin/broker-symbols/:server` | admin | سندهای کامل Symbol یک بروکر |
 | POST | `/api/admin/set-symbols-tradable` | admin | `{server, items:[{symbol, is_tradable}]}` ⇒ `{matched, missing[]}` |
+| GET | `/api/admin/trading-control` | admin | کلید انجام معامله (2026-11-01): `{trading_enabled, brokers:[{server, trading_enabled}]}` |
+| POST | `/api/admin/set-trading-control` | admin | همان شکل بالا از تنظیمات FP Trader پنل (کل وضعیت) ⇒ وضعیت تازه + `missing[]` (بروکرهایی که در نود نیستند) |
 | GET | `/api/admin/symbol-aliases` | admin | راهنمای نمادها `[{title, alias[], weight}]` |
 | POST | `/api/admin/set-symbol-alias` | admin | `{title, alias[], weight, old_title?}` (اعتبارسنجی تداخل نام‌ها ؛ weight روی Symbol های همان title) |
 | POST | `/api/admin/delete-symbol-alias` | admin | `{title}` (Symbol ها می‌مانند) |

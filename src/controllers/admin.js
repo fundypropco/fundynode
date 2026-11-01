@@ -63,6 +63,15 @@ const setSymbolsTradable = asyncHandler(async (req, res) => {
     sendResult(res, await BrokerSymbolService.setSymbolsTradable(req.body.server, req.body.items))
 })
 
+// #. کلید انجام معامله از تنظیمات FP Trader پنل (2026-11-01)
+const tradingControl = asyncHandler(async (req, res) => {
+    res.send({ status: 'success', data: await BrokerSymbolService.getTradingControl() })
+})
+
+const setTradingControl = asyncHandler(async (req, res) => {
+    sendResult(res, await BrokerSymbolService.setTradingControl(req.body))
+})
+
 const symbolAliases = asyncHandler(async (req, res) => {
     res.send({ status: 'success', results: await BrokerSymbolService.listSymbolAliases() })
 })
@@ -139,6 +148,8 @@ export default {
     deleteBroker,
     brokerSymbols,
     setSymbolsTradable,
+    tradingControl,
+    setTradingControl,
     symbolAliases,
     setSymbolAlias,
     deleteSymbolAlias

@@ -11,6 +11,7 @@
 | Symbol | `symbols` | مشخصات نماد در هر بروکر | ✅ |
 | SymbolAlias | `symbol_alias` | لیست نمادهای مجاز و نام‌های جایگزین | ✅ |
 | Broker | `brokers` | بروکرها و اختلاف زمانی | ✅ |
+| TradingControl | `trading_controls` | کلید کلی انجام معامله از پنل | ✅ |
 | LogRule | `log_rules` | کدام handler لاگ شود | ✅ |
 | RequestLog | `request_logs` | لاگ پیام‌های ورودی | ✅ |
 | Usage | `usage` | CPU/RAM سرورهای EA | ✅ |
@@ -187,8 +188,11 @@ waiting ──(updateWaitings بعد از باز شدن مقصد)──► pendi
 ## SymbolAlias (`symbol_alias`)
 `{title (unique), alias[], weight}` — فقط نمادهایی که اینجا هستند وارد `symbols` می‌شوند. از 2026-10-18 مرجع آن پنل ادمین است (`set-symbol-alias` / `delete-symbol-alias` ؛ `symbolAliasSeeder` فقط مقدار اولیه).
 
+## TradingControl (`trading_controls`)
+`{key: 'global' (unique), trading_enabled}` (2026-11-01) — کلید کلی انجام معامله از تنظیمات FP Trader پنل (`set-trading-control`) ؛ سند نباشد ⇒ آزاد. کش ندارد.
+
 ## Broker (`brokers`)
-`{title, server (unique), acc, diff_time}` — `diff_time` میلی‌ثانیه (از 401)؛ `acc` حسابی که دستورهای 11/13 برایش فرستاده می‌شود. از 2026-10-18 `title` (= نام لاتین پنل) و `acc` را پنل ادمین می‌نویسد (`set-broker`) و 401 `title` را فقط برای بروکر تازه می‌گذارد. کش ۵ دقیقه‌ای در `boot/cache.js`.
+`{title, server (unique), acc, diff_time, trading_enabled}` — `trading_enabled` (2026-11-01 ؛ نبودن = true) کلید انجام معامله روی حساب‌های Master همین بروکر ؛ `diff_time` میلی‌ثانیه (از 401)؛ `acc` حسابی که دستورهای 11/13 برایش فرستاده می‌شود. از 2026-10-18 `title` (= نام لاتین پنل) و `acc` را پنل ادمین می‌نویسد (`set-broker`) و 401 `title` را فقط برای بروکر تازه می‌گذارد. کش ۵ دقیقه‌ای در `boot/cache.js`.
 
 ## LogRule (`log_rules`)
 `{handler (unique), log}` — seed: همه کدهای اصلی `true`. کش ۱ دقیقه‌ای.
