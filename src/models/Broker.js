@@ -14,6 +14,11 @@ const brokerSchema = new mongoose.Schema({
     },
     diff_time: {
         type: Number
+    },
+    // #. کلید انجام معامله روی حساب های Master همین بروکر از پنل ادمین (2026-11-01 ؛ BrokerSymbolService.setTradingControl)
+    trading_enabled: {
+        type: Boolean,
+        default: true
     }
 })
 

@@ -10,7 +10,7 @@ import AccReportService from '../AccReportService.js'
 import { toMasterUnits } from '../../helpers/copierAmounts.js'
 import { findNewsBlock, newsBlockDescription } from '../../helpers/newsRule.js'
 import { processUserPartial } from '../PartialCloseService.js'
-import { disabledSymbolBlock } from '../BrokerSymbolService.js'
+import { disabledSymbolBlock, tradingControlBlock } from '../BrokerSymbolService.js'
 
 // #.
 // اگر گزارش لحظه ای حساب (42) در ردیس نباشد، سفارش بدون بررسی موجودی پذیرفته شود یا نه
@@ -204,6 +204,17 @@ async function sendForCheck(account) {
 async function isOrderPossible(account, copier, data) {
     const result = {}
     result.status = true
+
+    // #.
+    // انجام معامله خاموش (تنظیمات FP Trader پنل ، کلی یا بروکر Master همین copier ؛ 2026-11-01) ⇒ سفارش تازه ناممکن
+    // پنل سفارش های FP Trader را خودش رد می کند ؛ این چک برای متاتریدر کاربر است (معامله مبدا مثل بقیه موارد ناممکن بسته می شود)
+    // بستن ، ویرایش و باقیمانده بستن بخشی از این مسیر نمی گذرند و آزادند
+    const controlBlock = await tradingControlBlock(copier.server)
+    if (controlBlock) {
+        result.status = false
+        result.description = [controlBlock]
+        return result
+    }
 
     // #.
     // نماد غیرفعال (ادمین پنل ، Symbol.is_tradable = false روی بروکر کاربر یا Master ؛ 2026-10-18) ⇒ سفارش تازه ناممکن
