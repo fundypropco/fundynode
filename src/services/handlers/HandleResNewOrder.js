@@ -6,7 +6,7 @@ import { formatDateUTC, getMqlError, makeID } from "../../helpers/helper.js"
 import { getBrokerData } from "../../boot/cache.js"
 import AccountService from "../AccountService.js"
 import TradeMapService from '../TradeMapService.js'
-import { copierFactors, findCopier } from '../../helpers/copierAmounts.js'
+import { tradeFactors } from '../../helpers/copierAmounts.js'
 
 export default async (req, res) => {
 
@@ -27,8 +27,9 @@ export default async (req, res) => {
 
         // #.
         // ضریب حجم و واحد (سنتی) همان copier که سفارش روی آن باز شد ؛ برای تبدیل مقادیر مالی به مقیاس کاربر
-        const originAccount = await Account.findLast({ acc: getUpdateDoc.origin_acc }).select('copiers').lean()
-        const factors = copierFactors(findCopier(originAccount, data.acc))
+        // ضریب copier و نرخ کمیسیون / سواپ لحظه ساخت معامله (2026-11-03)
+        const originAccount = await Account.findLast({ acc: getUpdateDoc.origin_acc }).select('copiers commission_rate swap_rate').lean()
+        const factors = tradeFactors(originAccount, data.acc)
 
         // #.
         // مپ کردن اکانت و تیکت های مرجع و کپی کننده 
@@ -60,9 +61,11 @@ export default async (req, res) => {
             magic_dist: data.magic,
             comment_dist: data.comment,
             commission_dist: data.commission,
-            commission_final: data.commission_final,
+            commission_charged: data.commission_final,
             vol_factor: factors.vol_factor,
             cent: factors.cent,
+            commission_rate: factors.commission_rate,
+            swap_rate: factors.swap_rate,
 
             symbol_title: getUpdateDoc.symbol_title,
             side: getUpdateDoc.side,

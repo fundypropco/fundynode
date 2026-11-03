@@ -18,7 +18,7 @@ import { splitCommission } from '../../helpers/partialClose.js'
 // متاتریدر 4 و 5 Master:
 //   تیکت باقیمانده = تیکت بسته‌شده ⇒ متاتریدر 5: کمیسیون گزارش‌شده تجمیعی کل پوزیشن است
 //   تیکت تازه                    ⇒ متاتریدر 4: کمیسیون گزارش‌شده فقط مال تیکت بسته‌شده است
-//   (helpers/partialClose.splitCommission ؛ همین قاعده برای commission_final)
+//   (helpers/partialClose.splitCommission ؛ همین قاعده برای commission_charged)
 // swap_final / commission_final (نرخ شرکت) از 2026-10-17 در انتهای پیام می‌آیند ؛ EA قدیمی ⇒ کمیسیون متناسب با حجم و سواپ شرکتی 0
 export default async (req, res) => {
 
@@ -63,8 +63,8 @@ export default async (req, res) => {
                 sameTicket
             )
             const commissionFinal = splitCommission(
-                openTradeMap.commission_final,
-                tradeMaps.reduce((s, t) => s + (t.commission_final ?? 0), 0),
+                openTradeMap.commission_charged,
+                tradeMaps.reduce((s, t) => s + (t.commission_charged ?? 0), 0),
                 data.commission_final,
                 ratio,
                 sameTicket
@@ -92,9 +92,9 @@ export default async (req, res) => {
             openTradeMap.close_timestamp_dist = data.closed_timestamp + diff_time
             openTradeMap.profit_dist = data.profit
             openTradeMap.swap_dist = data.swap
-            openTradeMap.swap_final = data.swap_final ?? 0
+            openTradeMap.swap_charged = data.swap_final ?? 0
             openTradeMap.commission_dist = commission.closed
-            openTradeMap.commission_final = commissionFinal.closed
+            openTradeMap.commission_charged = commissionFinal.closed
             openTradeMap.status = 'closed'
             openTradeMap.closing_type = 'partial'
             openTradeMap.partial_code = partialCode
@@ -130,9 +130,11 @@ export default async (req, res) => {
                 magic_dist: data.magic,
                 comment_dist: data.comment,
                 commission_dist: commission.remain,
-                commission_final: commissionFinal.remain,
+                commission_charged: commissionFinal.remain,
                 vol_factor: openTradeMap.vol_factor,
                 cent: openTradeMap.cent,
+                commission_rate: openTradeMap.commission_rate,
+                swap_rate: openTradeMap.swap_rate,
 
                 symbol_title: openTradeMap.symbol_title,
                 symbol_weight: openTradeMap.symbol_weight,

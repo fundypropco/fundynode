@@ -35,7 +35,7 @@ export default async (req, res) => {
         // #.
         // محاسبه کمیسیون های تجمیعی لحاظ شده برای این معامله تا کنون
         const sumCommissions = tradeMaps.reduce((s, t) => s + (t.commission_dist ?? 0), 0)
-        const sumCommissionsFinal = tradeMaps.reduce((s, t) => s + (t.commission_final ?? 0), 0)
+        const sumCommissionsFinal = tradeMaps.reduce((s, t) => s + (t.commission_charged ?? 0), 0)
 
         // #.
         // اگر مقدار کمیسیون گزارش شده از کمیسیون های تجمیعی بیشتر باشد
@@ -59,7 +59,7 @@ export default async (req, res) => {
             openTradeMap.close_timestamp_dist = data.closed_timestamp + diff_time
             openTradeMap.profit_dist = data.profit
             openTradeMap.swap_dist = data.swap
-            openTradeMap.swap_final = data.swap_final
+            openTradeMap.swap_charged = data.swap_final
             openTradeMap.status = 'closed'
             openTradeMap.closing_type = 'single'
             if (commission_dist) {
@@ -71,9 +71,9 @@ export default async (req, res) => {
             }
             if (commission_final) {
                 if (tradeMaps.length === 1) {
-                    openTradeMap.commission_final = data.commission_final
+                    openTradeMap.commission_charged = data.commission_final
                 } else if (tradeMaps.length > 1) {
-                    openTradeMap.commission_final += commission_final
+                    openTradeMap.commission_charged += commission_final
                 }
             }
             await openTradeMap.save()

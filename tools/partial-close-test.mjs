@@ -83,7 +83,7 @@ async function setup({ volFactor = 1, cent = false, volSrc = 0.10, volDist = 0.1
     return TradeMap.create({
         acc_src: acc, ticket_src: ticketSrc, symbol_src: 'EURUSD', vol_src: volSrc, open_price_src: 1.1, open_timestamp_src: now() - 60000,
         acc_dist: MASTER, ticket_dist: ticketDist, server_dist: 'Master-Srv', symbol_dist: 'EURUSD', vol_dist: volDist, open_price_dist: 1.1,
-        open_timestamp_dist: now() - 60000, commission_dist: -0.7, commission_final: -3, symbol_title: 'EURUSD', side: 'buy', status: 'open',
+        open_timestamp_dist: now() - 60000, commission_dist: -0.7, commission_charged: -3, symbol_title: 'EURUSD', side: 'buy', status: 'open',
         tick_value: 1, tick_size: 0.00001, platform: 'panel', vol_factor: volFactor, cent
     })
 }
@@ -109,9 +109,9 @@ const t978 = now()
 r = await send(`${MASTER}_${ACC}_1,978,OK PARTIAL_&_9001_&_9001_&_0.06_&_${t978}_&_1.105_&_-0.1_&_-0.98_&_20_&_${ACC}_&_c_&_0_&_0_&_1.1_&_${t978 - 60000}_&_0.04_&_-0.2_&_-4.2,${now()},${gu.keyid}`)
 const closed1 = await TradeMap.findById(tm1._id)
 const rest1 = await TradeMap.findOne({ acc_src: ACC, ticket_src: 222 })
-check('closed part', [closed1.status, closed1.closing_type, closed1.vol_dist, closed1.vol_src, closed1.profit_dist, closed1.swap_final], ['closed', 'partial', 0.04, 0.04, 20, -0.2])
+check('closed part', [closed1.status, closed1.closing_type, closed1.vol_dist, closed1.vol_src, closed1.profit_dist, closed1.swap_charged], ['closed', 'partial', 0.04, 0.04, 20, -0.2])
 check('closed part src close fields', [closed1.close_price_src, closed1.profit_src], [1.105, 12.5])
-check('MT5 commission split (dist / final)', [closed1.commission_dist, rest1?.commission_dist, closed1.commission_final, rest1?.commission_final], [-0.56, -0.42, -2.4, -1.8])
+check('MT5 commission split (dist / charged)', [closed1.commission_dist, rest1?.commission_dist, closed1.commission_charged, rest1?.commission_charged], [-0.56, -0.42, -2.4, -1.8])
 check('remainder', [rest1?.status, rest1?.ticket_dist, rest1?.vol_dist, rest1?.vol_src, rest1?.tick_value, rest1?.platform], ['open', 9001, 0.06, 0.06, 1, 'panel'])
 check('same partial_code', closed1.partial_code > 0 && closed1.partial_code === rest1?.partial_code, true)
 check('synced closed + created with map_id', synced.map(s => [s.body.event, s.body.data[0].map_id]), [['closed', String(tm1._id)], ['created', String(rest1?._id)]])
@@ -125,7 +125,7 @@ r = await send(`${MASTER}_${ACC}_1,978,OK PARTIAL_&_9001_&_9001_&_0.02_&_${now()
 const fam = await TradeMap.find({ acc_dist: MASTER, ticket_dist: 9001 }).sort('_id')
 check('three pieces same partial_code', [fam.length, new Set(fam.map(f => f.partial_code)).size, fam.map(f => f.status)], [3, 1, ['closed', 'closed', 'open']])
 check('family commission = cumulative reported', Math.round(fam.reduce((s, f) => s + f.commission_dist, 0) * 100) / 100, -1.26)
-check('family commission_final = cumulative reported', Math.round(fam.reduce((s, f) => s + f.commission_final, 0) * 100) / 100, -5.4)
+check('family commission_charged = cumulative reported', Math.round(fam.reduce((s, f) => s + f.commission_charged, 0) * 100) / 100, -5.4)
 
 // ۳. پنل ⇒ حجم ناممکن روی Master (اقتصادی 0.5: کاربر 0.03 ⇒ Master 0.01) ⇒ رد
 await Account.deleteMany({}); await TradeMap.deleteMany({}); await GetUpdate.deleteMany({})
@@ -146,9 +146,9 @@ await send(`${MASTER}_394328_1,978,OK PARTIAL_&_9001_&_9002_&_3.5_&_${now()}_&_1
 const closedCent = await TradeMap.findById(tmCent._id)
 const restCent = await TradeMap.findOne({ ticket_dist: 9002 })
 check('MT4 commission split', [closedCent.commission_dist, restCent?.commission_dist], [-0.21, -0.49])
-check('old EA: commission_final by volume, swap_final 0', [closedCent.commission_final, restCent?.commission_final, closedCent.swap_final], [-0.9, -2.1, 0])
+check('old EA: commission_charged by volume, swap_charged 0', [closedCent.commission_charged, restCent?.commission_charged, closedCent.swap_charged], [-0.9, -2.1, 0])
 const panelRow = synced[0]?.body.data[0]
-check('panel row in user scale (÷100 ÷0.5)', [panelRow?.vol_dist, panelRow?.profit_final, panelRow?.commission_final], [0.015, 3, -0.02])
+check('panel row: dollars / lots 4 digits , user scale floored (÷100 ÷0.5)', [panelRow?.vol_dist, panelRow?.profit_final, panelRow?.commission_charged, panelRow?.commission_final], [0.015, 3, -0.009, -0.018])
 
 // ۵. متاتریدر 4 کاربر: 500 برای تیکت تازه با آیتم partial (11 فیلدی)
 await Account.deleteMany({}); await TradeMap.deleteMany({}); await GetUpdate.deleteMany({})
@@ -191,6 +191,21 @@ check('978 fail ⇒ open map untouched', [failed.status, failed.vol_src, failed.
 
 // map_id در toPanelTrade
 check('toPanelTrade map_id', toPanelTrade(failed.toObject()).map_id, String(failed._id))
+
+// یکپارچگی فیلدهای مالی (2026-11-03): دلار / لات با ۴ رقم ، _charged ، _final گرد به پائین ، نرخ‌ها
+console.log('— helpers/copierAmounts (2026-11-03)')
+const { floorTo, tradeFactors } = await import('../src/helpers/copierAmounts.js')
+check('floorTo: trader profit down , loss / cost up , float noise ignored', [floorTo(1.23456), floorTo(-1.23451), floorTo(-6.5), floorTo(-3.9 / 0.6), floorTo(0.1 + 0.2), floorTo(-0)], [1.2345, -1.2346, -6.5, -6.5, 0.3, 0])
+const ecoCent = toPanelTrade({
+    _id: 'x', cent: true, vol_factor: 0.6, commission_rate: 30, swap_rate: 10, vol_dist: 6, profit_dist: 1234.56,
+    commission_dist: -300, commission_charged: -390, swap_dist: -55, swap_charged: -60.5, profit_src: 20.5, commission_src: -6.5,
+})
+check('eco cent row: master dollars / lots (4 digits, no loss)', [ecoCent.vol_dist, ecoCent.profit_dist, ecoCent.commission_dist, ecoCent.commission_charged, ecoCent.swap_dist, ecoCent.swap_charged], [0.06, 12.3456, -3, -3.9, -0.55, -0.605])
+check('eco cent row: user scale floored', [ecoCent.profit_final, ecoCent.commission_final, ecoCent.swap_final], [20.576, -6.5, -1.0084])
+check('eco cent row: rates , cent , src untouched , no *_user keys', [ecoCent.commission_rate, ecoCent.swap_rate, ecoCent.cent, ecoCent.profit_src, ecoCent.commission_src, 'profit_user' in ecoCent || 'commission_user' in ecoCent || 'swap_user' in ecoCent], [30, 10, true, 20.5, -6.5, false])
+check('old trade map (no factors / rates) ⇒ standard , null rates', (({ vol_factor, cent, commission_rate, swap_rate, profit_final }) => [vol_factor, cent, commission_rate, swap_rate, profit_final])(toPanelTrade({ profit_dist: 5 })), [null, null, null, null, 5])
+check('tradeFactors: copier + account rates', tradeFactors({ commission_rate: 30, swap_rate: 0, copiers: [{ acc: MASTER, copy: true, vol_factor: 0.6, cent: true }] }, MASTER), { vol_factor: 0.6, cent: true, commission_rate: 30, swap_rate: 0 })
+check('trade map schema: _charged + rates , no _final / _user', ['commission_charged', 'swap_charged', 'commission_rate', 'swap_rate', 'commission_final', 'swap_final', 'profit_user'].map(p => !!TradeMap.schema.path(p)), [true, true, true, true, false, false, false])
 
 await mongoose.connection.db.dropDatabase()
 await mongoose.disconnect()

@@ -60,7 +60,7 @@ export function masterPartialVol(masterOpenVol, closedVol, openVol, symbol) {
 }
 
 // #.
-// تقسیم کمیسیون بین بخش بسته‌شده و باقیمانده (برای commission_dist و همین‌طور commission_final)
+// تقسیم کمیسیون بین بخش بسته‌شده و باقیمانده (برای commission_dist و همین‌طور commission_charged)
 //
 //   MT5 (تیکت Master عوض نمی‌شود): کمیسیون گزارش‌شده مجموع تجمیعی کل پوزیشن است (ورود + خروج‌های تا الان)
 //     ⇒ مجموع خانواده (همه رکوردهای همان تیکت Master) باید برابر گزارش شود (اگر منفی‌تر است) ؛

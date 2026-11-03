@@ -1,5 +1,5 @@
 /*
- * پر کردن فیلدهای تازه TradeMap (vol_factor ، cent ، profit_user ، swap_user ، commission_user)
+ * پر کردن فیلدهای تازه TradeMap (vol_factor ، cent ؛ فیلدهای *_user از 2026-11-03 حذف شدند)
  * برای معاملاتی که قبل از این تغییر ساخته شده‌اند.
  *
  * ضریب‌ها از copier همان حساب Master (acc_dist) در تازه‌ترین رکورد accounts حساب کاربر (acc_src) خوانده می‌شوند ؛
@@ -15,7 +15,7 @@
 import mongoose from 'mongoose'
 import Account from '../src/models/Account.js'
 import TradeMap from '../src/models/TradeMap.js'
-import { copierFactors, findCopier, userAmounts } from '../src/helpers/copierAmounts.js'
+import { copierFactors, findCopier } from '../src/helpers/copierAmounts.js'
 
 const URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/fundynode'
 const WRITE = process.argv.includes('--write')
@@ -23,7 +23,7 @@ const WRITE = process.argv.includes('--write')
 await mongoose.connect(URI)
 
 const tradeMaps = await TradeMap.find({ vol_factor: { $exists: false } },
-    { acc_src: 1, acc_dist: 1, profit_dist: 1, swap_final: 1, commission_final: 1 }).lean()
+    { acc_src: 1, acc_dist: 1 }).lean()
 
 const accounts = {}
 const ops = []
@@ -45,7 +45,7 @@ for (const tm of tradeMaps) {
     ops.push({
         updateOne: {
             filter: { _id: tm._id },
-            update: { $set: { ...factors, ...userAmounts({ ...tm, ...factors }) } }
+            update: { $set: factors }
         }
     })
 }

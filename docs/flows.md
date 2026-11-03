@@ -63,11 +63,11 @@ MT دمو / پنل ──500──► processMessage ──► partial? ──no
 3. سمت src در TradeMap به‌روز می‌شود: `close_price_src`, `close_time_src`, `swap_src`, `profit_src` و منطق کمیسیون (بخش ۶). **sync در این مرحله انجام نمی‌شود.**
 
 ### ۲-۲. نتیجه بستن روی Master (996) — `HandleResClose.js`
-- `OK CLOSE`: TradeMap های `(acc_dist, ticket_dist)` → رکورد `open` بسته می‌شود: `close_*_dist`, `profit_dist`, `swap_dist`, `swap_final`, `commission_dist`, `commission_final`, `status='closed'`, `closing_type='single'` → sync `closed`.
+- `OK CLOSE`: TradeMap های `(acc_dist, ticket_dist)` → رکورد `open` بسته می‌شود: `close_*_dist`, `profit_dist`, `swap_dist`, `swap_charged`, `commission_dist`, `commission_charged`, `status='closed'`, `closing_type='single'` → sync `closed`.
 - `OK DELETE` (حذف پندینگ): فقط `closed_timestamp` پارس می‌شود؛ ⚠ چون رکورد `pending` است و فقط `open` جستجو می‌شود، TradeMap به‌روز نمی‌شود.
 
 ### ۲-۳. گزارش خود Master (`extra == -1234`)
-بسته شدن مستقیم روی Master (مثلاً SL/TP): TradeMap با `(acc_dist=acc, ticket_dist=closed_ticket, status='open')` بسته می‌شود (`close_*_dist`, `profit_dist`, `swap_dist`, `swap_final`, `commission_dist`, `commission_final`) و sync `closed` می‌شود. دستوری ساخته نمی‌شود. زمان بستن باید میلی‌ثانیه از EA برسد و `diff_time` اعمال نمی‌شود. اگر معامله باز پیدا نشود (مثلاً قبلاً با 996 بسته شده) باز هم پاسخ `success` با `trade: ''` برمی‌گردد.
+بسته شدن مستقیم روی Master (مثلاً SL/TP): TradeMap با `(acc_dist=acc, ticket_dist=closed_ticket, status='open')` بسته می‌شود (`close_*_dist`, `profit_dist`, `swap_dist`, `swap_charged`, `commission_dist`, `commission_charged`) و sync `closed` می‌شود. دستوری ساخته نمی‌شود. زمان بستن باید میلی‌ثانیه از EA برسد و `diff_time` اعمال نمی‌شود. اگر معامله باز پیدا نشود (مثلاً قبلاً با 996 بسته شده) باز هم پاسخ `success` با `trade: ''` برمی‌گردد.
 
 ---
 
@@ -97,15 +97,15 @@ MT دمو / پنل ──500──► processMessage ──► partial? ──no
   - باقیمانده روی Master کمتر از `vol_min` (`close`): پنل ⇒ رد ؛ متاتریدر کاربر ⇒ دستور `CLOSE (4)` برای کل Master (پاسخ 996 ، `closing_type = single`).
 - تا رسیدن 978 رکورد باز **دست نمی‌خورد**؛ اطلاعات سمت src بخش بسته (قیمت/زمان/سود/سواپ کاربر) در سند GetUpdate می‌ماند و در 978 روی بخش بسته نوشته می‌شود ⇒ اگر Master نتوانست (CANT PARTIAL) معامله باز سالم می‌ماند.
 - **پاسخ 978** (`handleResPartialClose` ، از 2026-09-22 غیرفعال بود و دوباره فعال شد):
-  - رکورد باز ⇐ بخش بسته (`status = closed` ، `closing_type = partial` ، `vol_dist = closed_vol` ، `profit_dist` ، `swap_dist` ، `swap_final`).
+  - رکورد باز ⇐ بخش بسته (`status = closed` ، `closing_type = partial` ، `vol_dist = closed_vol` ، `profit_dist` ، `swap_dist` ، `swap_charged`).
   - رکورد تازه ⇐ باقیمانده: `ticket_src = origin_new_ticket` ، `ticket_dist = open_ticket` (MT5 همان تیکت) ، `vol_factor`/`cent`/`platform`/`magic_src`/`comment_src` از رکورد مادر ، `tick_value` **یک لات** (قبلا ضربدر حجم بود) و `tick_size`.
   - هر دو `partial_code` یکسان (اولین بار `Date.now()` ؛ بستن‌های بعدی همان کد) ⇒ پنل تکه‌ها را کنار هم نشان می‌دهد.
   - sync پنل: `closed` برای بخش بسته و `created` برای باقیمانده (هر دو با `map_id`) ، بعد آزاد کردن waiting های تیکت باقیمانده.
-- **کمیسیون** (`helpers/partialClose.splitCommission` ، برای `commission_dist` و `commission_final`):
+- **کمیسیون** (`helpers/partialClose.splitCommission` ، برای `commission_dist` و `commission_charged`):
   - تیکت Master عوض نشده ⇒ MT5: کمیسیون گزارش‌شده تجمیعی کل پوزیشن است ؛ اختلاف با مجموع خانواده (همه رکوردهای همان `ticket_dist`) روی بخش بسته و سهم باقیمانده متناسب با حجم از رکورد باز.
   - تیکت تازه ⇒ MT4: بخش بسته = مقدار گزارش‌شده ، باقیمانده = کمیسیون رکورد باز − گزارش (کمیسیون در بستن ⇒ 0).
   - مجموع خانواده همیشه با گزارش EA می‌خواند و در 996 بستن نهایی همان منطق تجمیعی قبلی کار می‌کند. (منطق قبلی در MT4 کمیسیون باقیمانده را دو بار حساب می‌کرد.)
-- **finals**: EA Master از 2026-10-17 `swap_final` و `commission_final` را در انتهای 978 می‌فرستد (اندیس 16 و 17 ؛ تغییر سمت MQL با صاحب پروژه). EA قدیمی بدون آنها ⇒ `commission_final` متناسب با حجم تقسیم می‌شود و `swap_final` بخش بسته 0 (warn در لاگ).
+- **finals**: EA Master از 2026-10-17 `swap_final` و `commission_final` (نام پیام) را در انتهای 978 می‌فرستد (اندیس 16 و 17 ؛ تغییر سمت MQL با صاحب پروژه) ⇒ TradeMap `swap_charged` و `commission_charged`. EA قدیمی بدون آنها ⇒ `commission_charged` متناسب با حجم تقسیم می‌شود و `swap_charged` بخش بسته 0 (warn در لاگ).
 - ⚠ اگر EA متاتریدر 4 کاربر برای یک partial هم 500 و هم 501 بفرستد هنوز دو دستور PARTIAL_CLOSE ساخته می‌شود (known-issues #17).
 - تست: `node tools/partial-close-test.mjs` (مونگو و ردیس توسعه ؛ sync به پنل در تست جایگزین می‌شود).
 
@@ -127,7 +127,7 @@ if (reported < sum)            // منفی‌تر = بیشتر
     if (tradeMaps.length == 1) record.commission_x = reported
     else                        record.commission_x += diff
 ```
-در `HandleResClose` همین منطق برای `commission_final` هم اجرا می‌شود.
+در `HandleResClose` همین منطق برای `commission_charged` هم اجرا می‌شود.
 
 ---
 
