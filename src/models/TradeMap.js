@@ -1,5 +1,4 @@
 import mongoose from "mongoose"
-import { userAmounts } from "../helpers/copierAmounts.js"
 
 const tradeMapSchema = new mongoose.Schema({
     server_src: {
@@ -140,7 +139,10 @@ const tradeMapSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
-    commission_final: {
+    // #.
+    // کمیسیون و سواپ Master با نرخ شرکت (EA از commission_rate / swap_rate پروفایل 40 حساب می‌کند ؛ پیام‌ها نامشان را _final می‌گذارند)
+    // خام EA مثل _dist ؛ نام قبلی تا 2026-11-03 commission_final / swap_final بود (tools/migrate-trademap-charged.mjs)
+    commission_charged: {
         type: Number,
         default: 0
     },
@@ -148,7 +150,7 @@ const tradeMapSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
-    swap_final: {
+    swap_charged: {
         type: Number,
         default: 0
     },
@@ -167,19 +169,12 @@ const tradeMapSchema = new mongoose.Schema({
         type: Boolean
     },
     // #.
-    // مقادیر دلاری روی Master (مقدار خام EA تقسیم بر ۱۰۰ در حساب سنتی) ؛ با هر save از روی فیلدهای خام حساب می‌شوند
-    // فیلدهای _dist و commission_final و swap_final در Mongo همان عدد خام EA می‌مانند
-    profit_user: {
-        type: Number,
-        default: 0
+    // نرخ کمیسیون / سواپ حساب (درصد اضافه روی عدد بروکر) در لحظه ساخت معامله (2026-11-03 ، از Account) ؛ رکوردهای قدیمی ندارند
+    commission_rate: {
+        type: Number
     },
-    swap_user: {
-        type: Number,
-        default: 0
-    },
-    commission_user: {
-        type: Number,
-        default: 0
+    swap_rate: {
+        type: Number
     },
 
     symbol_title: {
@@ -232,11 +227,6 @@ const tradeMapSchema = new mongoose.Schema({
 });
 
 
-// #.
-// همه مسیرهای ثبت سود/سواپ/کمیسیون با save هستند ⇒ مقادیر user همیشه با مقادیر خام هماهنگ می‌مانند
-tradeMapSchema.pre('save', function () {
-    Object.assign(this, userAmounts(this))
-})
 
 tradeMapSchema.index({ acc_src: 1, ticket_src: 1, acc_dist: 1, ticket_dist: 1 })
 tradeMapSchema.index({ acc_src: 1, ticket_src: 1 })

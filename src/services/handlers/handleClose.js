@@ -66,11 +66,11 @@ export default async (req, res, reqLog) => {
             openTradeMap.close_timestamp_dist = data.closed_timestamp
             openTradeMap.profit_dist = data.closed_profit
             openTradeMap.swap_dist = data.closed_swap
-            openTradeMap.swap_final = data.closed_swap_final
+            openTradeMap.swap_charged = data.closed_swap_final
             openTradeMap.status = 'closed'
             openTradeMap.closing_type = 'single'
             openTradeMap.commission_dist = data.closed_commission
-            openTradeMap.commission_final = data.closed_commission_final
+            openTradeMap.commission_charged = data.closed_commission_final
             await openTradeMap.save()
 
             await TradeMapService.sync({
