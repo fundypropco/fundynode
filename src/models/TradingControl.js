@@ -13,6 +13,16 @@ const tradingControlSchema = new mongoose.Schema({
     trading_enabled: {
         type: Boolean,
         default: true
+    },
+    // #.
+    // ترید تازه در شنبه / یکشنبه به ساعت سرور بروکر (GMT+2 ، تابستان آمریکا GMT+3 ؛ 2026-11-09) ؛ false ⇒ سفارش تازه در همان روز ناممکن
+    saturday_enabled: {
+        type: Boolean,
+        default: true
+    },
+    sunday_enabled: {
+        type: Boolean,
+        default: true
     }
 }, { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } })
 

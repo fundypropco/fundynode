@@ -191,7 +191,7 @@ waiting ──(updateWaitings بعد از باز شدن مقصد)──► pendi
 `{title (unique), alias[], weight}` — فقط نمادهایی که اینجا هستند وارد `symbols` می‌شوند. از 2026-10-18 مرجع آن پنل ادمین است (`set-symbol-alias` / `delete-symbol-alias` ؛ `symbolAliasSeeder` فقط مقدار اولیه).
 
 ## TradingControl (`trading_controls`)
-`{key: 'global' (unique), trading_enabled}` (2026-11-01) — کلید کلی انجام معامله از تنظیمات FP Trader پنل (`set-trading-control`) ؛ سند نباشد ⇒ آزاد. کش ندارد.
+`{key: 'global' (unique), trading_enabled, saturday_enabled, sunday_enabled}` (2026-11-01 ؛ شنبه / یکشنبه 2026-11-09: false ⇒ سفارش تازه در همان روز به ساعت سرور بروکر NY+7 ناممکن ، `serverWeekday`) — کلید کلی انجام معامله از تنظیمات FP Trader پنل (`set-trading-control`) ؛ سند نباشد ⇒ آزاد. کش ندارد.
 
 ## Broker (`brokers`)
 `{title, server (unique), acc, diff_time, trading_enabled}` — `trading_enabled` (2026-11-01 ؛ نبودن = true) کلید انجام معامله روی حساب‌های Master همین بروکر ؛ `diff_time` میلی‌ثانیه (از 401)؛ `acc` حسابی که دستورهای 11/13 برایش فرستاده می‌شود. از 2026-10-18 `title` (= نام لاتین پنل) و `acc` را پنل ادمین می‌نویسد (`set-broker`) و 401 `title` را فقط برای بروکر تازه می‌گذارد. کش ۵ دقیقه‌ای در `boot/cache.js`.

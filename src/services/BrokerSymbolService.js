@@ -27,13 +27,33 @@ export function disabledSymbolBlock(...symbols) {
 // #.
 // کلید انجام معامله از پنل ادمین (2026-11-01): کلی (TradingControl) یا بروکر Master (Broker.trading_enabled) خاموش ⇒ متن رد سفارش ؛ آزاد ⇒ null
 // کش درون حافظه ای نداریم: چند پروسه PM2 داریم و خاموش کردن باید همان لحظه روی همه اثر کند (فقط هنگام سفارش تازه خوانده می شود)
-export async function tradingControlBlock(masterServer) {
+export async function tradingControlBlock(masterServer, now = new Date()) {
     const control = await TradingControl.findOne({ key: 'global' }).lean()
     if (control?.trading_enabled === false) {
         return 'trading is disabled by admin'
     }
+    // #. ترید شنبه / یکشنبه خاموش (2026-11-09) ؛ روز به ساعت سرور بروکر
+    const weekday = serverWeekday(now)
+    if ((weekday === 6 && control?.saturday_enabled === false) || (weekday === 0 && control?.sunday_enabled === false)) {
+        return `trading is disabled by admin on ${weekday === 6 ? 'saturday' : 'sunday'} (broker server time)`
+    }
     const broker = await Broker.findOne({ server: masterServer }).select('trading_enabled').lean()
     return broker?.trading_enabled === false ? `trading is disabled by admin on broker ${masterServer}` : null
+}
+
+// #.
+// روز هفته به «ساعت سرور بروکر» (0 = یکشنبه ... 6 = شنبه): ساعت نیویورک + ۷ ساعت = GMT+2 زمستان و GMT+3 تابستان آمریکا ،
+// همان ساعتی که اکثر بروکرهای متاتریدر دارند (بازار فارکس جمعه ۲۴:۰۰ این ساعت بسته و دوشنبه ۰۰:۰۰ باز می شود)
+// هم‌سان با TradingControlService::serverNow پنل
+export function serverWeekday(now = new Date()) {
+    const parts = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'America/New_York', weekday: 'short', hour: 'numeric', hourCycle: 'h23'
+    }).formatToParts(now)
+    const days = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 }
+    const day = days[parts.find(p => p.type === 'weekday').value]
+    const hour = Number(parts.find(p => p.type === 'hour').value)
+    // #. ۷ ساعت بعد از نیویورک: از ساعت ۱۷ نیویورک روز سرور یک روز جلوتر است
+    return hour >= 17 ? (day + 1) % 7 : day
 }
 
 // #. وضعیت فعلی کلید کلی و کلید بروکرها (مقایسه با پنل)
@@ -42,21 +62,28 @@ export async function getTradingControl() {
     const brokers = await Broker.find().sort({ server: 1 }).select('server trading_enabled').lean()
     return {
         trading_enabled: control?.trading_enabled !== false,
+        saturday_enabled: control?.saturday_enabled !== false,
+        sunday_enabled: control?.sunday_enabled !== false,
         brokers: brokers.map(b => ({ server: b.server, trading_enabled: b.trading_enabled !== false }))
     }
 }
 
 // #.
-// پنل منبع این کلیدهاست و همیشه کل وضعیت را می فرستد: { trading_enabled , brokers: [{ server , trading_enabled }] }
+// پنل منبع این کلیدهاست و همیشه کل وضعیت را می فرستد: { trading_enabled , saturday_enabled , sunday_enabled , brokers: [{ server , trading_enabled }] }
 // بروکری که در نود نیست رد نمی شود و در missing برمی گردد
 export async function setTradingControl(body = {}) {
     const toBool = v => v === true || v === 1 || v === '1' || v === 'true'
     if (body.trading_enabled === undefined || body.trading_enabled === null) return fail('trading_enabled is required')
     if (body.brokers !== undefined && !Array.isArray(body.brokers)) return fail('brokers must be an array')
 
+    // #. شنبه / یکشنبه (2026-11-09): فقط وقتی پنل فرستاده باشد (پنل قدیمی بدون این فیلدها مقدار فعلی را عوض نمی کند)
+    const set = { trading_enabled: toBool(body.trading_enabled) }
+    if (body.saturday_enabled !== undefined && body.saturday_enabled !== null) set.saturday_enabled = toBool(body.saturday_enabled)
+    if (body.sunday_enabled !== undefined && body.sunday_enabled !== null) set.sunday_enabled = toBool(body.sunday_enabled)
+
     await TradingControl.findOneAndUpdate(
         { key: 'global' },
-        { $set: { trading_enabled: toBool(body.trading_enabled) } },
+        { $set: set },
         { upsert: true, setDefaultsOnInsert: true }
     )
 
