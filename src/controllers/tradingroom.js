@@ -5,6 +5,8 @@ import Symbol from '../models/Symbol.js'
 import TradeMap from "../models/TradeMap.js"
 import { toPanelTrade } from "../helpers/copierAmounts.js"
 import ForexNews from '../models/ForexNews.js'
+import AccReportService from '../services/AccReportService.js'
+import { maxUserVol } from '../helpers/orderCost.js'
 
 
 const getUpdates = asyncHandler(async (req, res) => {
@@ -15,6 +17,24 @@ const getUpdates = asyncHandler(async (req, res) => {
         status: 'success',
         result: result
     })
+})
+
+// #.
+// بیشترین حجم کاربر روی یک نماد برای حساب FP Trader (2026-11-09): پیام «پول کافی نیست» (خطای 10019 Master یا free equity / margin نود)
+// :acc = حساب کاربر (کد حساب پنل) ، :symbol = نماد Master همان دستور پنل ؛ اولین copier فعال ؛ بدون گزارش حساب یا نماد ⇒ data: null
+const maxVol = asyncHandler(async (req, res) => {
+    const account = await Account.findLast({ acc: req.params.acc }).lean()
+    const copier = account?.copiers?.find(c => c.copy) ?? account?.copiers?.[0]
+    if (!account || !copier) {
+        return res.send({ status: 'error', message: 'account not found', data: null })
+    }
+    const symbol = await Symbol.findOne({ server: copier.server, symbol: req.params.symbol }).lean()
+    const report = await AccReportService.get(account.acc)
+    if (!symbol || !report) {
+        return res.send({ status: 'success', data: null, message: !symbol ? 'symbol not found' : 'account report is not available' })
+    }
+    const result = maxUserVol(account, copier, symbol, report)
+    res.send({ status: 'success', data: result && { ...result, symbol: symbol.symbol, title: symbol.title, vol_min: symbol.vol_min } })
 })
 
 const syncAllTrades = asyncHandler(async (req, res) => {
@@ -217,6 +237,7 @@ const setNews = asyncHandler(async (req, res) => {
 
 export default {
     getUpdates,
+    maxVol,
     syncAllTrades,
     syncAccTrades,
     syncSymbols,
