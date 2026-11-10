@@ -72,19 +72,19 @@ FundyNode یکی از چند پروژه سامانه پراپ‌تریدینگ F
 | POST | `/api/tradingroom/sync-symbols` | `tradingroom.syncSymbols` | همه اسناد Symbol ؛ `body.server` (اختیاری ، 2026-10-18) ⇒ فقط همان بروکر |
 | GET | `/api/tradingroom/get-acc/:acc` | `tradingroom.getAcc` | تازه‌ترین رکورد Account آن شماره حساب |
 | POST | `/api/tradingroom/set-acc-status/:acc` | `tradingroom.setAccStatus` | `{status}` ⇒ وضعیت تازه‌ترین رکورد (غیر `trading` ⇒ `copy=false` ، `trading` ⇒ `copy=true`) |
-| POST | `/api/tradingroom/set-acc` | `tradingroom.setAcc` | **ساخت حساب از پنل** (فرم درخواست حساب ادمین): رکورد تازه `trading`+`copy` و متوقف کردن رکورد فعال قبلی همان `acc` ؛ بدنه: `acc, acc_meta, server, initial, drawdown, commission_rate, swap_rate, news_trading, news_gap_minutes, news_impacts[], username, copiers[{acc, server, copy, vol_factor, cent}]` (فیلدهای خبر از 2026-10-14 ؛ نیامده ⇒ بدون محدودیت) |
+| POST | `/api/tradingroom/set-acc` | `tradingroom.setAcc` | **ساخت حساب از پنل** (فرم درخواست حساب ادمین): رکورد تازه `trading`+`copy` و متوقف کردن رکورد فعال قبلی همان `acc` ؛ بدنه: `acc, acc_meta, server, broker_key, initial, drawdown, commission_rate, swap_rate, news_trading, news_gap_minutes, news_impacts[], username, copiers[{acc, server, broker_key, copy, vol_factor, cent}]` (فیلدهای خبر از 2026-10-14 ؛ نیامده ⇒ بدون محدودیت) ؛ `broker_key` (2026-11-11) کلید بروکر User MT (فقط با `acc_meta`) و Master ؛ بروکر ناموجود ⇒ `status:'error'` و هیچ رکوردی ساخته نمی‌شود (پنل بدون `broker_key` ⇒ فقط اگر یک بروکر با همان `server` هست) |
 | POST | `/api/tradingroom/set-acc-news/:acc` | `tradingroom.setAccNews` | قاعده ترید در خبر تازه‌ترین رکورد حساب (ادمین پنل، تنظیمات حساب): `{news_trading, news_gap_minutes, news_impacts[]}` ؛ حساب نیست ⇒ `{status:'error'}` (2026-10-14) |
 | POST | `/api/tradingroom/set-news` | `tradingroom.setNews` | اخبار ساعت‌دار ۷ روز از پنل `{news: [{id, currency, title, impact, start(ms), duration, symbols[]}]}` ⇒ کل `forex_news` جایگزین (2026-10-14) |
 | POST | `/api/admin/seed-symbol-alias` | admin | upsert لیست نمادهای مجاز (فارکس، فلزات، کریپتو) |
 | POST | `/api/admin/seed-log-rules` | admin | upsert قوانین لاگ درخواست |
-| POST | `/api/admin/seed-broker-symbols/:server` | admin | دستور `BROKER_SYMBOLS (13)` برای بروکر (`all` / `old` / نام سرور) ؛ از 2026-10-18 `{status, data:{count}}` و بروکر ناموجود / بدون `acc` ⇒ `status:'error'` (دکمه صفحه بروکرهای پنل) |
-| POST | `/api/admin/seed-broker-symbols-data/:server` | admin | دستور `BROKER_SYMBOL_DATA (11)` برای هر نماد بروکر (همان پاسخ و خطاها) |
-| GET | `/api/admin/brokers` | admin | بروکرها با `symbols_count` و `disabled_count` (پنل ادمین ، 2026-10-18 ؛ `BrokerSymbolService`) |
-| POST | `/api/admin/set-broker` | admin | `{server, title, acc, old_server?}` upsert بروکر از پنل ؛ تغییر سرور فقط بدون حساب روی آن و با انتقال Symbol ها |
-| POST | `/api/admin/delete-broker` | admin | `{server}` حذف بروکر و Symbol هایش ؛ بروکر دارای حساب (`server` / `copiers.server`) رد |
-| GET | `/api/admin/broker-symbols/:server` | admin | سندهای کامل Symbol یک بروکر |
-| POST | `/api/admin/set-symbols-tradable` | admin | `{server, items:[{symbol, is_tradable}]}` ⇒ `{matched, missing[]}` |
-| GET | `/api/admin/trading-control` | admin | کلید انجام معامله (2026-11-01): `{trading_enabled, saturday_enabled, sunday_enabled, brokers:[{server, trading_enabled}]}` (شنبه / یکشنبه 2026-11-09) |
+| POST | `/api/admin/seed-broker-symbols/:acc` | admin | دستور `BROKER_SYMBOLS (13)` به حساب اطلاعات بروکر (`all` / شماره `acc` ؛ 2026-11-11 ، قبلا نام سرور و حالت `old`) ؛ `{status, data:{count}}` و بروکری با این `acc` نباشد ⇒ `status:'error'` (دکمه صفحه بروکرهای پنل) |
+| POST | `/api/admin/seed-broker-symbols-data/:acc` | admin | دستور `BROKER_SYMBOL_DATA (11)` برای هر نماد بروکر همین `acc` (همان پاسخ و خطاها) |
+| GET | `/api/admin/brokers` | admin | بروکرها `{broker_key, title, server, acc, diff_time, trading_enabled, symbols_count, disabled_count}` (پنل ادمین ، 2026-10-18 ؛ `broker_key` 2026-11-11 ؛ `BrokerSymbolService`) |
+| POST | `/api/admin/set-broker` | admin | `{broker_key, title, server, acc, old_broker_key?}` upsert بروکر از پنل با `broker_key` ؛ `acc` یکتا (مال بروکر دیگر ⇒ رد) و هر زمان قابل تغییر ؛ تغییر کلید فقط بدون حساب روی آن و با انتقال Symbol ها |
+| POST | `/api/admin/delete-broker` | admin | `{broker_key}` حذف بروکر و Symbol هایش ؛ بروکر دارای حساب (`broker_key` / `copiers.broker_key`) رد |
+| GET | `/api/admin/broker-symbols/:broker_key` | admin | سندهای کامل Symbol یک بروکر |
+| POST | `/api/admin/set-symbols-tradable` | admin | `{broker_key, items:[{symbol, is_tradable}]}` ⇒ `{matched, missing[]}` |
+| GET | `/api/admin/trading-control` | admin | کلید انجام معامله (2026-11-01): `{trading_enabled, saturday_enabled, sunday_enabled, brokers:[{broker_key, server, trading_enabled}]}` (شنبه / یکشنبه 2026-11-09 ؛ کلید بروکر `broker_key` 2026-11-11) |
 | POST | `/api/admin/set-trading-control` | admin | همان شکل بالا از تنظیمات FP Trader پنل (کل وضعیت) ⇒ وضعیت تازه + `missing[]` (بروکرهایی که در نود نیستند) |
 | GET | `/api/tradingroom/max-vol/:acc/:symbol` | tradingroom | بیشترین حجم کاربر که الان روی نماد Master باز می‌شود (2026-11-09 ، پیام «پول کافی نیست» FP Trader ؛ `helpers/orderCost.js`) ⇒ `{user_vol, master_vol, room, symbol, title, vol_min}` یا `null` |
 | GET | `/api/admin/symbol-aliases` | admin | راهنمای نمادها `[{title, alias[], weight}]` |

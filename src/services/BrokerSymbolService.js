@@ -21,13 +21,13 @@ const fail = (message) => ({ ok: false, message })
 // اولین نماد غیرفعال میان نمادهای سفارش (symbol_a بروکر کاربر ، symbol_b بروکر Master) و متن رد سفارش ؛ همه فعال ⇒ null
 export function disabledSymbolBlock(...symbols) {
     const s = symbols.find(x => x && x.is_tradable === false)
-    return s ? `trading is disabled for symbol ${s.title} (${s.symbol}) on broker ${s.server}` : null
+    return s ? `trading is disabled for symbol ${s.title} (${s.symbol}) on broker ${s.broker_key || s.server}` : null
 }
 
 // #.
-// کلید انجام معامله از پنل ادمین (2026-11-01): کلی (TradingControl) یا بروکر Master (Broker.trading_enabled) خاموش ⇒ متن رد سفارش ؛ آزاد ⇒ null
+// کلید انجام معامله از پنل ادمین (2026-11-01): کلی (TradingControl) یا بروکر Master (Broker.trading_enabled با broker_key copier ؛ 2026-11-11) خاموش ⇒ متن رد سفارش ؛ آزاد ⇒ null
 // کش درون حافظه ای نداریم: چند پروسه PM2 داریم و خاموش کردن باید همان لحظه روی همه اثر کند (فقط هنگام سفارش تازه خوانده می شود)
-export async function tradingControlBlock(masterServer, now = new Date()) {
+export async function tradingControlBlock(masterBrokerKey, now = new Date()) {
     const control = await TradingControl.findOne({ key: 'global' }).lean()
     if (control?.trading_enabled === false) {
         return 'trading is disabled by admin'
@@ -37,8 +37,8 @@ export async function tradingControlBlock(masterServer, now = new Date()) {
     if ((weekday === 6 && control?.saturday_enabled === false) || (weekday === 0 && control?.sunday_enabled === false)) {
         return `trading is disabled by admin on ${weekday === 6 ? 'saturday' : 'sunday'} (broker server time)`
     }
-    const broker = await Broker.findOne({ server: masterServer }).select('trading_enabled').lean()
-    return broker?.trading_enabled === false ? `trading is disabled by admin on broker ${masterServer}` : null
+    const broker = masterBrokerKey ? await Broker.findOne({ broker_key: masterBrokerKey }).select("trading_enabled").lean() : null
+    return broker?.trading_enabled === false ? `trading is disabled by admin on broker ${masterBrokerKey}` : null
 }
 
 // #.
@@ -56,20 +56,20 @@ export function serverWeekday(now = new Date()) {
     return hour >= 17 ? (day + 1) % 7 : day
 }
 
-// #. وضعیت فعلی کلید کلی و کلید بروکرها (مقایسه با پنل)
+// #. وضعیت فعلی کلید کلی و کلید بروکرها (مقایسه با پنل) ؛ کلید بروکر broker_key (2026-11-11)
 export async function getTradingControl() {
     const control = await TradingControl.findOne({ key: 'global' }).lean()
-    const brokers = await Broker.find().sort({ server: 1 }).select('server trading_enabled').lean()
+    const brokers = await Broker.find().sort({ broker_key: 1 }).select('broker_key server trading_enabled').lean()
     return {
         trading_enabled: control?.trading_enabled !== false,
         saturday_enabled: control?.saturday_enabled !== false,
         sunday_enabled: control?.sunday_enabled !== false,
-        brokers: brokers.map(b => ({ server: b.server, trading_enabled: b.trading_enabled !== false }))
+        brokers: brokers.map(b => ({ broker_key: b.broker_key, server: b.server, trading_enabled: b.trading_enabled !== false }))
     }
 }
 
 // #.
-// پنل منبع این کلیدهاست و همیشه کل وضعیت را می فرستد: { trading_enabled , saturday_enabled , sunday_enabled , brokers: [{ server , trading_enabled }] }
+// پنل منبع این کلیدهاست و همیشه کل وضعیت را می فرستد: { trading_enabled , saturday_enabled , sunday_enabled , brokers: [{ broker_key , trading_enabled }] }
 // بروکری که در نود نیست رد نمی شود و در missing برمی گردد
 export async function setTradingControl(body = {}) {
     const toBool = v => v === true || v === 1 || v === '1' || v === 'true'
@@ -89,100 +89,117 @@ export async function setTradingControl(body = {}) {
 
     const missing = []
     for (const item of body.brokers ?? []) {
-        const server = String(item?.server ?? '').trim()
-        if (!server) continue
-        const result = await Broker.updateOne({ server }, { $set: { trading_enabled: toBool(item.trading_enabled) } })
-        if (!result.matchedCount) missing.push(server)
+        const brokerKey = String(item?.broker_key ?? '').trim()
+        if (!brokerKey) continue
+        const result = await Broker.updateOne({ broker_key: brokerKey }, { $set: { trading_enabled: toBool(item.trading_enabled) } })
+        if (!result.matchedCount) missing.push(brokerKey)
     }
 
     return { ok: true, data: { ...(await getTradingControl()), missing } }
 }
 
-// #. بروکری که حسابی (حساب کاربر یا Master) رویش ساخته شده قابل حذف یا تغییر سرور نیست
-export async function brokerInUse(server) {
-    return Boolean(await Account.exists({ $or: [{ server }, { 'copiers.server': server }] }))
+// #.
+// بروکری که حسابی (حساب کاربر یا Master) رویش ساخته شده قابل حذف یا تغییر broker_key نیست
+// (حساب قدیمی بدون broker_key ⇒ server همان سند ؛ مهاجرت broker_key = server گذاشته)
+export async function brokerInUse(brokerKey) {
+    return Boolean(await Account.exists({ $or: [{ broker_key: brokerKey }, { 'copiers.broker_key': brokerKey }] }))
 }
 
 export async function listBrokers() {
-    const brokers = await Broker.find().sort({ server: 1 }).lean()
+    const brokers = await Broker.find().sort({ broker_key: 1 }).lean()
     const counts = await Symbol.aggregate([
-        { $group: { _id: '$server', total: { $sum: 1 }, disabled: { $sum: { $cond: [{ $eq: ['$is_tradable', false] }, 1, 0] } } } }
+        { $group: { _id: '$broker_key', total: { $sum: 1 }, disabled: { $sum: { $cond: [{ $eq: ['$is_tradable', false] }, 1, 0] } } } }
     ])
     const countMap = new Map(counts.map(c => [c._id, c]))
     return brokers.map(b => ({
+        broker_key: b.broker_key,
         title: b.title ?? null,
         server: b.server,
         acc: b.acc ?? null,
         diff_time: b.diff_time ?? null,
         trading_enabled: b.trading_enabled !== false,
-        symbols_count: countMap.get(b.server)?.total ?? 0,
-        disabled_count: countMap.get(b.server)?.disabled ?? 0
+        symbols_count: countMap.get(b.broker_key)?.total ?? 0,
+        disabled_count: countMap.get(b.broker_key)?.disabled ?? 0
     }))
 }
 
 // #.
-// ساخت / ویرایش بروکر با کلید server ؛ old_server (اختیاری) = تغییر سرور بروکر موجود
-// title = نام لاتین بروکر در پنل ، acc = حساب دریافت اطلاعات پایه بروکر (دستور 11 و 13 ؛ ربطی به Master ندارد)
+// ساخت / ویرایش بروکر با کلید broker_key (2026-11-11 ؛ قبلا server) ؛ old_broker_key (اختیاری) = تغییر کلید بروکر موجود
+// title = نام لاتین بروکر در پنل ، server = نام سرور متاتریدر (یکتا نیست: چند کلاس حساب یک سرور) ،
+// acc = حساب اطلاعات بروکر (دستور 11 و 13 و پیام 401 ؛ یکتا ، هر زمان قابل تغییر ؛ ربطی به Master ندارد)
 // diff_time دست نمی‌خورد (از 401)
 export async function setBroker(body = {}) {
+    const brokerKey = String(body.broker_key ?? '').trim()
+    const oldKey = String(body.old_broker_key ?? '').trim() || brokerKey
     const server = String(body.server ?? '').trim()
-    const oldServer = String(body.old_server ?? '').trim() || server
     const title = String(body.title ?? '').trim()
     const accRaw = body.acc === null || body.acc === undefined ? '' : String(body.acc).trim()
 
+    if (!SERVER_RE.test(brokerKey)) return fail('invalid broker_key')
     if (!SERVER_RE.test(server)) return fail('invalid server')
     if (!title || title.length > 100) return fail('invalid title')
     if (accRaw !== '' && !/^\d{1,15}$/.test(accRaw)) return fail('invalid acc')
     const acc = accRaw === '' ? null : Number(accRaw)
 
-    let broker = await Broker.findOne({ server: oldServer })
+    let broker = await Broker.findOne({ broker_key: oldKey })
 
-    if (oldServer !== server) {
-        // #. تغییر سرور: سرور تازه آزاد باشد و هیچ حسابی روی سرور قبلی نباشد ؛ نمادها با بروکر منتقل می‌شوند
-        if (await Broker.exists({ server })) return fail(`broker ${server} already exists`)
-        if (await Symbol.exists({ server })) return fail(`symbols of server ${server} already exist`)
-        if (broker && await brokerInUse(oldServer)) return fail(`broker ${oldServer} is used by accounts`)
+    // #. acc یکتاست
+    if (acc !== null) {
+        const accOwner = await Broker.findOne({ acc }).select('broker_key').lean()
+        if (accOwner && (!broker || String(accOwner._id) !== String(broker._id))) {
+            return fail(`acc ${acc} belongs to broker ${accOwner.broker_key}`)
+        }
+    }
+
+    if (oldKey !== brokerKey) {
+        // #. تغییر کلید: کلید تازه آزاد باشد و هیچ حسابی روی کلید قبلی نباشد ؛ نمادها با بروکر منتقل می‌شوند
+        if (await Broker.exists({ broker_key: brokerKey })) return fail(`broker ${brokerKey} already exists`)
+        if (await Symbol.exists({ broker_key: brokerKey })) return fail(`symbols of broker ${brokerKey} already exist`)
+        if (broker && await brokerInUse(oldKey)) return fail(`broker ${oldKey} is used by accounts`)
         if (broker) {
-            await Symbol.updateMany({ server: oldServer }, { $set: { server } })
+            await Symbol.updateMany({ broker_key: oldKey }, { $set: { broker_key: brokerKey } })
         }
     }
 
     if (!broker) {
-        broker = new Broker({ server })
+        broker = new Broker({ broker_key: brokerKey })
     }
+    broker.broker_key = brokerKey
     broker.server = server
     broker.title = title
     broker.acc = acc
     await broker.save()
+    // #. نام سرور نمادها (فقط برای خوانایی) هم با بروکر
+    await Symbol.updateMany({ broker_key: brokerKey, server: { $ne: server } }, { $set: { server } })
     clearBrokerCache()
 
-    return { ok: true, data: (await listBrokers()).find(b => b.server === server) }
+    return { ok: true, data: (await listBrokers()).find(b => b.broker_key === brokerKey) }
 }
 
-// #. حذف بروکر و نمادهایش ؛ بروکر در حال استفاده رد می‌شود ؛ ناموجود ⇒ موفق (not_found) تا پنل هم حذف کند
-export async function deleteBroker(server) {
-    server = String(server ?? '').trim()
-    if (!server) return fail('invalid server')
-    if (await brokerInUse(server)) return fail(`broker ${server} is used by accounts`)
+// #. حذف بروکر و نمادهایش با broker_key ؛ بروکر در حال استفاده رد می‌شود ؛ ناموجود ⇒ موفق (not_found) تا پنل هم حذف کند
+export async function deleteBroker(brokerKey) {
+    brokerKey = String(brokerKey ?? '').trim()
+    if (!brokerKey) return fail('invalid broker_key')
+    if (await brokerInUse(brokerKey)) return fail(`broker ${brokerKey} is used by accounts`)
 
-    const broker = await Broker.findOneAndDelete({ server })
-    const symbols = await Symbol.deleteMany({ server })
+    const broker = await Broker.findOneAndDelete({ broker_key: brokerKey })
+    const symbols = await Symbol.deleteMany({ broker_key: brokerKey })
     clearBrokerCache()
 
     return { ok: true, data: { not_found: !broker, deleted_symbols: symbols.deletedCount ?? 0 } }
 }
 
 // #. نمادهای یک بروکر با همه جزئیات (از 989 و 401)
-export async function brokerSymbols(server) {
-    return await Symbol.find({ server: String(server ?? '') }).sort({ weight: 1, title: 1 }).lean()
+export async function brokerSymbols(brokerKey) {
+    return await Symbol.find({ broker_key: String(brokerKey ?? '') }).sort({ weight: 1, title: 1 }).lean()
 }
 
 // #.
-// فعال / غیرفعال کردن معامله روی نمادهای یک بروکر: items = [{ symbol , is_tradable }] (symbol = نام نماد در بروکر)
+// فعال / غیرفعال کردن معامله روی نمادهای یک بروکر (broker_key): items = [{ symbol , is_tradable }] (symbol = نام نماد در بروکر)
 // خروجی: تعداد به‌روزشده و نمادهایی که در نود نیستند
-export async function setSymbolsTradable(server, items) {
-    server = String(server ?? '').trim()
-    if (!server) return fail('invalid server')
+export async function setSymbolsTradable(brokerKey, items) {
+    brokerKey = String(brokerKey ?? '').trim()
+    if (!brokerKey) return fail('invalid broker_key')
     if (!Array.isArray(items) || !items.length) return fail('items must be a non-empty array')
 
     const ops = []
@@ -192,12 +209,12 @@ export async function setSymbolsTradable(server, items) {
         if (!symbol) continue
         const value = item.is_tradable === true || item.is_tradable === 1 || item.is_tradable === '1' || item.is_tradable === 'true'
         names.push(symbol)
-        ops.push({ updateOne: { filter: { server, symbol }, update: { $set: { is_tradable: value } } } })
+        ops.push({ updateOne: { filter: { broker_key: brokerKey, symbol }, update: { $set: { is_tradable: value } } } })
     }
     if (!ops.length) return fail('no valid item')
 
     const result = await Symbol.bulkWrite(ops)
-    const found = await Symbol.find({ server, symbol: { $in: names } }).distinct('symbol')
+    const found = await Symbol.find({ broker_key: brokerKey, symbol: { $in: names } }).distinct('symbol')
 
     return {
         ok: true,

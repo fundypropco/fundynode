@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import logger from "../helpers/logger.js";
+import migrateBrokerKey from "./migrateBrokerKey.js";
 
 import { createAccountIndexes } from "../models/Account.js";
 import { createAccountReportIndexes } from "../models/AccountReport.js";
@@ -28,6 +29,9 @@ async function getMongo(retries = 10, delay = 5000) {
                 console.log("✅ Connected To MongoDB ...")
 
                 await new Promise((resolve) => setTimeout(resolve, 1000))
+
+                // #. کلید بروکر server ⇒ broker_key (2026-11-11) ؛ پیش از ایندکس های یکتای تازه broker_key
+                await migrateBrokerKey()
 
                 await Promise.all([
                     createAccountIndexes(),

@@ -3,6 +3,7 @@ import { formatDateUTC, makeID, makeMsgForHandler } from '../../helpers/helper.j
 import { ACTION_HANDLER } from "../../helpers/constant.js"
 import TradeMap from "../../models/TradeMap.js"
 import { getBrokerData } from "../../boot/cache.js"
+import { brokerKeyOf, originBrokerKeyOf } from "../../helpers/brokerKey.js"
 import AccountService from "../AccountService.js"
 
 export default async (req, res) => {
@@ -14,7 +15,7 @@ export default async (req, res) => {
     // #.
     // بروزرسانی وضعیت دستور در صف دستورات
     const getUpdateDoc = await GetUpdateService.updateStatus(data)
-    const brokerData = await getBrokerData(getUpdateDoc?.server)
+    const brokerData = await getBrokerData(brokerKeyOf(getUpdateDoc))
     const diff_time = Number(brokerData?.diff_time || 0)
 
     // #
@@ -70,8 +71,10 @@ export default async (req, res) => {
                 handler: ACTION_HANDLER.CLOSE,
                 acc: data.acc,
                 server: getUpdateDoc.server,
+                broker_key: brokerKeyOf(getUpdateDoc),
                 origin_acc: getUpdateDoc.origin_acc,
                 origin_server: getUpdateDoc.origin_server,
+                origin_broker_key: originBrokerKeyOf(getUpdateDoc),
                 ticket: item.ticket,
                 symbol: item.symbol,
                 vol: item.vol,

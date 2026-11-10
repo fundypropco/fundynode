@@ -141,7 +141,7 @@ acc,502,NEW MODIFY_&_ticket_&_sl_&_tp_&_open_price_@_ticket_&_sl_&_tp_&_open_pri
 ```
 acc,401,name_&_server_&_currency_&_tehran_ts_msc_&_symbol_&_lots_&_type_&_open_price_&_close_price_&_open_time_msc_&_close_time_msc_&_commission_&_profit_&_spread_&_bid_&_ask_&_diff_with_tehran_&_spread_avg_5_&_spread_avg_50_&_leverage_&_margin,timestamp,-2
 ```
-اثر: upsert `Broker{server, title=name, diff_time = round(diff/1800)*1800*1000}` و اگر نماد در SymbolAlias شناخته شد upsert `Symbol` (کمیسیون min/max، اسپرد min/max/last/avg، margin، leverage).
+اثر (از 2026-11-11): بروکر با **`acc` فرستنده** (حساب اطلاعات بروکر) پیدا می‌شود ، نه `server` پیام (چند کلاس حساب یک سرور دارند) ⇒ `diff_time = round(diff/1800)*1800*1000` ؛ بروکری با این acc نباشد ⇒ `{status:'error'}` و هیچ تغییری (دیگر بروکر تازه ساخته نمی‌شود ؛ بروکر را پنل می‌سازد). اگر نماد در SymbolAlias شناخته شد upsert `Symbol` با `broker_key` همان بروکر (کمیسیون min/max، اسپرد min/max/last/avg، margin، leverage).
 
 ### 41 — DRAWDOWN (`HandleDrawdown.js`)
 ```
@@ -177,6 +177,7 @@ acc,300,cpu_&_ram_&_disk_&_net,timestamp,-3
 acc_cluster,301,REQUEST SYMBOL RATES_&_server_&_commission_rate_&_swap_rate_&_CYCLE n,timestamp,-2
 ```
 پاسخ‌دهی به‌صورت دستور خروجی 301 (پایین). تأیید دریافت با 399.
+بروکر (از 2026-11-11): `server` پیام یکتا نیست ⇒ `Account` ای که `copiers.acc` آن = `acc` درخواست‌دهنده است (اول حساب همان magic ، بعد جدیدترین) و نمادهای `broker_key` همان copier ؛ پیدا نشد ⇒ فقط اگر یک بروکر با `server` پیام هست ، وگرنه فهرست خالی. `server` در پاسخ همان مقدار پیام است.
 
 ### 302 — REQUEST PROFILE
 ```
@@ -196,8 +197,8 @@ acc_cluster,302,REQUEST PROFILE_&_server_&_magic_&_CYCLE n,timestamp,-2
 | 996 (close) | `OK CLOSE_&_ticket_&_close_price_&_close_timestamp_&_swap_&_swap_final_&_commission_&_commission_final_&_profit_&_error_&_vol_&_symbol` یا `OK DELETE_&_ticket_&_close_timestamp` | result_code در i=2 |
 | 978 (partial close) | `OK PARTIAL_&_closed_ticket_&_open_ticket_&_open_vol_&_closed_timestamp_&_close_price_&_swap_&_commission_&_profit_&_magic_&_comment_&_sl_&_tp_&_open_price_&_open_timestamp_&_closed_vol[_&_swap_final_&_commission_final]` — حجم‌ها و مبالغ خام Master ؛ `open_ticket == closed_ticket` ⇒ MT5 (کمیسیون تجمیعی) ؛ finals از 2026-10-17 (اختیاری) | `CANT PARTIAL_&_result_code` (کد در i=1) |
 | 977 (close origin) | `OK CLOSE_&_ticket_&_close_price_&_close_timestamp_&_swap_&_commission_&_profit_&_error_&_vol_&_symbol` | result_code در i=2 |
-| 987 (broker symbols) | `acc,987,S1,S2,...,Sn,timestamp,keyid` — **لیست با کاما**؛ `symbols = parts.slice(2,-2)` | — |
-| 989 (symbol data) | `contract_size_=_v_&_tick_size_=_v_&_tick_value_=_v_&_vol_step_=_v_&_vol_min_=_v_&_vol_max_=_v_&_digits_=_v_&_point_=_v` | — |
+| 987 (broker symbols) | `acc,987,S1,S2,...,Sn,timestamp,keyid` — **لیست با کاما**؛ `symbols = parts.slice(2,-2)` ؛ بروکر با `acc` فرستنده (2026-11-11 ؛ نبود ⇒ `broker_key` دستور ، وگرنه `status:'error'`) | — |
+| 989 (symbol data) | `contract_size_=_v_&_tick_size_=_v_&_tick_value_=_v_&_vol_step_=_v_&_vol_min_=_v_&_vol_max_=_v_&_digits_=_v_&_point_=_v` ؛ بروکر با `acc` فرستنده (2026-11-11) | — |
 | 960 / 399 | فقط تأیید؛ keyid = آخرین بخش | — |
 
 کد خطا با `getMqlError(code)` به نام MQL4/MQL5 (مثل `ERR_INVALID_STOPS`, `TRADE_RETCODE_NO_MONEY`) تبدیل و در `GetUpdate.description` به شکل `result_text/code/NAME` ذخیره می‌شود.

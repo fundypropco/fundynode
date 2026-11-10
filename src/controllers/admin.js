@@ -17,11 +17,11 @@ const seedLogRules = asyncHandler(async (req, res) => {
 })
 
 // #.
-// دکمه‌های صفحه بروکرهای پنل ادمین هم همین دو را صدا می‌زنند ⇒ status و تعداد ؛ بروکر ناموجود / بدون acc ⇒ status = error
+// دکمه‌های صفحه بروکرهای پنل ادمین هم همین دو را صدا می‌زنند ⇒ status و تعداد ؛ ورودی = acc حساب اطلاعات بروکر (2026-11-11 ؛ قبلا server) ؛ بروکری با این acc نباشد ⇒ status = error
 // (message = 'success' برای سازگاری با فراخوانی‌های قبلی می‌ماند)
 const seedBrokerSymbols = asyncHandler(async (req, res) => {
     try {
-        const count = await brokerSymbolsSeeder(req.params.server)
+        const count = await brokerSymbolsSeeder(req.params.acc)
         res.send({ status: 'success', message: 'success', data: { count } })
     } catch (err) {
         res.send({ status: 'error', message: err.message })
@@ -30,7 +30,7 @@ const seedBrokerSymbols = asyncHandler(async (req, res) => {
 
 const seedBrokerSymbolsData = asyncHandler(async (req, res) => {
     try {
-        const count = await brokerSymbolsDataSeeder(req.params.server)
+        const count = await brokerSymbolsDataSeeder(req.params.acc)
         res.send({ status: 'success', message: 'success', data: { count } })
     } catch (err) {
         res.send({ status: 'error', message: err.message })
@@ -52,15 +52,15 @@ const setBroker = asyncHandler(async (req, res) => {
 })
 
 const deleteBroker = asyncHandler(async (req, res) => {
-    sendResult(res, await BrokerSymbolService.deleteBroker(req.body.server))
+    sendResult(res, await BrokerSymbolService.deleteBroker(req.body.broker_key))
 })
 
 const brokerSymbols = asyncHandler(async (req, res) => {
-    res.send({ status: 'success', results: await BrokerSymbolService.brokerSymbols(req.params.server) })
+    res.send({ status: 'success', results: await BrokerSymbolService.brokerSymbols(req.params.brokerKey) })
 })
 
 const setSymbolsTradable = asyncHandler(async (req, res) => {
-    sendResult(res, await BrokerSymbolService.setSymbolsTradable(req.body.server, req.body.items))
+    sendResult(res, await BrokerSymbolService.setSymbolsTradable(req.body.broker_key, req.body.items))
 })
 
 // #. کلید انجام معامله از تنظیمات FP Trader پنل (2026-11-01)

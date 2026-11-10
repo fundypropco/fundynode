@@ -5,6 +5,7 @@ import { ACTION_HANDLER } from './constant.js'
 import axios from "axios"
 import logger from '../helpers/logger.js'
 import { getLogRuleData } from '../boot/cache.js'
+import { brokerKeyOf } from './brokerKey.js'
 
 export async function setRequestLog(handler, message) {
     if (await getLogRuleData(handler)) {
@@ -709,22 +710,25 @@ export async function isValidSymbols(accountObj, copierObj, data) {
     result.description = []
     result.is_valid_symbols = false
 
-    if (accountObj.server && accountObj.acc_meta) {
-        result.symbol_a = await Symbol.findOne({ server: accountObj.server, symbol: data.symbol })
+    // #. نماد با کلید بروکر حساب کاربر (User MT) و Master (2026-11-11 ؛ helpers/brokerKey.js ؛ قبلا server)
+    const keyA = brokerKeyOf(accountObj)
+    const keyB = brokerKeyOf(copierObj)
+    if (keyA && accountObj.acc_meta) {
+        result.symbol_a = await Symbol.findOne({ broker_key: keyA, symbol: data.symbol })
         if (!result.symbol_a) {
-            result.description.push(`symbol ${data.symbol} not found for broker ${accountObj.server}`)
+            result.description.push(`symbol ${data.symbol} not found for broker ${keyA}`)
             return result
         }
 
-        result.symbol_b = await Symbol.findOne({ server: copierObj.server, title: result.symbol_a.title })
+        result.symbol_b = await Symbol.findOne({ broker_key: keyB, title: result.symbol_a.title })
         if (!result.symbol_b) {
-            result.description.push(`symbol ${data.symbol} not found for broker ${copierObj.server}`)
+            result.description.push(`symbol ${data.symbol} not found for broker ${keyB}`)
             return result
         }
     } else {
-        result.symbol_b = await Symbol.findOne({ server: copierObj.server, symbol: data.symbol })
+        result.symbol_b = await Symbol.findOne({ broker_key: keyB, symbol: data.symbol })
         if (!result.symbol_b) {
-            result.description.push(`symbol ${data.symbol} not found for broker ${copierObj.server}`)
+            result.description.push(`symbol ${data.symbol} not found for broker ${keyB}`)
             return result
         }
         result.symbol_a = result.symbol_b

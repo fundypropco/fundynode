@@ -1,6 +1,7 @@
 import GetUpdateService from '../GetUpdateService.js'
 import TradeMap from '../../models/TradeMap.js'
 import { formatDateUTC } from "../../helpers/helper.js"
+import { brokerKeyOf } from "../../helpers/brokerKey.js"
 
 export default async (req, res) => {
 
@@ -35,6 +36,7 @@ export default async (req, res) => {
                 acc_src: deletedTradeMap.acc_src,
                 ticket_src: deletedTradeMap.ticket_src,
                 server_src: deletedTradeMap.server_src,
+                broker_key_src: brokerKeyOf(deletedTradeMap, '_src'),
                 symbol_src: deletedTradeMap.symbol_src,
                 vol_src: deletedTradeMap.vol_src,
                 sl_src: deletedTradeMap.sl_src,
@@ -46,6 +48,7 @@ export default async (req, res) => {
                 acc_dist: data.acc,
                 ticket_dist: data.open_ticket,
                 server_dist: deletedTradeMap.server_dist,
+                broker_key_dist: brokerKeyOf(deletedTradeMap, '_dist'),
                 symbol_dist: deletedTradeMap.symbol_dist,
                 vol_dist: deletedTradeMap.vol_dist,
                 vol_factor: deletedTradeMap.vol_factor,

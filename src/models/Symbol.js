@@ -1,10 +1,16 @@
 import mongoose from "mongoose"
 
 const symbolSchema = new mongoose.Schema({
-    server: {
+    // #. کلید بروکر نماد (2026-11-11 ؛ helpers/brokerKey.js) ؛ همه جست و جوهای نماد با broker_key است
+    broker_key: {
         type: String,
         required: true,
         index: true
+    },
+    // #. نام سرور متاتریدر بروکر (فقط برای خوانایی ؛ چند کلاس حساب یک سرور دارند)
+    server: {
+        type: String,
+        default: '',
     },
     title: {
         //  نام نماد 
@@ -109,8 +115,8 @@ const symbolSchema = new mongoose.Schema({
     }
 })
 
-symbolSchema.index({ server: 1, title: 1 }, { unique: true })
-symbolSchema.index({ server: 1, symbol: 1 }, { unique: true })
+symbolSchema.index({ broker_key: 1, title: 1 }, { unique: true })
+symbolSchema.index({ broker_key: 1, symbol: 1 }, { unique: true })
 
 const Symbol = mongoose.model('Symbol', symbolSchema, 'symbols')
 

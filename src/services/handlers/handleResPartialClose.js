@@ -2,6 +2,7 @@ import GetUpdateService from "../GetUpdateService.js"
 import { formatDateUTC } from '../../helpers/helper.js'
 import TradeMap from '../../models/TradeMap.js'
 import { getBrokerData } from "../../boot/cache.js"
+import { brokerKeyOf, originBrokerKeyOf } from "../../helpers/brokerKey.js"
 import Symbol from "../../models/Symbol.js"
 import TradeMapService from "../TradeMapService.js"
 import logger from '../../helpers/logger.js'
@@ -33,8 +34,8 @@ export default async (req, res) => {
     if (getUpdateDoc && getUpdateDoc.status == 'success') {
         // #.
         // دریافت اطلاعات بروکر و نماد
-        const symbol = await Symbol.findOne({ server: getUpdateDoc.server, symbol: getUpdateDoc.symbol }).lean()
-        const brokerData = await getBrokerData(getUpdateDoc.server)
+        const symbol = await Symbol.findOne({ broker_key: brokerKeyOf(getUpdateDoc), symbol: getUpdateDoc.symbol }).lean()
+        const brokerData = await getBrokerData(brokerKeyOf(getUpdateDoc))
         const diff_time = Number(brokerData?.diff_time ?? 0)
 
         // #.
@@ -104,6 +105,7 @@ export default async (req, res) => {
             // مپ کردن اکانت و تیکت های مرجع و کپی کننده باقیمانده
             const newOpenTradeMap = new TradeMap({
                 server_src: openTradeMap.server_src || getUpdateDoc.origin_server,
+                broker_key_src: brokerKeyOf(openTradeMap, '_src') || originBrokerKeyOf(getUpdateDoc),
                 acc_src: getUpdateDoc.origin_acc,
                 ticket_src: getUpdateDoc.origin_new_ticket,
                 symbol_src: openTradeMap.symbol_src,
@@ -118,6 +120,7 @@ export default async (req, res) => {
                 commission_src: getUpdateDoc.origin_new_commission ?? 0,
 
                 server_dist: getUpdateDoc.server,
+                broker_key_dist: brokerKeyOf(getUpdateDoc),
                 acc_dist: data.acc,
                 ticket_dist: data.open_ticket,
                 symbol_dist: openTradeMap.symbol_dist,

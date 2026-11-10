@@ -1,5 +1,6 @@
 import GetUpdateService from '../GetUpdateService.js'
 import Symbol from "../../models/Symbol.js"
+import { brokerByAcc, brokerKeyOf } from "../../helpers/brokerKey.js"
 
 export default async (req, res) => {
 
@@ -11,10 +12,13 @@ export default async (req, res) => {
     // بروزرسانی وضعیت دستور در صف دستورات 
     const getUpdateDoc = await GetUpdateService.updateStatus(data)
 
-    if (getUpdateDoc) {
-        // # 
-        // بروزرسانی اطلاعات نماد 
-        const symbol = await Symbol.findOne({ symbol: getUpdateDoc.symbol, server: getUpdateDoc.server })
+    // #. بروکر با شماره حساب اطلاعات پاسخ دهنده (2026-11-11 ؛ EA از broker_key خبر ندارد)
+    const broker = getUpdateDoc ? await brokerByAcc(data.acc, brokerKeyOf(getUpdateDoc)) : null
+
+    if (getUpdateDoc && broker) {
+        // #
+        // بروزرسانی اطلاعات نماد
+        const symbol = await Symbol.findOne({ symbol: getUpdateDoc.symbol, broker_key: broker.broker_key })
 
         if (symbol) {
             symbol.contract_size = data.symbol_info.contract_size

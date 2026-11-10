@@ -2,6 +2,7 @@ import { formatDateUTC } from '../../helpers/helper.js'
 import GetUpdateService from '../GetUpdateService.js'
 import TradeMap from "../../models/TradeMap.js"
 import { getBrokerData } from "../../boot/cache.js"
+import { brokerKeyOf } from "../../helpers/brokerKey.js"
 import AccountService from "../AccountService.js"
 
 export default async (req, res) => {
@@ -18,7 +19,7 @@ export default async (req, res) => {
     // بستن مپ معامله کلوز شده 
     if (getUpdateDoc && getUpdateDoc.status === 'success') {
 
-        const brokerData = await getBrokerData(getUpdateDoc.server)
+        const brokerData = await getBrokerData(brokerKeyOf(getUpdateDoc))
         const diff_time = Number(brokerData.diff_time)
 
         for (const item of data.items) {

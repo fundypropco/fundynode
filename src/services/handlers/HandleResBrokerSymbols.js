@@ -2,18 +2,29 @@ import { normalizeSymbol } from '../../helpers/helper.js'
 import GetUpdateService from '../GetUpdateService.js'
 import SymbolAlias from "../../models/SymbolAlias.js"
 import Symbol from "../../models/Symbol.js"
+import { brokerByAcc, brokerKeyOf } from "../../helpers/brokerKey.js"
 
 export default async (req, res) => {
 
     // #
-    // پردازش دیتای ورودی 
+    // پردازش دیتای ورودی
     const data = processMessage(req.body.message)
 
     // #
-    //بروزرسانی وضعیت دستور در صف دستورات 
+    //بروزرسانی وضعیت دستور در صف دستورات
     const getUpdateDoc = await GetUpdateService.updateStatus(data)
 
-    const serverName = getUpdateDoc ? getUpdateDoc.server : 'Test-Server'
+    // #.
+    // بروکر با شماره حساب اطلاعات پاسخ دهنده (2026-11-11 ؛ قبلا server دستور و بدون دستور 'Test-Server')
+    // بروکری با این acc نباشد ⇒ نمادی ثبت نمی شود
+    const broker = await brokerByAcc(data.acc, brokerKeyOf(getUpdateDoc))
+    if (!broker) {
+        return res.send({
+            status: 'error',
+            message: `broker with acc ${data.acc} not found`
+        })
+    }
+    const brokerKey = broker.broker_key
 
     // #
     // استفاده از جدول راهنمای نمادهای معاملاتی برای تشخیص نمادهای قابل معامله در این بروکر 
@@ -50,8 +61,8 @@ export default async (req, res) => {
             if (title) {
                 return {
                     updateOne: {
-                        filter: { title: title, server: serverName },
-                        update: { $set: { symbol: rawSymbol, server: serverName, weight: weightMap.get(title) } },
+                        filter: { title: title, broker_key: brokerKey },
+                        update: { $set: { symbol: rawSymbol, broker_key: brokerKey, server: broker.server, weight: weightMap.get(title) } },
                         upsert: true
                     }
                 }
