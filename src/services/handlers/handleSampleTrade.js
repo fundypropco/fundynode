@@ -50,7 +50,6 @@ export default async (req, res) => {
                     server: data.server,
                     symbol: data.symbol,
                     title: symbolTitle,
-                    commission: data.commission
                 },
                 $min: {
                     commission_max: data.commission,
@@ -61,6 +60,7 @@ export default async (req, res) => {
                     spread_max: data.spread
                 },
                 $set: {
+                    commission: data.commission,
                     spread_last: data.spread,
                     spread_avg_5: data.spread_avg_5,
                     spread_avg_50: data.spread_avg_50,
