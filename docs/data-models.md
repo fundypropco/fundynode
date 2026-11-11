@@ -44,7 +44,8 @@
 | `username` | String | `''` | در پروفایل 40 ارسال می‌شود |
 | `acc_meta` | Number | 0 | شماره MT دموی کاربر؛ در پراپ بدون متاتریدر = 0 |
 | `acc` | Number | 0 | کد حساب معاملاتی کاربر در پراپ / در کپی ساده = شماره MT |
-| `server` | String | `''` | سرور بروکر حساب کاربر |
+| `server` | String | `''` | نام سرور بروکر حساب کاربر (فقط نمایش ؛ یکتا نیست) |
+| `broker_key` | String | `''` | (2026-11-11) کلید بروکر حساب کاربر (User MT) از پنل در `set-acc` ؛ نمادهای `symbol_a` و `diff_time` با همین (`helpers/brokerKey.js`) ؛ بدون User MT خالی |
 | `initial` | Number | | بالانس اولیه |
 | `drawdown` | Number | 0 | **حداقل اکوئیتی مجاز به دلار** (مثلاً 950) — نه درصد |
 | `commission_rate`, `swap_rate` | Number | 0 | در پروفایل 40 ارسال می‌شود؛ از پنل (`plan_configs`، پیش‌فرض 30 و 0) می‌آیند |
@@ -52,7 +53,7 @@
 | `news_trading` | Boolean | true | ترید در تایم اخبار مجاز است؟ (2026-10-14، از کانفیگ پنل با `set-acc` / `set-acc-news`) ؛ پیش‌فرض true ⇒ حساب‌های قدیمی بدون محدودیت |
 | `news_gap_minutes` | Number | 0 | فاصله مجاز ترید قبل از شروع و بعد از پایان خبر (دقیقه، حداکثر 240) |
 | `news_impacts` | [String] | `[]` | درجه‌های اهمیت خبرهایی که فاصله دارند: `high` ، `medium` ، `low` ، `holiday` |
-| `copiers[]` | زیرسند | `[]` | `{acc, server, copy, vol_factor=1, cent=false}` — حساب‌های Master مقصد (پایین) |
+| `copiers[]` | زیرسند | `[]` | `{acc, server, broker_key, copy, vol_factor=1, cent=false}` — حساب‌های Master مقصد (پایین) |
 | `status` | enum | `stopped` | `trading / passed / failed / stopped` (در کد استفاده نمی‌شود) |
 | `check_time` | Number | 0 | زمان درخواست بررسی صحت کپی (عملاً استفاده نمی‌شود) |
 | `created_at` | Number | now | |
@@ -65,7 +66,8 @@
 
 | فیلد | پیش‌فرض | توضیح |
 |---|---|---|
-| `acc`, `server` | | شماره حساب و سرور بروکر Master |
+| `acc`, `server` | | شماره حساب و نام سرور بروکر Master |
+| `broker_key` | `''` | (2026-11-11) کلید بروکر Master: نمادهای `symbol_b` ، کلید انجام معامله ، پیام 301 |
 | `copy` | | کپی روی این مقصد فعال است؟ |
 | `vol_factor` | 1 | ضریب حجم: پلن حرفه‌ای ۱ ، پلن اقتصادی = سهم تریدر از تقسیم سود با حداقل 0.5 (پنل می‌فرستد) |
 | `cent` | false | **حساب مقصد سنتی است؟** (2026-10-11) |
@@ -123,8 +125,8 @@
 | `try_count` | تعداد پاسخ‌های دریافت‌شده |
 | `side` | `buy, buy_limit, buy_stop, sell, sell_limit, sell_stop, none` |
 | `description[]` | دلایل/خطاها (`text/code/MQL_NAME`) |
-| `server, acc, ticket, symbol, vol, sl, tp, comment, magic` | سمت **اجراکننده** (معمولاً Master) |
-| `origin_*` | سمت **کاربر**: server, acc, acc_meta, ticket, symbol, vol, open/close price/time/timestamp, sl, tp, comment, magic, commission, swap, profit |
+| `server, acc, ticket, symbol, vol, sl, tp, comment, magic` | سمت **اجراکننده** (معمولاً Master) ؛ `broker_key` (2026-11-11) کلید بروکر اجراکننده (سند قدیمی بدون آن ⇒ `server`) |
+| `origin_*` | سمت **کاربر**: server, broker_key (2026-11-11), acc, acc_meta, ticket, symbol, vol, open/close price/time/timestamp, sl, tp, comment, magic, commission, swap, profit |
 | `origin_new_ticket/vol/commission` | برای partial: تیکت و حجم باقیمانده |
 | `symbol_title` | نام استاندارد نماد |
 | `created_at`, `updated_at` | |
@@ -146,7 +148,7 @@ waiting ──(updateWaitings بعد از باز شدن مقصد)──► pendi
 
 | گروه | فیلدها |
 |---|---|
-| سمت کاربر (`_src`) | `server, acc, ticket, symbol, vol, open_price, open_time, open_timestamp, sl, tp, close_price, close_time, close_timestamp, magic, comment, commission, swap, profit` |
+| سمت کاربر (`_src`) | `server, broker_key (2026-11-11 ؛ قدیمی ⇒ server), acc, ticket, symbol, vol, open_price, open_time, open_timestamp, sl, tp, close_price, close_time, close_timestamp, magic, comment, commission, swap, profit` |
 | سمت Master (`_dist`) | همان فیلدها با پسوند `_dist` (ایندکس روی `close_timestamp_dist`) |
 | مقادیر شرکت (`_charged`) | `commission_charged`, `swap_charged` — کمیسیون و سواپ Master با نرخ شرکت که EA حساب و در 996 / 999 / 978 / 501 Master گزارش می‌کند (نام پیام `*_final`) ؛ **عدد خام EA** (سنت در حساب سنتی). نرخ = درصد اضافه روی عدد بروکر: `commission_charged ≈ commission_dist × (1 + commission_rate / 100)` و سواپ همین‌طور (سواپ همیشه منفی است ؛ صاحب پروژه 2026-11-03). تا 2026-11-03 نامشان `commission_final` / `swap_final` بود (`tools/migrate-trademap-charged.mjs`) |
 | ضریب copier (2026-10-11) | `vol_factor` و `cent` همان copier در لحظه ساخت معامله (`HandleResNewOrder` از `Account.copiers` ؛ پارشیال/پندینگ از TradeMap مادر). رکوردهای قدیمی ندارند ⇒ مثل حساب استاندارد با ضریب ۱ (پر کردن: `tools/backfill-trademap-vol-factor.mjs`) |
@@ -175,7 +177,8 @@ waiting ──(updateWaitings بعد از باز شدن مقصد)──► pendi
 ## Symbol (`symbols`)
 | فیلد | توضیح |
 |---|---|
-| `server` | سرور بروکر |
+| `broker_key` | (2026-11-11) کلید بروکر — همه جست‌وجوهای نماد با این است |
+| `server` | نام سرور بروکر (فقط نمایش ؛ یکتا نیست) |
 | `title` | نام استاندارد (`EURUSD`) — کلید تطبیق بین بروکرها |
 | `symbol` | نام در این بروکر (`EURUSD_o`) |
 | `tick_size, contract_size, tick_value, vol_step, vol_min, vol_max, digits, point` | از 989 |
@@ -184,7 +187,7 @@ waiting ──(updateWaitings بعد از باز شدن مقصد)──► pendi
 | `is_tradable` | (2026-10-18) پیش‌فرض `true` ؛ فقط پنل ادمین عوض می‌کند (`set-symbols-tradable`) ؛ `false` روی بروکر کاربر یا Master ⇒ `isOrderPossible` سفارش تازه را رد می‌کند (`disabledSymbolBlock`) |
 | `updated_at` | String |
 
-ایندکس یکتا: `{server, title}` و `{server, symbol}`.
+ایندکس یکتا: `{broker_key, title}` و `{broker_key, symbol}` (تا 2026-11-11 با `server` ؛ `boot/migrateBrokerKey.js` ایندکس‌های قدیمی را حذف می‌کند).
 ⚠ در 401 نام‌گذاری `$min: commission_max` و `$max: commission_min` برعکس است (کمیسیون منفی است؛ پس «بیشترین هزینه» = کوچک‌ترین عدد) — عمدی به نظر می‌رسد.
 
 ## SymbolAlias (`symbol_alias`)
@@ -194,7 +197,7 @@ waiting ──(updateWaitings بعد از باز شدن مقصد)──► pendi
 `{key: 'global' (unique), trading_enabled, saturday_enabled, sunday_enabled}` (2026-11-01 ؛ شنبه / یکشنبه 2026-11-09: false ⇒ سفارش تازه در همان روز به ساعت سرور بروکر NY+7 ناممکن ، `serverWeekday`) — کلید کلی انجام معامله از تنظیمات FP Trader پنل (`set-trading-control`) ؛ سند نباشد ⇒ آزاد. کش ندارد.
 
 ## Broker (`brokers`)
-`{title, server (unique), acc, diff_time, trading_enabled}` — `trading_enabled` (2026-11-01 ؛ نبودن = true) کلید انجام معامله روی حساب‌های Master همین بروکر ؛ `diff_time` میلی‌ثانیه (از 401)؛ `acc` حسابی که دستورهای 11/13 برایش فرستاده می‌شود. از 2026-10-18 `title` (= نام لاتین پنل) و `acc` را پنل ادمین می‌نویسد (`set-broker`) و 401 `title` را فقط برای بروکر تازه می‌گذارد. کش ۵ دقیقه‌ای در `boot/cache.js`.
+`{broker_key (unique), title, server, acc (unique وقتی عدد است), diff_time, trading_enabled}` — **کلید بروکر `broker_key`** (2026-11-11 ؛ نام سرور با یک عبارت توضیحی ؛ پنل منبع) چون چند کلاس حساب یک `server` دارند ؛ `acc` حساب اطلاعات: دستورهای 13 / 11 به آن می‌رود و 401 / 987 / 989 با آن به بروکر می‌رسند (`brokerByAcc`) ؛ 401 دیگر بروکر تازه نمی‌سازد. `trading_enabled` (2026-11-01 ؛ نبودن = true) کلید انجام معامله روی حساب‌های Master همین بروکر ؛ `diff_time` میلی‌ثانیه (از 401)؛ `acc` حسابی که دستورهای 11/13 برایش فرستاده می‌شود. از 2026-10-18 `title` (= نام لاتین پنل) و `acc` را پنل ادمین می‌نویسد (`set-broker`) و 401 `title` را فقط برای بروکر تازه می‌گذارد. کش ۵ دقیقه‌ای در `boot/cache.js`.
 
 ## LogRule (`log_rules`)
 `{handler (unique), log}` — seed: همه کدهای اصلی `true`. کش ۱ دقیقه‌ای.

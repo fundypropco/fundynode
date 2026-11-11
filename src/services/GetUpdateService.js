@@ -2,6 +2,7 @@ import GetUpdate from "../models/GetUpdate.js"
 import Symbol from "../models/Symbol.js"
 import { formatDate, formatDateUTC, getMqlError, getOrderVol, makeMsgForHandler } from "../helpers/helper.js"
 import { ACTION_HANDLER } from "../helpers/constant.js"
+import { brokerKeyOf } from "../helpers/brokerKey.js"
 
 const create = async (data) => {
     // const noDuplicatingHandlers = [
@@ -31,6 +32,7 @@ const create = async (data) => {
     //if (!found) {
     const getUpdate = new GetUpdate({
         server: data.server ?? '',
+        broker_key: data.broker_key ?? '',
         acc: data.acc,
         ticket: data.ticket ?? 0,
         symbol: data.symbol ?? '',
@@ -53,6 +55,7 @@ const create = async (data) => {
         origin_acc_meta: data.origin_acc_meta ?? 0,
         origin_ticket: data.origin_ticket ?? 0,
         origin_server: data.origin_server ?? '',
+        origin_broker_key: data.origin_broker_key ?? '',
         origin_symbol: data.origin_symbol ?? '',
         origin_vol: data.origin_vol ?? 0,
         origin_sl: data.origin_sl ?? 0,
@@ -158,6 +161,8 @@ const prepareOrderData = async (account, copier, data) => {
     perparedData.platform = data.platform || 'metatrader'
 
     perparedData.server = copier.server
+
+    perparedData.broker_key = brokerKeyOf(copier)
     perparedData.acc = copier.acc
     perparedData.symbol = data.symbol_b.symbol
     perparedData.symbol_title = data.symbol_a.title
@@ -175,6 +180,8 @@ const prepareOrderData = async (account, copier, data) => {
     perparedData.keyid = data.keyid++
 
     perparedData.origin_server = account.server
+
+    perparedData.origin_broker_key = brokerKeyOf(account)
     perparedData.origin_acc = account.acc
     perparedData.origin_acc_meta = account.acc_meta
     perparedData.origin_ticket = data.ticket
@@ -199,6 +206,7 @@ const prepareCloseOriginData = async (account, data) => {
 
     perparedData.handler = ACTION_HANDLER.CLOSE_ORIGIN
     perparedData.server = account.server
+    perparedData.broker_key = brokerKeyOf(account)
     perparedData.acc = account.acc
     perparedData.ticket = data.ticket
     perparedData.side = data.side ?? ''
@@ -210,6 +218,8 @@ const prepareCloseOriginData = async (account, data) => {
     perparedData.keyid = data.keyid++
 
     perparedData.origin_server = account.server
+
+    perparedData.origin_broker_key = brokerKeyOf(account)
     perparedData.origin_acc = account.acc
     perparedData.origin_ticket = data.ticket
     perparedData.origin_symbol = data.symbol ?? ''
@@ -234,6 +244,7 @@ const preparePartialCloseData = async (account, copier, data, tradeMap) => {
     perparedData.handler = ACTION_HANDLER.PARTIAL_CLOSE
     perparedData.platform = data.platform || 'metatrader'
     perparedData.server = copier.server
+    perparedData.broker_key = brokerKeyOf(copier)
     perparedData.acc = copier.acc
     perparedData.ticket = tradeMap?.ticket_dist ?? -1
     perparedData.symbol = tradeMap?.symbol_dist ?? ''
@@ -247,6 +258,8 @@ const preparePartialCloseData = async (account, copier, data, tradeMap) => {
     perparedData.keyid = data.keyid++
 
     perparedData.origin_server = account.server
+
+    perparedData.origin_broker_key = brokerKeyOf(account)
     perparedData.origin_acc = account.acc
     perparedData.origin_ticket = data.closed_ticket
     perparedData.origin_symbol = tradeMap?.symbol_src ?? ''
@@ -275,6 +288,7 @@ const prepareCloseData = async (account, copier, data, tradeMap) => {
     perparedData.handler = ACTION_HANDLER.CLOSE
     perparedData.platform = data.platform || 'metatrader'
     perparedData.server = copier.server
+    perparedData.broker_key = brokerKeyOf(copier)
     perparedData.acc = copier.acc
     perparedData.ticket = tradeMap?.ticket_dist ?? -1
     perparedData.symbol = tradeMap?.symbol_dist ?? ''
@@ -285,6 +299,8 @@ const prepareCloseData = async (account, copier, data, tradeMap) => {
     perparedData.keyid = data.keyid++
 
     perparedData.origin_server = account.server
+
+    perparedData.origin_broker_key = brokerKeyOf(account)
     perparedData.origin_acc = account.acc
     perparedData.origin_acc_meta = account.acc_meta
     perparedData.origin_ticket = data.closed_ticket
@@ -310,12 +326,12 @@ const prepareModifyData = async (account, copier, data, tradeMap) => {
     if (Number(data.sl) || Number(data.tp)) {
         if (tradeMap) {
             side = tradeMap.side
-            symbol = await Symbol.findOne({ server: tradeMap.server_dist, symbol: tradeMap.symbol_dist })
+            symbol = await Symbol.findOne({ broker_key: brokerKeyOf(tradeMap, "_dist"), symbol: tradeMap.symbol_dist })
         } else {
             const doc = await GetUpdate.findOne({ acc: copier.acc, origin_acc: account.acc, origin_ticket: data.ticket, handler: { $in: [ACTION_HANDLER.BUY, ACTION_HANDLER.BUYLIMIT, ACTION_HANDLER.BUYSTOP, ACTION_HANDLER.SELL, ACTION_HANDLER.SELLLIMIT, ACTION_HANDLER.SELLSTOP] } })
             if (doc) {
                 side = doc.side
-                symbol = await Symbol.findOne({ server: doc.server, symbol: doc.symbol })
+                symbol = await Symbol.findOne({ broker_key: brokerKeyOf(doc), symbol: doc.symbol })
             }
         }
     }
@@ -323,6 +339,7 @@ const prepareModifyData = async (account, copier, data, tradeMap) => {
     perparedData.handler = ACTION_HANDLER.MODIFY
     perparedData.platform = data.platform || 'metatrader'
     perparedData.server = copier.server
+    perparedData.broker_key = brokerKeyOf(copier)
     perparedData.acc = copier.acc
     perparedData.ticket = tradeMap?.ticket_dist ?? -1
     perparedData.symbol = tradeMap?.symbol_dist ?? ''
@@ -334,6 +351,8 @@ const prepareModifyData = async (account, copier, data, tradeMap) => {
     perparedData.keyid = data.keyid++
 
     perparedData.origin_server = account.server
+
+    perparedData.origin_broker_key = brokerKeyOf(account)
     perparedData.origin_acc = account.acc
     perparedData.origin_acc_meta = account.acc_meta
     perparedData.origin_ticket = data.ticket
@@ -352,6 +371,7 @@ const prepareOpenPendingOrderData = async (account, copier, data, tradeMap) => {
 
     perparedData.handler = ACTION_HANDLER.OPEN_PENDING_ORDER
     perparedData.server = copier.server
+    perparedData.broker_key = brokerKeyOf(copier)
     perparedData.acc = copier.acc
     perparedData.ticket = tradeMap.ticket_dist
     perparedData.symbol = tradeMap.symbol_dist
@@ -365,6 +385,8 @@ const prepareOpenPendingOrderData = async (account, copier, data, tradeMap) => {
     perparedData.keyid = data.keyid++
 
     perparedData.origin_server = account.server
+
+    perparedData.origin_broker_key = brokerKeyOf(account)
     perparedData.origin_acc = account.acc
     perparedData.origin_ticket = tradeMap.ticket_src
     perparedData.origin_symbol = tradeMap.symbol_src

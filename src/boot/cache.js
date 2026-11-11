@@ -8,17 +8,18 @@ let logRulesData = null
 let logRulesData_expire = null
 
 
-export async function getBrokerData(server) {
+// #. diff_time بروکر با کلید broker_key (2026-11-11 ؛ قبلا server) ؛ ورودی از brokerKeyOf(doc)
+export async function getBrokerData(brokerKey) {
     const now = Date.now()
 
-    if (brokersData && brokersData[server] && now < brokersData_expire) {
-        return brokersData[server]
+    if (brokersData && brokersData[brokerKey] && now < brokersData_expire) {
+        return brokersData[brokerKey]
     }
 
     const brokers = await Broker.find().lean()
 
     brokersData = brokers.reduce((t, b) => {
-        t[b.server] = {
+        t[b.broker_key || b.server] = {
             diff_time: b.diff_time
         }
         return t
@@ -26,7 +27,7 @@ export async function getBrokerData(server) {
 
     brokersData_expire = now + (5 * 60 * 1000)
 
-    return brokersData[server]
+    return brokersData[brokerKey]
 }
 
 // #. بعد از ساخت / ویرایش / حذف بروکر از پنل (BrokerSymbolService) کش بروکرها همان لحظه باطل می‌شود

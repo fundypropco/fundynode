@@ -2,6 +2,7 @@ import { formatDateUTC } from '../../helpers/helper.js'
 import GetUpdateService from '../GetUpdateService.js'
 import TradeMap from "../../models/TradeMap.js"
 import { getBrokerData } from "../../boot/cache.js"
+import { brokerKeyOf } from "../../helpers/brokerKey.js"
 
 export default async (req, res) => {
 
@@ -12,7 +13,7 @@ export default async (req, res) => {
     // #.
     // بروزرسانی وضعیت دستور در صف دستورات 
     const getUpdateDoc = await GetUpdateService.updateStatus(data)
-    const brokerData = await getBrokerData(getUpdateDoc?.server)
+    const brokerData = await getBrokerData(brokerKeyOf(getUpdateDoc))
     const diff_time = Number(brokerData?.diff_time || 0)
 
     // #.

@@ -3,6 +3,7 @@ import GetUpdateService from "../GetUpdateService.js"
 import { isValidSymbols, makeID, getOrderSide, formatDateUTC, getOrderVol } from '../../helpers/helper.js'
 import TradeMap from '../../models/TradeMap.js'
 import { getBrokerData } from '../../boot/cache.js'
+import { brokerKeyOf } from "../../helpers/brokerKey.js"
 import logger from '../../helpers/logger.js'
 import RequestLog from '../../models/RequestLog.js'
 import TradeMapService from '../TradeMapService.js'
@@ -210,7 +211,7 @@ async function isOrderPossible(account, copier, data) {
     // انجام معامله خاموش (تنظیمات FP Trader پنل ، کلی یا بروکر Master همین copier ؛ 2026-11-01) ⇒ سفارش تازه ناممکن
     // پنل سفارش های FP Trader را خودش رد می کند ؛ این چک برای متاتریدر کاربر است (معامله مبدا مثل بقیه موارد ناممکن بسته می شود)
     // بستن ، ویرایش و باقیمانده بستن بخشی از این مسیر نمی گذرند و آزادند
-    const controlBlock = await tradingControlBlock(copier.server)
+    const controlBlock = await tradingControlBlock(brokerKeyOf(copier))
     if (controlBlock) {
         result.status = false
         result.description = [controlBlock]
@@ -333,7 +334,7 @@ async function processMessage(msg) {
         data.accountObj = await Account.findLast({ acc_meta: data.acc })
         data.diff_time = 0
         if (data.accountObj) {
-            data.brokerData = await getBrokerData(data.accountObj.server)
+            data.brokerData = await getBrokerData(brokerKeyOf(data.accountObj))
             data.diff_time = Number(data.brokerData.diff_time)
         }
     }

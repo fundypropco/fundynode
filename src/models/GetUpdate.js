@@ -44,6 +44,11 @@ const getUpdateSchema = new mongoose.Schema({
         default: '',
         index: true,
     },
+    // #. کلید بروکر حساب مقصد دستور (2026-11-11 ؛ helpers/brokerKey.js) ؛ رکورد قدیمی بدون آن ⇒ server
+    broker_key: {
+        type: String,
+        default: '',
+    },
     acc: {
         type: Number,
         index: true,
@@ -73,6 +78,9 @@ const getUpdateSchema = new mongoose.Schema({
     },
 
     origin_server: {
+        type: String,
+    },
+    origin_broker_key: {
         type: String,
     },
     origin_acc: {

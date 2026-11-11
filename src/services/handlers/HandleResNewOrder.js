@@ -4,6 +4,7 @@ import Account from "../../models/Account.js"
 import Symbol from "../../models/Symbol.js"
 import { formatDateUTC, getMqlError, makeID } from "../../helpers/helper.js"
 import { getBrokerData } from "../../boot/cache.js"
+import { brokerKeyOf, originBrokerKeyOf } from "../../helpers/brokerKey.js"
 import AccountService from "../AccountService.js"
 import TradeMapService from '../TradeMapService.js'
 import { tradeFactors } from '../../helpers/copierAmounts.js'
@@ -21,9 +22,9 @@ export default async (req, res) => {
     if (getUpdateDoc && getUpdateDoc.status == 'success') {
         // #.
         // دریافت اطلاعات بروکر و نماد
-        const brokerData = await getBrokerData(getUpdateDoc.server)
+        const brokerData = await getBrokerData(brokerKeyOf(getUpdateDoc))
         const diff_time = Number(brokerData.diff_time)
-        const symbol = await Symbol.findOne({ server: getUpdateDoc.server, symbol: getUpdateDoc.symbol })
+        const symbol = await Symbol.findOne({ broker_key: brokerKeyOf(getUpdateDoc), symbol: getUpdateDoc.symbol })
 
         // #.
         // ضریب حجم و واحد (سنتی) همان copier که سفارش روی آن باز شد ؛ برای تبدیل مقادیر مالی به مقیاس کاربر
@@ -35,6 +36,7 @@ export default async (req, res) => {
         // مپ کردن اکانت و تیکت های مرجع و کپی کننده 
         const tradeMap = new TradeMap({
             server_src: getUpdateDoc.origin_server,
+            broker_key_src: originBrokerKeyOf(getUpdateDoc),
             acc_src: getUpdateDoc.origin_acc,
             ticket_src: getUpdateDoc.origin_ticket,
             symbol_src: getUpdateDoc.origin_symbol,
@@ -51,6 +53,7 @@ export default async (req, res) => {
             acc_dist: data.acc,
             ticket_dist: data.ticket,
             server_dist: getUpdateDoc.server,
+            broker_key_dist: brokerKeyOf(getUpdateDoc),
             symbol_dist: getUpdateDoc.symbol,
             vol_dist: data.vol,
             sl_dist: data.sl,

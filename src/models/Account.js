@@ -9,6 +9,12 @@ const copierSchema = new mongoose.Schema({
         type: String,
         index: true,
     },
+    // #. کلید بروکر حساب Master (2026-11-11 ؛ از پنل در set-acc) ؛ نمادها ، کلید معامله و diff_time با همین کلید
+    broker_key: {
+        type: String,
+        index: true,
+        default: ''
+    },
     copy: {
         type: Boolean,
     },
@@ -46,6 +52,12 @@ const accountSchema = new mongoose.Schema({
         default: 0
     },
     server: {
+        type: String,
+        index: true,
+        default: ''
+    },
+    // #. کلید بروکر حساب User MT (2026-11-11 ؛ از پنل در set-acc ؛ بدون User MT خالی)
+    broker_key: {
         type: String,
         index: true,
         default: ''

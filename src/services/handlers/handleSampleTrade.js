@@ -2,25 +2,31 @@ import { formatDateUTC, normalizeSymbol } from '../../helpers/helper.js'
 import Broker from '../../models/Broker.js'
 import Symbol from '../../models/Symbol.js'
 import SymbolAlias from '../../models/SymbolAlias.js'
+import logger from '../../helpers/logger.js'
 
 export default async (req, res) => {
 
     // #.
-    //پردازش پیام ورودی 
+    //پردازش پیام ورودی
     const data = processMessage(req.body.message)
 
-    // #. 
+    // #.
     // بروزرسانی اطلاعات مربوط به بروکر
-    const broker = await Broker.findOneAndUpdate({ server: data.server }, {
+    // 2026-11-11: بروکر با شماره حساب فرستنده (acc حساب اطلاعات بروکر) پیدا می شود نه نام سرور (چند کلاس حساب یک سرور دارند) ؛
+    // بروکر را ادمین پنل می سازد (set-broker با broker_key) ⇒ حساب ناشناخته بروکر تازه نمی سازد (قبلا upsert با server)
+    const broker = await Broker.findOneAndUpdate({ acc: data.acc }, {
         $set: {
             diff_time: Math.round(data.diff / 1800) * 1800 * 1000
-        },
-        // #. عنوان بروکر را ادمین پنل تعیین می‌کند (set-broker ، 2026-10-18) ⇒ نام بروکر EA فقط برای بروکر تازه
-        $setOnInsert: {
-            title: data.name,
-            server: data.server
         }
-    }, { upsert: true, new: true })
+    }, { new: true })
+
+    if (!broker) {
+        logger.warn(`sample trade (401) from acc ${data.acc} (server ${data.server}): no broker with this acc`)
+        return res.send({
+            status: 'error',
+            message: `broker with acc ${data.acc} not found`
+        })
+    }
 
 
     // #. 
@@ -42,12 +48,13 @@ export default async (req, res) => {
     if (symbolTitle) {
         await Symbol.findOneAndUpdate(
             {
-                server: data.server,
+                broker_key: broker.broker_key,
                 symbol: data.symbol
             },
             {
                 $setOnInsert: {
-                    server: data.server,
+                    broker_key: broker.broker_key,
+                    server: broker.server,
                     symbol: data.symbol,
                     title: symbolTitle,
                 },

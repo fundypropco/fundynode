@@ -2,6 +2,7 @@ import { formatDateUTC } from '../../helpers/helper.js'
 import GetUpdateService from '../GetUpdateService.js'
 import TradeMap from "../../models/TradeMap.js"
 import { getBrokerData } from "../../boot/cache.js"
+import { brokerKeyOf } from "../../helpers/brokerKey.js"
 import AccountService from "../AccountService.js"
 import TradeMapService from "../TradeMapService.js"
 
@@ -20,7 +21,7 @@ export default async (req, res) => {
     if (getUpdateDoc && getUpdateDoc.status === 'success') {
         // #.
         // دریافت اطلاعات بروکر
-        const brokerData = await getBrokerData(getUpdateDoc.server)
+        const brokerData = await getBrokerData(brokerKeyOf(getUpdateDoc))
         const diff_time = Number(brokerData.diff_time)
 
         // #. 

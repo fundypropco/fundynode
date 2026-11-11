@@ -53,7 +53,7 @@ check('old EA (null) ⇒ volume split', splitCommission(-3, -3, null, 0.4, false
 
 // ------------------------------------------------------------------
 console.log('— full flow (Mongo + Redis)')
-const URI = 'mongodb://127.0.0.1:27117/fundynode_partial_test'
+const URI = `mongodb://${process.env.MONGO_TEST_HOST ?? '127.0.0.1:27117'}/fundynode_partial_test`
 await mongoose.connect(URI)
 await mongoose.connection.db.dropDatabase()
 
@@ -72,8 +72,9 @@ const send = async (message) => {
 
 const now = () => Date.now()
 const MASTER = 5001, ACC = 394326
-await Broker.create([{ server: 'Master-Srv', title: 'Master', diff_time: 0 }, { server: 'User-Srv', title: 'User', diff_time: 0 }])
-await Symbol.create({ server: 'Master-Srv', symbol: 'EURUSD', title: 'EURUSD', vol_step: 0.01, vol_min: 0.01, tick_value: 1, tick_size: 0.00001 })
+// #. کلید بروکر broker_key (2026-11-11) ؛ حساب‌ها و TradeMap پایین بدون broker_key (سند قدیمی ⇒ brokerKeyOf همان server)
+await Broker.create([{ broker_key: 'Master-Srv', server: 'Master-Srv', title: 'Master', diff_time: 0 }, { broker_key: 'User-Srv', server: 'User-Srv', title: 'User', diff_time: 0 }])
+await Symbol.create({ broker_key: 'Master-Srv', server: 'Master-Srv', symbol: 'EURUSD', title: 'EURUSD', vol_step: 0.01, vol_min: 0.01, tick_value: 1, tick_size: 0.00001 })
 
 async function setup({ volFactor = 1, cent = false, volSrc = 0.10, volDist = 0.10, ticketSrc = 111, ticketDist = 9001, acc = ACC } = {}) {
     await Account.create({

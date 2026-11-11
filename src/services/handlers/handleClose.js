@@ -3,6 +3,7 @@ import GetUpdateService from "../GetUpdateService.js"
 import { formatDateUTC, getOrderSide, makeID } from '../../helpers/helper.js'
 import TradeMap from '../../models/TradeMap.js'
 import { getBrokerData } from '../../boot/cache.js'
+import { brokerKeyOf } from "../../helpers/brokerKey.js"
 import TradeMapService from '../TradeMapService.js'
 import RequestLog from '../../models/RequestLog.js'
 import { processUserPartial } from '../PartialCloseService.js'
@@ -231,7 +232,7 @@ async function processMessage(msg) {
         data.accountObj = await Account.findLast({ acc_meta: data.acc })
         data.diff_time = 0
         if (data.accountObj) {
-            data.brokerData = await getBrokerData(data.accountObj.server)
+            data.brokerData = await getBrokerData(brokerKeyOf(data.accountObj))
             data.diff_time = Number(data.brokerData.diff_time)
         }
     }

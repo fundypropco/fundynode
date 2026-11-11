@@ -5,6 +5,7 @@ import TradeMapService from './TradeMapService.js'
 import logger from '../helpers/logger.js'
 import { getOrderVol, makeID } from '../helpers/helper.js'
 import { masterPartialVol } from '../helpers/partialClose.js'
+import { brokerKeyOf } from '../helpers/brokerKey.js'
 
 // #.
 // بستن بخشی گزارش‌شده از سمت کاربر (متاتریدر کاربر با 500 / 501 یا FP Trader با 501) ؛ مشترک بین HandleNewOrder و handleClose
@@ -58,7 +59,7 @@ export async function processUserPartial(data, closedCommission) {
         // حجم بستن روی Master
         let plan
         if (openTradeMap) {
-            const symbol = await Symbol.findOne({ server: openTradeMap.server_dist || copier.server, symbol: openTradeMap.symbol_dist }).lean()
+            const symbol = await Symbol.findOne({ broker_key: brokerKeyOf(openTradeMap, '_dist') || brokerKeyOf(copier), symbol: openTradeMap.symbol_dist }).lean()
             plan = masterPartialVol(openTradeMap.vol_dist, partialInfo.closed_vol, partialInfo.open_vol, symbol)
         } else {
             // معامله هنوز روی Master باز نشده (دستور waiting) ⇒ همان فرمول حجم سفارش

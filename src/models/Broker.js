@@ -1,13 +1,22 @@
 import mongoose from "mongoose"
 
+// #.
+// بروکر = یک کلاس حساب روی یک سرور متاتریدر (2026-11-11 ؛ helpers/brokerKey.js)
+// broker_key کلید یکتا (نام سرور با یک عبارت توضیحی) ؛ server نام سرور متاتریدر و یکتا نیست
+// acc حساب اطلاعات بروکر (یکتا ، هر زمان از پنل قابل تغییر): دستورهای 13 / 11 به این حساب می روند و پیام 401 با آن به بروکر می رسد
 const brokerSchema = new mongoose.Schema({
+    broker_key: {
+        type: String,
+        required: true,
+        unique: true
+    },
     title: {
         type: String,
     },
     server: {
         type: String,
         required: true,
-        unique: true
+        index: true
     },
     acc: {
         type: Number
@@ -21,6 +30,9 @@ const brokerSchema = new mongoose.Schema({
         default: true
     }
 })
+
+// #. acc یکتا فقط وقتی عدد است (بروکر بدون حساب اطلاعات مجاز)
+brokerSchema.index({ acc: 1 }, { unique: true, partialFilterExpression: { acc: { $type: 'number' } } })
 
 const Broker = mongoose.model('Broker', brokerSchema, 'brokers')
 

@@ -7,6 +7,8 @@ import { toPanelTrade } from "../helpers/copierAmounts.js"
 import ForexNews from '../models/ForexNews.js'
 import AccReportService from '../services/AccReportService.js'
 import { maxUserVol } from '../helpers/orderCost.js'
+import Broker from '../models/Broker.js'
+import { brokerKeyOf } from '../helpers/brokerKey.js'
 
 
 const getUpdates = asyncHandler(async (req, res) => {
@@ -28,7 +30,7 @@ const maxVol = asyncHandler(async (req, res) => {
     if (!account || !copier) {
         return res.send({ status: 'error', message: 'account not found', data: null })
     }
-    const symbol = await Symbol.findOne({ server: copier.server, symbol: req.params.symbol }).lean()
+    const symbol = await Symbol.findOne({ broker_key: brokerKeyOf(copier), symbol: req.params.symbol }).lean()
     const report = await AccReportService.get(account.acc)
     if (!symbol || !report) {
         return res.send({ status: 'success', data: null, message: !symbol ? 'symbol not found' : 'account report is not available' })
@@ -63,8 +65,8 @@ const syncAccTrades = asyncHandler(async (req, res) => {
 
 const syncSymbols = asyncHandler(async (req, res) => {
 
-    // #. server (اختیاری ، 2026-10-18) ⇒ فقط نمادهای همان بروکر (دکمه «دریافت از FundyNode» صفحه نمادهای بروکر در پنل)
-    const filter = req.body?.server ? { server: String(req.body.server) } : {}
+    // #. broker_key (اختیاری ؛ 2026-10-18 با server ، از 2026-11-11 با broker_key) ⇒ فقط نمادهای همان بروکر (دکمه «دریافت از FundyNode» صفحه نمادهای بروکر در پنل)
+    const filter = req.body?.broker_key ? { broker_key: String(req.body.broker_key) } : {}
     const results = await Symbol.find(filter)
 
     res.send({
@@ -126,6 +128,29 @@ const setAcc = asyncHandler(async (req, res) => {
     }
 
     // #.
+    // کلید بروکر User MT (سطح اول) و Master (هر copier) از پنل (2026-11-11) ؛ نمادها ، کلید معامله و diff_time با همین کلید
+    // بروکر ناموجود ⇒ رد (پنل هیچ تغییری ذخیره نمی کند) ؛ بدون User MT (acc_meta = 0) کلید سطح اول خالی می ماند
+    const accMeta = Number(req.body.acc_meta) || 0
+    const accountKey = accMeta ? await resolveBrokerKey(req.body.broker_key, req.body.server) : ''
+    if (accMeta && !accountKey) {
+        return res.send({
+            status: 'error',
+            message: `broker ${req.body.broker_key || req.body.server || ''} of user account not found`
+        })
+    }
+    const copierKeys = []
+    for (const copier of copiers) {
+        const key = await resolveBrokerKey(copier.broker_key, copier.server)
+        if (!key) {
+            return res.send({
+                status: 'error',
+                message: `broker ${copier.broker_key || copier.server || ''} of copier ${copier.acc} not found`
+            })
+        }
+        copierKeys.push(key)
+    }
+
+    // #.
     // رکوردهای فعال قبلی همین شماره حساب متوقف می‌شوند
     const stopped = await Account.updateMany(
         { acc: acc, status: 'trading', copy: true },
@@ -135,8 +160,9 @@ const setAcc = asyncHandler(async (req, res) => {
     const account = await Account.create({
         username: String(req.body.username ?? ''),
         acc: acc,
-        acc_meta: Number(req.body.acc_meta) || 0,
+        acc_meta: accMeta,
         server: String(req.body.server ?? ''),
+        broker_key: accountKey,
         initial: Number(req.body.initial) || 0,
         drawdown: Number(req.body.drawdown) || 0,
         commission_rate: Number(req.body.commission_rate) || 0,
@@ -145,9 +171,10 @@ const setAcc = asyncHandler(async (req, res) => {
         ...newsRuleFields(req.body),
         copy: true,
         status: 'trading',
-        copiers: copiers.map(copier => ({
+        copiers: copiers.map((copier, i) => ({
             acc: Number(copier.acc),
             server: String(copier.server ?? ''),
+            broker_key: copierKeys[i],
             copy: copier.copy !== false,
             vol_factor: Number(copier.vol_factor) || 1,
             cent: copier.cent === true
@@ -162,6 +189,20 @@ const setAcc = asyncHandler(async (req, res) => {
     })
 })
 
+
+// #.
+// کلید بروکر set-acc: broker_key پنل اگر بروکرش در نود هست ؛ پنل قدیمی بدون broker_key ⇒ فقط اگر یک بروکر با همین نام سرور هست
+// پیدا نشد ⇒ '' (set-acc رد می شود)
+async function resolveBrokerKey(brokerKey, server) {
+    const key = String(brokerKey ?? '').trim()
+    if (key) {
+        return (await Broker.exists({ broker_key: key })) ? key : ''
+    }
+    const name = String(server ?? '').trim()
+    if (!name) return ''
+    const brokers = await Broker.find({ server: name }).select('broker_key').limit(2).lean()
+    return brokers.length === 1 ? brokers[0].broker_key : ''
+}
 
 // #.
 // فیلدهای قاعده ترید در خبر از بدنه درخواست پنل ؛ news_trading نیامده ⇒ true (بدون محدودیت)

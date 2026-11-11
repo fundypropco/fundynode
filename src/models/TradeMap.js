@@ -5,6 +5,11 @@ const tradeMapSchema = new mongoose.Schema({
         type: String,
         default: ''
     },
+    // #. کلید بروکر حساب مبدا (2026-11-11 ؛ helpers/brokerKey.js) ؛ رکورد قدیمی بدون آن ⇒ server_src
+    broker_key_src: {
+        type: String,
+        default: ''
+    },
     acc_src: {
         type: Number,
         index: true,
@@ -84,6 +89,11 @@ const tradeMapSchema = new mongoose.Schema({
         default: 0
     },
     server_dist: {
+        type: String,
+        default: ''
+    },
+    // #. کلید بروکر حساب Master (2026-11-11) ؛ رکورد قدیمی بدون آن ⇒ server_dist
+    broker_key_dist: {
         type: String,
         default: ''
     },
