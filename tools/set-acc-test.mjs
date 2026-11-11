@@ -6,10 +6,11 @@
 import express from 'express'
 import mongoose from 'mongoose'
 import Account from '../src/models/Account.js'
+import Broker from '../src/models/Broker.js'
 import tradingroomRouter from '../src/routes/tradingroom.js'
 import { getOrderVol } from '../src/helpers/helper.js'
 
-const URI = 'mongodb://127.0.0.1:27117/fundynode_setacc_test'
+const URI = `mongodb://${process.env.MONGO_TEST_HOST ?? '127.0.0.1:27117'}/fundynode_setacc_test`
 let pass = 0, fail = 0
 const check = (name, got, want) => {
     const g = JSON.stringify(got), w = JSON.stringify(want)
@@ -19,6 +20,11 @@ const check = (name, got, want) => {
 
 await mongoose.connect(URI)
 await mongoose.connection.db.dropDatabase()
+await Broker.createIndexes()
+// #. بروکرهای نود (2026-11-11: set-acc بروکر ناموجود را رد می‌کند) ؛ پنل بدون broker_key ⇒ بروکر یکتای همان server
+for (const server of ['LiteFinance-MT5-Demo', 'Real-MT5', 'Broker-Cent', 'Demo-MT5']) {
+    await Broker.create({ broker_key: server, server, title: server })
+}
 
 const app = express()
 app.use(express.json())
@@ -92,6 +98,16 @@ r = await post('/set-acc', payload({ acc: 394328, copiers: [{ acc: 91424121, ser
 check('cent stored on the copier', (await Account.findLast({ acc: 394328 }).lean()).copiers[0].cent, true)
 await post('/set-acc', payload({ acc: 394329 }))
 check('default false when the panel does not send it', (await Account.findLast({ acc: 394329 }).lean()).copiers[0].cent, false)
+
+console.log('== 9) کلید بروکر broker_key (2026-11-11) ==')
+await Broker.create({ broker_key: 'Shared-Std', server: 'Shared-Srv', title: 'S' })
+await Broker.create({ broker_key: 'Shared-ECN', server: 'Shared-Srv', title: 'E' })
+r = await post('/set-acc', payload({ acc: 394330, acc_meta: 5551, server: 'Shared-Srv', broker_key: 'Shared-ECN', copiers: [{ acc: 91424130, server: 'Shared-Srv', broker_key: 'Shared-Std', copy: true }] }))
+let k = await Account.findLast({ acc: 394330 }).lean()
+check('broker_key of User MT and Master stored (two classes on one server)', [r.status, k.broker_key, k.copiers[0].broker_key], ['success', 'Shared-ECN', 'Shared-Std'])
+check('  unknown Master broker_key ⇒ error , nothing created', [(await post('/set-acc', payload({ acc: 394331, copiers: [{ acc: 1, server: 'Shared-Srv', broker_key: 'Nope', copy: true }] }))).message, await Account.countDocuments({ acc: 394331 })], ['broker Nope of copier 1 not found', 0])
+check('  old panel without broker_key on a shared server (ambiguous) ⇒ error', (await post('/set-acc', payload({ acc: 394331, copiers: [{ acc: 1, server: 'Shared-Srv', copy: true }] }))).message, 'broker Shared-Srv of copier 1 not found')
+check('  User MT with unknown broker ⇒ error ; without User MT the account key stays empty', [(await post('/set-acc', payload({ acc: 394331, acc_meta: 77, server: 'Nowhere' }))).message, (await Account.findLast({ acc: 394326 }).lean()).broker_key, (await Account.findLast({ acc: 394326 }).lean()).copiers[0].broker_key], ['broker Nowhere of user account not found', '', 'LiteFinance-MT5-Demo'])
 
 console.log('== 8) حجم سفارش روی copier (getOrderVol) ==')
 // اندازه اقتصادی همیشه = ضریب × حجم کاربر ؛ حساب سنتی فقط واحد را عوض می‌کند (۱ لات سنتی = ۰.۰۱ استاندارد)

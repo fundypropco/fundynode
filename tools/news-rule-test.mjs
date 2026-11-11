@@ -6,12 +6,13 @@
 import express from 'express'
 import mongoose from 'mongoose'
 import Account from '../src/models/Account.js'
+import Broker from '../src/models/Broker.js'
 import ForexNews from '../src/models/ForexNews.js'
 import tradingroomRouter from '../src/routes/tradingroom.js'
 import { findNewsBlock, newsAffects, newsBlockDescription } from '../src/helpers/newsRule.js'
 import { readFileSync } from 'fs'
 
-const URI = 'mongodb://127.0.0.1:27117/fundynode_newsrule_test'
+const URI = `mongodb://${process.env.MONGO_TEST_HOST ?? '127.0.0.1:27117'}/fundynode_newsrule_test`
 let pass = 0, fail = 0
 const check = (name, got, want) => {
     const g = JSON.stringify(got), w = JSON.stringify(want)
@@ -21,6 +22,8 @@ const check = (name, got, want) => {
 
 await mongoose.connect(URI)
 await mongoose.connection.db.dropDatabase()
+// #. set-acc بروکر ناموجود را رد می‌کند (2026-11-11) ؛ پنل بدون broker_key ⇒ بروکر یکتای همان server
+await Broker.create([{ broker_key: 'Demo-Server', server: 'Demo-Server', title: 'D' }, { broker_key: 'LiteFinance-MT5-Demo', server: 'LiteFinance-MT5-Demo', title: 'L' }])
 
 const app = express()
 app.use(express.json())
